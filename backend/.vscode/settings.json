@@ -1,0 +1,11 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "driver": "PostgreSQL",
+            "name": "local_microblog",
+            "connectString": "postgres://postgres:postgres@localhost:20110/microblog"
+        }
+    ]
+}
