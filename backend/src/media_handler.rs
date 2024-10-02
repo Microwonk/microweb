@@ -112,6 +112,18 @@ pub async fn get_upload(
                 "Content-Disposition",
                 format!("inline; filename=\"{}\"", media.name),
             ),
+            // Cache Control for 7 days
+            ("Cache-Control", "public, max-age=604800".to_owned()),
+            // unique identifier for caching
+            ("ETag", media.name),
+            // last modified with datetime value of HTTP date format RFC 7231
+            (
+                "Last-Modified",
+                media
+                    .created_at
+                    .format("%a, %d %b %Y %H:%M:%S GMT")
+                    .to_string(),
+            ),
             ("Content-Type", media.media_type),
         ],
         Bytes::from(media.data),

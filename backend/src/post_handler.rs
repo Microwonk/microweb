@@ -17,16 +17,17 @@ pub async fn create_post(
     let result = sqlx::query_as::<_, Post>(
         r#"
         INSERT INTO posts (
-            author, title, slug, markdown_content
+            author, title, description, slug, markdown_content
         )
         VALUES (
-            $1, $2, $3, $4
+            $1, $2, $3, $4, $5
         )
-        RETURNING id, author, slug, title, markdown_content, created_at, updated_at
+        RETURNING id, author, slug, title, description, markdown_content, created_at, updated_at
         "#,
     )
     .bind(identity.id)
     .bind(post.title.as_str())
+    .bind(post.description)
     .bind(post.title.replace(" ", "_").to_ascii_lowercase())
     .bind(post.markdown_content)
     .fetch_one(&state.pool)
@@ -141,13 +142,14 @@ pub async fn update_post(
     match sqlx::query_as::<_, User>(
         r#"
         UPDATE posts
-        SET title = $1, slug = $2, markdown_content = $3, updated_at = $4
-        WHERE id = $4
+        SET title = $1, slug = $2, description = $3 markdown_content = $4, updated_at = $5
+        WHERE id = $6
         RETURNING id, author, title, slug, markdown_content, created_at, updated_at
         "#,
     )
     .bind(post.title.as_str())
     .bind(post.title.replace(" ", "_").to_ascii_lowercase())
+    .bind(post.description)
     .bind(post.markdown_content)
     .bind(Utc::now())
     .bind(id)

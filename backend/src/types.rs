@@ -6,6 +6,7 @@ pub struct Post {
     pub id: i32,
     pub author: i32,
     pub title: String,
+    pub description: String,
     pub slug: String,
     pub markdown_content: String,
     pub created_at: sqlx::types::chrono::NaiveDateTime,
@@ -15,6 +16,7 @@ pub struct Post {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct NewPost {
     pub title: String,
+    pub description: String,
     pub markdown_content: String,
 }
 

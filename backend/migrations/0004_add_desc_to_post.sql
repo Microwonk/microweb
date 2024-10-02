@@ -1,0 +1,2 @@
+DELETE FROM posts WHERE 0 = 0;
+ALTER TABLE posts ADD COLUMN description TEXT NOT NULL;

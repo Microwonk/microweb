@@ -1,23 +1,22 @@
-use crate::components::*;
-
-use crate::sections::*;
-
+use crate::components::Header;
 use leptos::*;
-use leptos_meta::*;
+use leptos_use::*;
 
 #[component]
 pub fn HomePage() -> impl IntoView {
+    let UseColorModeReturn { set_mode, .. } =
+        use_color_mode_with_options(UseColorModeOptions::default());
+
     view! {
-        <Title text="Nicolas Frey"/>
         <Header/>
-        <Profile/>
-        <BackGround/>
-        <main class="grid gap-20 md:gap-28 lg:gap-64 mt-12 md:mt-20 xl:mt-28">
-            <Hero/>
-            <About/>
-            <Features/>
-            <Contact/>
-            <Info/>
-        </main>
+        <ul>
+            <li><button on:click=move |_| set_mode.set(ColorMode::Light)>Change to Light</button></li>
+            <li><button on:click=move |_| set_mode.set(ColorMode::Dark)>Change to Dark</button></li>
+            <li><button on:click=move |_| set_mode.set(ColorMode::Auto)>Change to Auto</button></li>
+        </ul>
+        <img src="https://microblog.shuttleapp.rs/upload/3" alt="My Image"/>
+        <video controls>
+            <source type="video/mp4" src="https://microblog.shuttleapp.rs/upload/2"/>
+        </video>
     }
 }
