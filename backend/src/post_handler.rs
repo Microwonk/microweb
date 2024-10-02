@@ -139,10 +139,10 @@ pub async fn update_post(
     Json(post): Json<NewPost>,
 ) -> ApiResult<impl IntoResponse> {
     admin_check(&identity)?;
-    match sqlx::query_as::<_, User>(
+    match sqlx::query_as::<_, Post>(
         r#"
         UPDATE posts
-        SET title = $1, slug = $2, description = $3 markdown_content = $4, updated_at = $5
+        SET title = $1, slug = $2, description = $3, markdown_content = $4, updated_at = $5
         WHERE id = $6
         RETURNING id, author, title, slug, markdown_content, created_at, updated_at
         "#,
