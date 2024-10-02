@@ -7,6 +7,28 @@ use serde::{Deserialize, Serialize};
 use serde_json;
 use std::error::Error;
 
+pub type ApiResult<T> = Result<T, ApiError>;
+
+#[macro_export]
+macro_rules! ok {
+    () => {
+        Ok(StatusCode::OK)
+    };
+    ($val:expr) => {
+        Ok((StatusCode::OK, Json($val)))
+    };
+}
+
+#[macro_export]
+macro_rules! created {
+    () => {
+        Ok(StatusCode::CREATED)
+    };
+    ($val:expr) => {
+        Ok((StatusCode::CREATED, Json($val)))
+    };
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ApiError {
     message: String,

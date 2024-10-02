@@ -1,14 +1,26 @@
-pub mod api_error;
+pub mod api_response;
 pub mod auth_handler;
-pub mod get_handlers;
-pub mod post_handlers;
+pub mod media_handler;
+pub mod post_handler;
 pub mod types;
-pub mod upload_handler;
+pub mod user_handler;
 
-pub use {api_error::*, types::*};
+use axum::http::StatusCode;
+pub use {api_response::*, types::*};
 
 #[derive(Clone)]
 pub struct ServerState {
     pub pool: sqlx::PgPool,
     pub secret_key: String,
+}
+
+pub fn admin_check(identity: &User) -> Result<(), ApiError> {
+    if !identity.admin {
+        Err(ApiError::new(
+            "User is not Admin.",
+            StatusCode::UNAUTHORIZED,
+        ))
+    } else {
+        Ok(())
+    }
 }

@@ -11,12 +11,12 @@ use chrono::{Duration, Utc};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, TokenData, Validation};
 use serde::{Deserialize, Serialize};
 
-use crate::{ApiError, LoginRequest, LoginResponse, NewUser, ServerState, User};
+use crate::{ok, ApiError, ApiResult, LoginRequest, LoginResponse, NewUser, ServerState, User};
 
 pub async fn register(
     State(state): State<ServerState>,
     Json(new_user): Json<NewUser>,
-) -> Result<impl IntoResponse, ApiError> {
+) -> ApiResult<impl IntoResponse> {
     let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE email = $1")
         .bind(new_user.email.clone())
         .fetch_one(&state.pool)
@@ -39,7 +39,7 @@ pub async fn register(
     .bind(new_user.name)
     .bind(new_user.email)
     .bind(false)
-    .bind(hash(new_user.password, DEFAULT_COST).map_err(|e| {
+    .bind(hash(new_user.password.as_str(), DEFAULT_COST).map_err(|e| {
         ApiError::werr(
             "Error hashing password.",
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -49,7 +49,17 @@ pub async fn register(
     .fetch_one(&state.pool)
     .await
     {
-        Ok(user) => Ok((StatusCode::OK, Json(user))),
+        Ok(user) => {
+            // directly also login when registering.
+            login(
+                State(state.clone()),
+                Json(LoginRequest {
+                    email: user.email,
+                    password: new_user.password,
+                }),
+            )
+            .await
+        }
         Err(e) => Err(ApiError::werr(
             "Error creating/registering User.",
             StatusCode::BAD_REQUEST,
@@ -61,7 +71,7 @@ pub async fn register(
 pub async fn login(
     State(state): State<ServerState>,
     Json(login): Json<LoginRequest>,
-) -> Result<Json<LoginResponse>, ApiError> {
+) -> ApiResult<impl IntoResponse> {
     let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE email = $1")
         .bind(login.email)
         .fetch_one(&state.pool)
@@ -83,14 +93,14 @@ pub async fn login(
     let token = encode_jwt(user.unwrap().email, state.secret_key)
         .map_err(|c| ApiError::new("Error encoding jwt.", c))?;
 
-    Ok(Json(LoginResponse { token }))
+    ok!(LoginResponse { token })
 }
 
 fn verify_password(plain: &str, hashed: &str) -> bool {
     verify(plain, hashed).unwrap_or(false)
 }
 
-pub async fn guard(
+pub async fn auth_guard(
     State(state): State<ServerState>,
     mut req: Request,
     next: Next,
@@ -127,7 +137,7 @@ pub struct Claims {
     pub email: String,
 }
 
-pub fn encode_jwt(email: String, secret: String) -> Result<String, StatusCode> {
+fn encode_jwt(email: String, secret: String) -> Result<String, StatusCode> {
     let now = Utc::now();
     let expire = Duration::hours(24);
 
@@ -145,7 +155,7 @@ pub fn encode_jwt(email: String, secret: String) -> Result<String, StatusCode> {
     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR);
 }
 
-pub fn decode_jwt(jwt: String, secret: String) -> Result<TokenData<Claims>, StatusCode> {
+fn decode_jwt(jwt: String, secret: String) -> Result<TokenData<Claims>, StatusCode> {
     let res: Result<TokenData<Claims>, StatusCode> = decode(
         &jwt,
         &DecodingKey::from_secret(secret.as_ref()),

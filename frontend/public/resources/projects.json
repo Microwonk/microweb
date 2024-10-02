@@ -1,0 +1,83 @@
+{
+    "data": [
+      {
+        "slug": "varcher",
+        "name": "Varcher",
+        "area": "var",
+        "description": "A Vulkan renderer written in C++",
+        "information": {
+          "role": "Solo Developer",
+          "timeline": "2024",
+          "responsibility": "Developed a 3D graphics engine and learned Vulkan through this project, uses C++17 features and has a swappable renderer system. Implements AMDs FSR2.0 on Windows, also works on Linux.",
+          "github": "Microwonk/varcher"
+        },
+        "tags": ["C++", "CMake", "vcpkg", "Vulkan", "GLSL", "Vulkan", "Engine"],
+        "link": {
+          "source": "github",
+          "url": "https://github.com/Microwonk/varcher"
+        },
+        "image": "assets/varcher.svg"
+      },
+      {
+        "slug": "letsdrive",
+        "name": "Let's Drive",
+        "area": "let",
+        "description": "A mobile app for recording car rides for the L-17 license in austria.",
+        "information": {
+          "role": "Team lead",
+          "timeline": "2023 - 2024",
+          "responsibility": "A technical and design lead for the App, part of the diploma Thesis at the IT-College Imst"
+        },
+        "tags": [".NET MAU", "C#", "Firebase", "LaTeX", "Android", "iOS", "Figma", "GPS"],
+        "link": {
+          "source": "nothing",
+          "url": "/"
+        },
+        "image": "assets/ld.svg"
+      },
+      {
+        "slug": "hamster_cycle_zero",
+        "name": "Hamster Cycle Zero",
+        "area": "ham",
+        "description": "A game for the bevy game jam 5!",
+        "information": {
+          "role": "Programmer, Level Designer, Audio Designer",
+          "timeline": "2024",
+          "responsibility": "Solo programmer of the game during a 7 day jam, art provided by @hanadri, my girlfriend. Placed 26th overall with over 70 plays!",
+          "github": "Microwonk/bevy_jam_5",
+          "itch": {
+            "embed_link": "https://itch.io/embed-upload/11031191?color=000000",
+            "link": "https://microwonk.itch.io/hamster-cycle-zero",
+            "title": "Play Hamster Cycle Zero on Itch.io"
+          }
+        },
+        "tags": ["Bevy", "Rust", "WGSL", "Game", "GameJam", "Web", "PixelArt"],
+        "link": {
+          "source": "github",
+          "url": "https://github.com/Microwonk/bevy_jam_5"
+        }
+      },
+      {
+        "slug": "celestial_aberrations",
+        "name": "Celestial Aberrations",
+        "area": "cab",
+        "description": "A game for the AcerolaJam0!",
+        "information": {
+          "role": "Programmer, Level Designer, Audio Designer, Artist",
+          "timeline": "2024",
+          "responsibility": "Solo programmer for a game jam that lasted 14 days, made with the Godot game engine and got played over 50 times!",
+          "github": "Microwonk/AcerolaJam0",
+          "itch": {
+            "embed_link": "https://itch.io/embed-upload/9825304?color=000000",
+            "link": "https://microwonk.itch.io/acerolajam0",
+            "title": "Play Celestial Aberrations on Itch.io"
+          }
+        },
+        "tags": ["Godot", "C#", "GDScript", "Game", "GameJam", "Web", "PixelArt"],
+        "link": {
+          "source": "github",
+          "url": "https://github.com/Microwonk/AcerolaJam0"
+        }
+      }
+    ]
+  }
