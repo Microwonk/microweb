@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
+// TODO: add archived bool to posts, so they can easily be hidden.archived
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
 pub struct Post {
     pub id: i32,
