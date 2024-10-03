@@ -21,6 +21,8 @@ pub struct NewPost {
     pub markdown_content: String,
 }
 
+// TODO: profile picture
+
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
 pub struct User {
     pub id: i32,
@@ -31,12 +33,31 @@ pub struct User {
     pub created_at: sqlx::types::chrono::NaiveDateTime,
 }
 
+impl User {
+    /// clones self and makes a UserProfile instance
+    pub fn profile(&self) -> UserProfile {
+        let cloned = self.clone();
+        UserProfile {
+            id: cloned.id,
+            name: cloned.name,
+            email: cloned.email,
+        }
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct NewUser {
     pub name: String,
     pub email: String,
     // pub admin: bool,
     pub password: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
+pub struct UserProfile {
+    pub id: i32,
+    pub name: String,
+    pub email: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
@@ -67,4 +88,9 @@ pub struct LoginRequest {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct LoginResponse {
     pub token: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct IsAdminResponse {
+    pub admin: bool,
 }

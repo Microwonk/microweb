@@ -82,6 +82,7 @@ fn unauthenticated_routes(state: ServerState) -> Router {
         .route("/posts", get(post_handler::get_all_posts))
         // get upload
         .route("/upload/:id", get(media_handler::get_upload))
+        // test route
         .route("/test", get(test))
         .with_state(state)
         .layer(cors)
@@ -109,6 +110,8 @@ fn authenticated_routes(state: ServerState) -> Router {
             "/post/:post_id/media",
             get(media_handler::get_all_media_by_post),
         )
+        // delete media
+        .route("/upload/:id", delete(media_handler::delete_media))
         // create a post (if admin)
         .route("/user/post", post(post_handler::create_post))
         // once post is created, can be updated, fetched and deleted
@@ -124,6 +127,13 @@ fn authenticated_routes(state: ServerState) -> Router {
         .route("/users", get(user_handler::get_all_users))
         // get all users that are admins
         .route("/users/admins", get(user_handler::get_all_admin_users))
+        // check if the user is an admin for frontend purposes
+        .route("/user/admin", get(user_handler::is_admin))
+        // get profile and update profile (user)
+        .route(
+            "/profile",
+            get(user_handler::get_profile).put(user_handler::change_profile),
+        )
         // auth middleware
         .layer(axum::middleware::from_fn_with_state(
             state.clone(),

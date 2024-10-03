@@ -130,6 +130,26 @@ pub async fn get_upload(
     ))
 }
 
+pub async fn delete_media(
+    Extension(identity): Extension<User>,
+    Path(id): Path<i32>,
+    State(state): State<ServerState>,
+) -> ApiResult<impl IntoResponse> {
+    admin_check(&identity)?;
+    match sqlx::query("DELETE FROM media WHERE id = $1")
+        .bind(id)
+        .execute(&state.pool)
+        .await
+    {
+        Ok(_) => ok!(),
+        Err(e) => Err(ApiError::werr(
+            "Could not delete Media.",
+            StatusCode::BAD_REQUEST,
+            e,
+        )),
+    }
+}
+
 pub async fn get_all_media(
     Extension(identity): Extension<User>,
     State(state): State<ServerState>,
