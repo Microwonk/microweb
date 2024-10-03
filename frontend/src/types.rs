@@ -7,8 +7,20 @@ pub struct LoginRequest {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct RegisterRequest {
+    pub name: String,
+    pub email: String,
+    pub password: String,
+}
+
+#[derive(Clone, Default, Debug, Serialize, Deserialize, PartialEq)]
 pub struct LoginResponse {
     pub token: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct IsAdminResponse {
+    pub admin: bool,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

@@ -97,7 +97,9 @@ fn authenticated_routes(state: ServerState) -> Router {
                 .unwrap(),
             "http://localhost:3000".parse::<HeaderValue>().unwrap(),
             "http://127.0.0.1:3000".parse::<HeaderValue>().unwrap(),
-        ]);
+        ])
+        .allow_credentials(true)
+        .allow_headers([AUTHORIZATION, ACCEPT, CONTENT_TYPE]);
 
     Router::new()
         // # ADMIN ROUTES

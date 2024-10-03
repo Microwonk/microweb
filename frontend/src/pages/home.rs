@@ -1,4 +1,4 @@
-use crate::components::Header;
+use crate::components::header::Header;
 use leptos::*;
 use leptos_use::*;
 
@@ -14,9 +14,9 @@ pub fn HomePage() -> impl IntoView {
             <li><button on:click=move |_| set_mode.set(ColorMode::Dark)>Change to Dark</button></li>
             <li><button on:click=move |_| set_mode.set(ColorMode::Auto)>Change to Auto</button></li>
         </ul>
-        <img src="https://microblog.shuttleapp.rs/upload/3" alt="My Image"/>
-        <video controls>
-            <source type="video/mp4" src="https://microblog.shuttleapp.rs/upload/2"/>
-        </video>
+        // <img src="https://microblog.shuttleapp.rs/upload/3" alt="My Image"/>
+        // <video controls>
+        //     <source type="video/mp4" src="https://microblog.shuttleapp.rs/upload/2"/>
+        // </video>
     }
 }
