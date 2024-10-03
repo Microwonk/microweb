@@ -1,4 +1,4 @@
-use std::{io::BufWriter, num::NonZeroU32, process::Command};
+use std::{io::BufWriter, num::NonZeroU32};
 
 use crate::{admin_check, ok, ApiError, ApiResult, Media, MediaNoData, ServerState, User};
 use axum::{
@@ -14,7 +14,6 @@ use image::{
     codecs::{jpeg::JpegEncoder, png::PngEncoder},
     ColorType, ImageEncoder, ImageReader,
 };
-use tokio::{fs::File, io::AsyncWriteExt};
 use uuid::Uuid;
 
 pub async fn upload(
@@ -83,16 +82,10 @@ pub async fn upload(
                     // TODO: implement gif compression
                     data
                 }
-                "video/mp4" => match compress_video_mp4(&data).await {
-                    Ok(compressed_video) => compressed_video,
-                    Err(err) => {
-                        failures.push(format!(
-                            "Video compression failed for file: {} with error: {}",
-                            file_name, err
-                        ));
-                        continue;
-                    }
-                },
+                "video/mp4" => {
+                    // TODO: implement video compression
+                    data
+                }
                 _ => {
                     failures.push(format!("Unsupported content type for file: {}", file_name));
                     continue;
@@ -196,56 +189,6 @@ fn compress_image(data: &[u8], content_type: &str) -> Result<Vec<u8>, String> {
     let image_bytes = result_buf.into_inner().unwrap();
 
     Ok(image_bytes)
-}
-
-// Function to compress MP4 video using `ffmpeg`
-async fn compress_video_mp4(data: &[u8]) -> Result<Vec<u8>, String> {
-    // Create temporary input and output files for processing
-    let input_path = "public/input_video.mp4";
-    let output_path = "public/output_video_compressed.mp4";
-
-    // Write the video data to a temporary input file
-    let mut input_file = File::create(input_path).await.map_err(|e| e.to_string())?;
-    input_file
-        .write_all(data)
-        .await
-        .map_err(|e| e.to_string())?;
-    input_file.sync_all().await.map_err(|e| e.to_string())?;
-
-    // Run the `ffmpeg` command to compress the video
-    let status = Command::new("ffmpeg")
-        .args([
-            "-i",
-            input_path, // Input file
-            "-vcodec",
-            "libx264", // Use H.264 video codec for compression
-            "-crf",
-            "28", // Constant Rate Factor (CRF) for quality (28 is a reasonable default)
-            "-preset",
-            "fast",      // Preset for speed/quality tradeoff
-            output_path, // Output file
-        ])
-        .status()
-        .map_err(|e| format!("Failed to run ffmpeg: {}", e))?;
-
-    if !status.success() {
-        return Err("ffmpeg failed to compress the video".to_string());
-    }
-
-    // Read the compressed video from the output file
-    let compressed_data = tokio::fs::read(output_path)
-        .await
-        .map_err(|e| format!("Failed to read compressed video: {}", e))?;
-
-    // Clean up the temporary files
-    tokio::fs::remove_file(input_path)
-        .await
-        .map_err(|e| format!("Failed to remove input video: {}", e))?;
-    tokio::fs::remove_file(output_path)
-        .await
-        .map_err(|e| format!("Failed to remove compressed video: {}", e))?;
-
-    Ok(compressed_data)
 }
 
 pub async fn get_upload(
