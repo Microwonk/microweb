@@ -6,7 +6,7 @@ use crate::{types::Profile, util::Api};
 pub fn Header(logged_in: ReadSignal<bool>) -> impl IntoView {
     let (user, set_user) = create_signal(None::<Profile>);
     spawn_local(async move {
-        set_user(Some(Api::get_profile().await.unwrap_or_default()));
+        set_user(Api::get_profile().await.ok());
     });
     view! {
         <header class="bg-white">
