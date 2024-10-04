@@ -9,7 +9,7 @@ use leptos::SignalGetUntracked;
 use leptos_use::storage::use_local_storage;
 use serde::{Deserialize, Serialize};
 
-use crate::types::{IsAdminResponse, LoginRequest, LoginResponse, RegisterRequest};
+use crate::types::{IsAdminResponse, LoginRequest, LoginResponse, Post, Profile, RegisterRequest};
 
 // fn generate_json_ld(post: &Post) -> String {
 //     format!(
@@ -100,6 +100,23 @@ impl Api {
         }
     }
 
+    pub async fn logout() {
+        let (_, _, delete_token) = use_local_storage::<LoginResponse, JsonSerdeCodec>("token");
+        delete_token();
+        *TOKEN.write().await = "".to_string();
+    }
+
+    pub async fn get_profile() -> Result<Profile, ApiError> {
+        match Request::get(format!("{}/profile", API_PATH).as_str())
+            .header("Authorization", &format!("Bearer {}", TOKEN.read().await))
+            .send()
+            .await
+        {
+            Ok(response) => Ok(response.json::<Profile>().await.map_err(ApiError::json)?),
+            Err(e) => Err(ApiError::json(e)),
+        }
+    }
+
     pub async fn register(
         email: impl Into<String>,
         password: impl Into<String>,
@@ -126,6 +143,17 @@ impl Api {
                 Ok(())
             }
             Err(e) => Err(serde_json::from_str(e.to_string().as_str()).map_err(ApiError::json)?),
+        }
+    }
+
+    pub async fn all_blog_posts() -> Result<Vec<Post>, ApiError> {
+        match Request::get(format!("{}/posts", API_PATH).as_str())
+            // .header("Authorization", &format!("Bearer {}", TOKEN.read().await))
+            .send()
+            .await
+        {
+            Ok(response) => Ok(response.json::<Vec<Post>>().await.map_err(ApiError::json)?),
+            Err(e) => Err(ApiError::json(e)),
         }
     }
 

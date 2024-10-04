@@ -2,6 +2,7 @@
 name = "frontend"
 version = "0.1.0"
 edition = "2021"
+authors = ["Microwonk <nicolas.theo.frey@gmail.com>"]
 
 [dependencies]
 leptos = { version = "0.6.15", features = ["csr", "nightly"] }
@@ -20,6 +21,7 @@ chrono = { version = "0.4.38", features = ["serde"] }
 web-sys = { version = "0.3", features = ["Document", "Window"] }
 regex = "1.11.0"
 codee = { version = "0.2.0", features = ["json_serde"] }
+icondata = "0.4.0"
 lazy_static = "1.5.0"
 tokio = { version = "1.40.0", features = ["sync"] }
 

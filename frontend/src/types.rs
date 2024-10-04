@@ -6,11 +6,18 @@ pub struct LoginRequest {
     pub password: String,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct RegisterRequest {
     pub name: String,
     pub email: String,
     pub password: String,
+}
+
+#[derive(Clone, Default, Debug, Serialize, Deserialize)]
+pub struct Profile {
+    pub id: i32,
+    pub name: String,
+    pub email: String,
 }
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize, PartialEq)]

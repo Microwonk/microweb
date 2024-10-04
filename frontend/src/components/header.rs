@@ -1,13 +1,19 @@
 use leptos::*;
 
+use crate::{types::Profile, util::Api};
+
 #[component]
-pub fn Header() -> impl IntoView {
+pub fn Header(logged_in: ReadSignal<bool>) -> impl IntoView {
+    let (user, set_user) = create_signal(None::<Profile>);
+    spawn_local(async move {
+        set_user(Some(Api::get_profile().await.unwrap_or_default()));
+    });
     view! {
         <header class="bg-white">
             <div class="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
                 <div class="flex h-16 items-center justify-between">
                 <div class="flex-1 md:flex md:items-center md:gap-12">
-                    <a class="block text-indigo-600" href="/">
+                    <a class="block text-black" href="/">
                     <span class="sr-only">Home</span>
                     <svg class="h-8" viewBox="0 0 28 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path
@@ -40,23 +46,41 @@ pub fn Header() -> impl IntoView {
                     </nav>
 
                     <div class="flex items-center gap-4">
-                    <div class="sm:flex sm:gap-4">
-                        <a
-                        class="rounded-md bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white shadow"
-                        href="/login"
-                        >
-                        Login
-                        </a>
-
-                        <div class="hidden sm:flex">
-                        <a
-                            class="rounded-md bg-gray-100 px-5 py-2.5 text-sm font-medium text-indigo-600"
-                            href="/register"
-                        >
-                            Register
-                        </a>
+                    <Show when=move || !logged_in.get() fallback=move || view!{
+                        <div class="sm:flex sm:gap-4">
+                            <a
+                            class="rounded-md bg-red-600 px-5 py-2.5 text-sm font-medium text-white shadow"
+                            href="/logout"
+                            >
+                            Logout
+                            </a>
+                            <div class="hidden sm:flex">
+                                <a class="text-gray-500 text-sm px-5 py-2.5">
+                                {move || {
+                                    user.get().unwrap_or_default().name
+                                }}
+                                </a>
+                            </div>
                         </div>
-                    </div>
+                    }>
+                        <div class="sm:flex sm:gap-4">
+                            <a
+                            class="rounded-md bg-black px-5 py-2.5 text-sm font-medium text-white shadow"
+                            href="/login"
+                            >
+                            Login
+                            </a>
+
+                            <div class="hidden sm:flex">
+                            <a
+                                class="rounded-md bg-gray-100 px-5 py-2.5 text-sm font-medium text-black"
+                                href="/register"
+                            >
+                                Register
+                            </a>
+                            </div>
+                        </div>
+                    </Show>
 
                     <div class="block md:hidden">
                         <button class="rounded bg-gray-100 p-2 text-gray-600 transition hover:text-gray-600/75">

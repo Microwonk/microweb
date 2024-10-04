@@ -2,13 +2,12 @@ use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
 use leptos_use::*;
-use logging::debug_warn;
 
 use crate::{
     components::ReRouter,
     pages::{
-        admin::AdminPage, home::HomePage, login::LoginPage, p404::Page404, profile::ProfilePage,
-        register::RegisterPage,
+        admin::AdminPage, home::HomePage, loading::LoadingPage, login::LoginPage, logout::LogOut,
+        p404::Page404, profile::ProfilePage, register::RegisterPage,
     },
     types::IsAdminResponse,
     util::Api,
@@ -25,7 +24,6 @@ pub fn App() -> impl IntoView {
     // Initialize state and check if logged in
     spawn_local(async move {
         Api::initialize().await;
-        debug_warn!("{}", Api::is_logged_in().await);
         set_logged_in(Api::is_logged_in().await);
         set_is_admin(
             Api::is_admin()
@@ -41,26 +39,26 @@ pub fn App() -> impl IntoView {
         use_color_mode_with_options(UseColorModeOptions::default());
 
     view! {
-        <Title text="Nicolas Frey Blog"/>
         <Html lang="en" class=move || format!("{} smooth-scroll", mode.get())/>
 
         <Router>
             <Routes>
                 <Route path="/" view=move || view! {
-                    <Show  when=move || loaded.get() fallback=|| view! { LOADING }>
+                    <Show  when=move || loaded.get() fallback=LoadingPage>
                         <Outlet/>
                     </Show>
                 }>
                     // Public routes
-                    <Route path="/" view=HomePage/>
-                    <Route path="/register" view=RegisterPage/>
-                    <Route path="/login" view=LoginPage/>
+                    <Route path="/" view=move || view! { <HomePage logged_in/> }/>
+                    <Route path="/register" view=move || view! { <RegisterPage set_logged_in/> }/>
+                    <Route path="/login" view=move || view! { <LoginPage set_logged_in/> }/>
+                    <Route path="/logout" view=move || view! { <LogOut set_logged_in/> }/>
                     <Route path="/*any" view=Page404/>
 
                     <Route path="/profile" view=move || {
                         view! {
                             <Show when=move || logged_in.get() fallback=|| view! {
-                                <ReRouter route="/login"/>
+                                <ReRouter route="/"/>
                             }>
                                 <Outlet/>
                             </Show>

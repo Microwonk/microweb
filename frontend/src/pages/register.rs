@@ -6,7 +6,7 @@ use regex::Regex;
 use crate::util::Api;
 
 #[component]
-pub fn RegisterPage() -> impl IntoView {
+pub fn RegisterPage(set_logged_in: WriteSignal<bool>) -> impl IntoView {
     let (email, set_email) = create_signal("".to_string());
     let (password, set_password) = create_signal("".to_string());
     let (username, set_username) = create_signal("".to_string());
@@ -18,7 +18,7 @@ pub fn RegisterPage() -> impl IntoView {
         <Title text="Register"/>
         <div class="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 lg:px-8">
             <div class="mx-auto max-w-lg">
-                <h1 class="text-center text-2xl font-bold text-indigo-600 sm:text-3xl">Create an account</h1>
+                <h1 class="text-center text-2xl font-bold text-black sm:text-3xl">Create an account</h1>
 
                 <p class="mx-auto mt-4 max-w-md text-center text-gray-500">
                 Creating an account lets you post comments!
@@ -153,7 +153,7 @@ pub fn RegisterPage() -> impl IntoView {
                 </div>
 
                 <button
-                    class="block w-full rounded-lg bg-indigo-600 px-5 py-3 text-sm font-medium text-white"
+                    class="block w-full rounded-lg bg-black px-5 py-3 text-sm font-medium text-white"
                     on:click=move |_| {
                         let username_value = username.get();
                         let email_value = email.get();
@@ -183,6 +183,7 @@ pub fn RegisterPage() -> impl IntoView {
                                 #[allow(clippy::single_match)]
                                 match Api::register(email_value, password_value, username_value).await {
                                     Ok(_) => {
+                                        set_logged_in(true);
                                         let navigate = use_navigate();
                                         navigate("/", NavigateOptions::default());
                                     },
@@ -197,7 +198,7 @@ pub fn RegisterPage() -> impl IntoView {
 
                 <p class="text-center text-sm text-gray-500">
                     Already have an account?
-                    <a class="underline" href="/login">Sign in</a>
+                    <a class="underline text-black" href="/login">Sign in</a>
                 </p>
                 </form>
             </div>

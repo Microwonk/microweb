@@ -1,6 +1,7 @@
 use leptos::*;
 use leptos_router::use_navigate;
 
+pub mod blog_card;
 pub mod header;
 
 #[component]
