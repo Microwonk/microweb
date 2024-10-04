@@ -43,7 +43,7 @@ where
                     {description.into()}
                 </p>
 
-                <p class="mt-8 font-bold text-black">Read more</p>
+                <p class="mt-8 font-bold text-black underline decoration-dashed">Read more</p>
                 </div>
             </div>
         </a>

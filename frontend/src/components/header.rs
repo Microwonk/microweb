@@ -1,13 +1,16 @@
 use leptos::*;
 
-use crate::{types::Profile, util::Api};
+use crate::{components::drop_down::DropDown, types::Profile, util::Api};
 
 #[component]
 pub fn Header(logged_in: ReadSignal<bool>) -> impl IntoView {
     let (user, set_user) = create_signal(None::<Profile>);
+    let (dropdown, set_dropdown) = create_signal(false);
+
     spawn_local(async move {
         set_user(Api::get_profile().await.ok());
     });
+
     view! {
         <header class="bg-white shadow-xl rounded-lg">
             <div class="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
@@ -80,7 +83,10 @@ pub fn Header(logged_in: ReadSignal<bool>) -> impl IntoView {
                             </Show>
 
                             <div class="block lg:hidden">
-                                <button class="rounded-full h-16 w-16 bg-black border-none p-2 text-white transition">
+                                <button
+                                    class="rounded-full h-16 w-16 bg-black border-none p-2 text-white transition"
+                                    on:click=move |_| set_dropdown(!dropdown.get())
+                                >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     class="size-5"
@@ -92,6 +98,16 @@ pub fn Header(logged_in: ReadSignal<bool>) -> impl IntoView {
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                                 </svg>
                                 </button>
+                                <Show when=move || dropdown.get()>
+                                    <DropDown actions={
+                                        vec![
+                                            ("About", "https://www.nicolas-frey.com", Some("_blank")),
+                                            ("Feed", "/feed", None),
+                                            ("Subscribe", "/subscribe", None),
+                                            ("Profile", "/profile", None),
+                                        ]
+                                    }/>
+                                </Show>
                             </div>
                         </div>
                     </div>
