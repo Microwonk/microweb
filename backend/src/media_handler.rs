@@ -68,16 +68,18 @@ pub async fn upload(
             };
 
             let compressed_data = match content_type.as_str() {
-                "image/jpeg" | "image/png" => match compress_image(&data, content_type.as_str()) {
-                    Ok(compressed_img) => compressed_img,
-                    Err(err) => {
-                        failures.push(format!(
-                            "Image compression failed for file: {} with error: {}",
-                            file_name, err
-                        ));
-                        continue;
+                "image/jpeg" | "image/png" => {
+                    match compress_image(&data, content_type.as_str(), 720, 720) {
+                        Ok(compressed_img) => compressed_img,
+                        Err(err) => {
+                            failures.push(format!(
+                                "Image compression failed for file: {} with error: {}",
+                                file_name, err
+                            ));
+                            continue;
+                        }
                     }
-                },
+                }
                 "image/gif" => {
                     // TODO: implement gif compression
                     data
@@ -123,45 +125,87 @@ pub async fn upload(
     ok!(response)
 }
 
-fn compress_image(data: &[u8], content_type: &str) -> Result<Vec<u8>, String> {
+fn compress_image(
+    data: &[u8],
+    content_type: &str,
+    max_width: u32,
+    max_height: u32,
+) -> Result<Vec<u8>, String> {
     // Convert DynamicImage to an RGBA buffer
     let img = ImageReader::new(std::io::Cursor::new(data))
         .with_guessed_format()
-        .unwrap()
+        .map_err(|e| e.to_string())?
         .decode()
-        .unwrap();
-    let width = NonZeroU32::new(img.width()).unwrap();
-    let height = NonZeroU32::new(img.height()).unwrap();
-    let mut src_image = fr::Image::from_vec_u8(
-        width,
-        height,
-        img.to_rgba8().into_raw(),
-        fr::PixelType::U8x4,
-    )
-    .unwrap();
+        .map_err(|e| e.to_string())?;
+    let original_width = img.width();
+    let original_height = img.height();
+
+    // Calculate aspect ratio and the new dimensions while keeping the aspect ratio
+    let aspect_ratio = original_width as f32 / original_height as f32;
+    let (new_width, new_height) = if original_width > original_height {
+        let adjusted_height = (max_width as f32 / aspect_ratio).round() as u32;
+        (max_width, adjusted_height.min(max_height))
+    } else {
+        let adjusted_width = (max_height as f32 * aspect_ratio).round() as u32;
+        (adjusted_width.min(max_width), max_height)
+    };
+
+    // Convert the image to RGBA (or RGB if it's for JPEG)
+    let mut src_image = if content_type == "image/jpeg" {
+        // Strip the alpha channel for JPEG by converting the image to RGB
+        fr::Image::from_vec_u8(
+            NonZeroU32::new(original_width).unwrap(),
+            NonZeroU32::new(original_height).unwrap(),
+            img.to_rgb8().into_raw(), // Convert to RGB8 for JPEG
+            fr::PixelType::U8x3,      // RGB has 3 channels (U8x3)
+        )
+        .unwrap()
+    } else {
+        // Use RGBA8 for other formats like PNG
+        fr::Image::from_vec_u8(
+            NonZeroU32::new(original_width).unwrap(),
+            NonZeroU32::new(original_height).unwrap(),
+            img.to_rgba8().into_raw(), // RGBA for PNG
+            fr::PixelType::U8x4,       // RGBA has 4 channels (U8x4)
+        )
+        .unwrap()
+    };
 
     // Multiple RGB channels of source image by alpha channel
     // (not required for the Nearest algorithm)
     let alpha_mul_div = fr::MulDiv::default();
-    alpha_mul_div
-        .multiply_alpha_inplace(&mut src_image.view_mut())
-        .unwrap();
+    if content_type != "image/jpeg" {
+        // Only multiply by alpha if it's not JPEG (which doesn't have alpha)
+        alpha_mul_div
+            .multiply_alpha_inplace(&mut src_image.view_mut())
+            .unwrap();
+    }
 
-    // Create container for data of destination image
-    let dst_width = NonZeroU32::new(480).unwrap();
-    let dst_height = NonZeroU32::new(360).unwrap();
-    let mut dst_image = fr::Image::new(dst_width, dst_height, src_image.pixel_type());
+    // Create container for data of destination image with new dimensions
+    let new_width_non_zero = NonZeroU32::new(new_width).unwrap();
+    let new_height_non_zero = NonZeroU32::new(new_height).unwrap();
+    let mut dst_image = fr::Image::new(
+        new_width_non_zero,
+        new_height_non_zero,
+        src_image.pixel_type(),
+    );
 
     // Get mutable view of destination image data
     let mut dst_view = dst_image.view_mut();
 
     // Create Resizer instance and resize source image
-    // into buffer of destination image
     let mut resizer = fr::Resizer::new(fr::ResizeAlg::Convolution(fr::FilterType::Lanczos3));
-    resizer.resize(&src_image.view(), &mut dst_view).unwrap();
+    resizer
+        .resize(&src_image.view(), &mut dst_view)
+        .map_err(|e| e.to_string())?;
 
     // Divide RGB channels of destination image by alpha
-    alpha_mul_div.divide_alpha_inplace(&mut dst_view).unwrap();
+    if content_type != "image/jpeg" {
+        // Only divide by alpha if it's not JPEG
+        alpha_mul_div
+            .divide_alpha_inplace(&mut dst_view)
+            .map_err(|e| e.to_string())?;
+    }
 
     // Write destination image as PNG/JPEG-file
     let mut result_buf = BufWriter::new(Vec::new());
@@ -170,23 +214,23 @@ fn compress_image(data: &[u8], content_type: &str) -> Result<Vec<u8>, String> {
         "image/jpeg" => JpegEncoder::new(&mut result_buf)
             .write_image(
                 dst_image.buffer(),
-                dst_width.get(),
-                dst_height.get(),
-                ColorType::Rgba8.into(),
+                new_width_non_zero.get(),
+                new_height_non_zero.get(),
+                ColorType::Rgb8.into(), // Use RGB for JPEG
             )
-            .unwrap(),
+            .map_err(|e| e.to_string())?,
         "image/png" => PngEncoder::new(&mut result_buf)
             .write_image(
                 dst_image.buffer(),
-                dst_width.get(),
-                dst_height.get(),
-                ColorType::Rgba8.into(),
+                new_width_non_zero.get(),
+                new_height_non_zero.get(),
+                ColorType::Rgba8.into(), // Use RGBA for PNG
             )
-            .unwrap(),
+            .map_err(|e| e.to_string())?,
         _ => return Err("Unsupported image format".to_string()),
     }
 
-    let image_bytes = result_buf.into_inner().unwrap();
+    let image_bytes = result_buf.into_inner().map_err(|e| e.to_string())?;
 
     Ok(image_bytes)
 }
