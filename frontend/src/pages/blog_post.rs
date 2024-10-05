@@ -1,8 +1,5 @@
-use inkjet::{
-    formatter::ThemedHtml,
-    theme::{vendored, Theme},
-    Highlighter, Language,
-};
+use std::io::Cursor;
+
 use leptos::*;
 use leptos_router::use_params_map;
 use pulldown_cmark::*;
@@ -21,23 +18,28 @@ pub fn BlogPostPage(
     // filter slug to find blog post
     set_blog_post(blog_posts.get().iter().find(|&b| b.slug == slug()).cloned());
 
-    let code = r#"
-```rust
-fn main() {
-    println!("Hello, world!");
-    let x = 5;
-    let y = 10;
-    println!("x + y = {}", x + y);
-}
-```"#
-        .to_string();
+    // WORKS
+    //     let code = r#"
+    // # TEST
+
+    // ![alt text](https://microblog.shuttleapp.rs/upload/3)
+    // ```rust
+    // fn main() {
+    //     println!("Hello, world!");
+    //     let x = 5;
+    //     let y = 10;
+    //     println!("x + y = {}", x + y);
+    // }
+    // ```"#
+    //         .to_string();
 
     view! {
         <Header logged_in/>
-        // <Show when=move || blog_post.get().is_some() fallback=LoadingPage>
-        //     <BlogPost content=blog_post.get().unwrap().markdown_content />
-        // </Show>
-        <BlogPost content=code />
+        <div class="w-1/2 py-10 pl-32">
+        <Show when=move || blog_post.get().is_some() fallback=LoadingPage>
+            <BlogPost content=blog_post.get().unwrap().markdown_content />
+        </Show>
+        </div>
     }
 }
 
@@ -100,12 +102,22 @@ fn add_markdown_heading_ids(events: Vec<Event<'_>>) -> Vec<Event<'_>> {
 }
 
 fn highlight_code(events: Vec<Event<'_>>) -> Vec<Event<'_>> {
+    use syntect::{highlighting::ThemeSet, html::highlighted_html_for_string, parsing::SyntaxSet};
+
     let mut in_code_block = false;
 
-    let mut language = Language::Plaintext;
-    let mut highlighter = Highlighter::new();
-    let theme: Theme = Theme::from_helix(vendored::AYU_LIGHT).unwrap();
-    let formatter = ThemedHtml::new(theme);
+    let syntax_set = SyntaxSet::load_defaults_nonewlines();
+    let mut syntax = syntax_set.find_syntax_plain_text();
+
+    // TODO: dark
+    // let theme = ThemeSet::load_from_reader(&mut Cursor::new(include_str!(
+    //     "../../public/assets/rose-pine.tmTheme"
+    // )))
+    // .unwrap();
+    let theme = ThemeSet::load_from_reader(&mut Cursor::new(include_str!(
+        "../../public/assets/peel-light.tmTheme"
+    )))
+    .unwrap();
 
     let mut to_highlight = String::new();
     let mut out_events = Vec::new();
@@ -115,7 +127,7 @@ fn highlight_code(events: Vec<Event<'_>>) -> Vec<Event<'_>> {
             Event::Start(Tag::CodeBlock(kind)) => {
                 match kind {
                     CodeBlockKind::Fenced(lang) => {
-                        language = Language::from_token(lang).unwrap_or(Language::Plaintext);
+                        syntax = syntax_set.find_syntax_by_token(&lang).unwrap_or(syntax)
                     }
                     CodeBlockKind::Indented => {}
                 }
@@ -125,16 +137,12 @@ fn highlight_code(events: Vec<Event<'_>>) -> Vec<Event<'_>> {
                 if !in_code_block {
                     panic!("this should never happen");
                 }
-
-                let html_out = highlighter
-                    .highlight_to_string(language, &formatter, &to_highlight)
+                let html = highlighted_html_for_string(&to_highlight, &syntax_set, syntax, &theme)
                     .unwrap();
 
                 to_highlight.clear();
                 in_code_block = false;
-
-                // Push the generated HTML
-                out_events.push(Event::Html(CowStr::from(html_out)));
+                out_events.push(Event::Html(CowStr::from(html)));
             }
             Event::Text(t) => {
                 if in_code_block {

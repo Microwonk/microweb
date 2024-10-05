@@ -381,10 +381,6 @@ a {
   z-index: 10;
 }
 
-.m-2 {
-  margin: 0.5rem;
-}
-
 .mx-auto {
   margin-left: auto;
   margin-right: auto;
@@ -481,6 +477,18 @@ a {
   width: 100%;
 }
 
+.w-5\/6 {
+  width: 83.333333%;
+}
+
+.w-2\/3 {
+  width: 66.666667%;
+}
+
+.w-1\/2 {
+  width: 50%;
+}
+
 .max-w-lg {
   max-width: 32rem;
 }
@@ -551,6 +559,10 @@ a {
   --tw-space-y-reverse: 0;
   margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse)));
   margin-bottom: calc(1rem * var(--tw-space-y-reverse));
+}
+
+.place-self-center {
+  place-self: center;
 }
 
 .rounded {
@@ -676,6 +688,21 @@ a {
   padding-bottom: 0.75rem;
 }
 
+.px-10 {
+  padding-left: 2.5rem;
+  padding-right: 2.5rem;
+}
+
+.px-32 {
+  padding-left: 8rem;
+  padding-right: 8rem;
+}
+
+.py-10 {
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+}
+
 .\!pt-0 {
   padding-top: 0px !important;
 }
@@ -690,6 +717,14 @@ a {
 
 .pt-8 {
   padding-top: 2rem;
+}
+
+.pt-10 {
+  padding-top: 2.5rem;
+}
+
+.pl-32 {
+  padding-left: 8rem;
 }
 
 .text-center {
