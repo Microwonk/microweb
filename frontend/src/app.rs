@@ -6,8 +6,9 @@ use leptos_use::*;
 use crate::{
     components::ReRouter,
     pages::{
-        admin::AdminPage, home::HomePage, loading::LoadingPage, login::LoginPage, logout::LogOut,
-        p404::Page404, profile::ProfilePage, register::RegisterPage,
+        admin::AdminPage, blog_post::BlogPostPage, home::HomePage, loading::LoadingPage,
+        login::LoginPage, logout::LogOut, p404::Page404, profile::ProfilePage,
+        register::RegisterPage,
     },
     types::IsAdminResponse,
     util::Api,
@@ -20,6 +21,7 @@ pub fn App() -> impl IntoView {
     let (is_admin, set_is_admin) = create_signal(false);
     let (logged_in, set_logged_in) = create_signal(false);
     let (loaded, set_loaded) = create_signal(false);
+    let (blog_posts, set_blog_posts) = create_signal(Vec::new());
 
     // Initialize state and check if logged in
     spawn_local(async move {
@@ -31,6 +33,7 @@ pub fn App() -> impl IntoView {
                 .unwrap_or(IsAdminResponse { admin: false })
                 .admin,
         );
+        set_blog_posts(Api::all_blog_posts().await.unwrap_or(Vec::new()));
         set_loaded(true);
     });
 
@@ -49,10 +52,11 @@ pub fn App() -> impl IntoView {
                     </Show>
                 }>
                     // Public routes
-                    <Route path="/" view=move || view! { <HomePage logged_in/> }/>
+                    <Route path="/" view=move || view! { <HomePage logged_in blog_posts/> }/>
                     <Route path="/register" view=move || view! { <RegisterPage set_logged_in/> }/>
                     <Route path="/login" view=move || view! { <LoginPage set_logged_in/> }/>
                     <Route path="/logout" view=move || view! { <LogOut set_logged_in/> }/>
+                    <Route path="/posts/:slug" view=move || view! { <BlogPostPage logged_in blog_posts/> }/>
                     <Route path="/*any" view=Page404/>
 
                     <Route path="/profile" view=move || {

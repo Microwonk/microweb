@@ -24,6 +24,7 @@ codee = { version = "0.2.0", features = ["json_serde"] }
 icondata = { version = "0.4.0" }
 lazy_static = "1.5.0"
 tokio = { version = "1.40.0", features = ["sync"] }
+inkjet = { version = "0.11.1", features = ["html"] }
 
 [dev-dependencies]
 wasm-bindgen = "0.2"

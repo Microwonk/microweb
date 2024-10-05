@@ -107,12 +107,27 @@ impl Api {
     }
 
     pub async fn get_profile() -> Result<Profile, ApiError> {
-        match Request::get(format!("{}/profile", API_PATH).as_str())
-            .header("Authorization", &format!("Bearer {}", TOKEN.read().await))
-            .send()
-            .await
-        {
-            Ok(response) => Ok(response.json::<Profile>().await.map_err(ApiError::json)?),
+        Self::simple_get(format!("{}/profile", API_PATH), true).await
+    }
+
+    pub async fn get_post(slug: impl Into<String>) -> Result<Post, ApiError> {
+        Self::simple_get(format!("{}/post/{}", API_PATH, slug.into()), false).await
+    }
+
+    pub async fn all_blog_posts() -> Result<Vec<Post>, ApiError> {
+        Self::simple_get(format!("{}/posts", API_PATH), false).await
+    }
+
+    async fn simple_get<T: for<'de> Deserialize<'de>>(
+        path: impl Into<String>,
+        authenticated: bool,
+    ) -> Result<T, ApiError> {
+        let mut r = Request::get(path.into().as_str());
+        if authenticated {
+            r = r.header("Authorization", &format!("Bearer {}", TOKEN.read().await));
+        }
+        match r.send().await {
+            Ok(response) => Ok(response.json::<T>().await.map_err(ApiError::json)?),
             Err(e) => Err(ApiError::json(e)),
         }
     }
@@ -146,32 +161,11 @@ impl Api {
         }
     }
 
-    pub async fn all_blog_posts() -> Result<Vec<Post>, ApiError> {
-        match Request::get(format!("{}/posts", API_PATH).as_str())
-            // .header("Authorization", &format!("Bearer {}", TOKEN.read().await))
-            .send()
-            .await
-        {
-            Ok(response) => Ok(response.json::<Vec<Post>>().await.map_err(ApiError::json)?),
-            Err(e) => Err(ApiError::json(e)),
-        }
-    }
-
     pub async fn is_admin() -> Result<IsAdminResponse, ApiError> {
         if !Self::is_logged_in().await {
             return Ok(IsAdminResponse { admin: false });
         }
-        match Request::get(format!("{}/user/admin", API_PATH).as_str())
-            .header("Authorization", &format!("Bearer {}", TOKEN.read().await))
-            .send()
-            .await
-        {
-            Ok(response) => Ok(response
-                .json::<IsAdminResponse>()
-                .await
-                .map_err(ApiError::json)?),
-            Err(e) => Err(ApiError::json(e)),
-        }
+        Self::simple_get(format!("{}/user/admin", API_PATH), true).await
     }
 
     pub async fn initialize() -> bool {

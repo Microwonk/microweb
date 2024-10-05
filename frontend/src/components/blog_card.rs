@@ -1,13 +1,14 @@
 use leptos::*;
 
 #[component]
-pub fn BlogCard<T>(title: T, description: T, link: T) -> impl IntoView
-where
-    T: Into<String> + Clone,
-{
+pub fn BlogCard(
+    #[prop(into)] title: String,
+    #[prop(into)] description: String,
+    #[prop(into)] link: String,
+) -> impl IntoView {
     let title_clone = title.clone();
     view! {
-        <a href=link.into() class="group relative block h-64 sm:h-80 lg:h-96">
+        <a href={format!("posts/{}", link)} class="group relative block h-64 sm:h-80 lg:h-96">
             <span class="rounded-md absolute inset-0 border-2 border-dashed border-black"></span>
 
             <div
@@ -31,16 +32,16 @@ where
                     />
                 </svg>
 
-                <h2 class="mt-4 text-xl text-black font-medium sm:text-2xl">{title.into()}</h2>
+                <h2 class="mt-4 text-xl text-black font-medium sm:text-2xl">{title}</h2>
                 </div>
 
                 <div
                 class="absolute p-4 opacity-0 transition-opacity group-hover:relative group-hover:opacity-100 sm:p-6 lg:p-8"
                 >
-                <h3 class="mt-4 text-xl text-black font-medium sm:text-2xl">{title_clone.into()}</h3>
+                <h3 class="mt-4 text-xl text-black font-medium sm:text-2xl">{title_clone}</h3>
 
                 <p class="mt-4 text-sm text-black sm:text-base">
-                    {description.into()}
+                    {description}
                 </p>
 
                 <p class="mt-8 font-bold text-black underline decoration-dashed">Read more</p>

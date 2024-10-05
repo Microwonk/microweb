@@ -1,10 +1,13 @@
 use leptos::*;
 
 #[component]
-pub fn DropDown<T>(actions: Vec<(T, T, Option<T>)>) -> impl IntoView
-where
-    T: Into<String> + Clone,
-{
+pub fn DropDown(
+    actions: Vec<(
+        impl Into<String>,
+        impl Into<String>,
+        Option<impl Into<String>>,
+    )>,
+) -> impl IntoView {
     #[derive(Clone)]
     struct Action {
         id: usize,
@@ -31,29 +34,27 @@ where
         >
             <div class="p-2">
                 <For
-                // a function that returns the items we're iterating over; a signal is fine
-                each=move || actions.clone()
-                // a unique key for each item
-                key=|a| a.id
-                // renders each item to a view
-                children=move |action: Action| {
-                    view! {
-                        <a
-                            href={action.link}
-                            class="block rounded-lg px-4 py-2 text-end text-xl text-gray-500 hover:bg-gray-50 hover:text-gray-700"
-                            target={
-                                if let Some(target) = action.target {
-                                    target
-                                } else {
-                                    "_self".to_owned()
+                    each=move || actions.clone()
+                    key=|a| a.id
+                    children=move |action: Action| {
+                        view! {
+                            <a
+                                href={action.link}
+                                class="block rounded-lg px-4 py-2 text-end text-xl text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                                target={
+                                    if let Some(target) = action.target {
+                                        target
+                                    } else {
+                                        "_self".to_owned()
+                                    }
                                 }
-                            }
-                            role="menuitem"
-                        >
-                            {action.name}
-                        </a>
+                                role="menuitem"
+                            >
+                                {action.name}
+                            </a>
+                        }
                     }
-                }/>
+                />
             </div>
         </div>
     }

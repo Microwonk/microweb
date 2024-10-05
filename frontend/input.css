@@ -29,3 +29,80 @@
       @apply no-underline;
     }
 }
+
+.markdown {
+  @apply w-full text-lg break-words;
+}
+
+.markdown p {
+  @apply my-6;
+}
+
+.markdown h1 {
+  @apply text-5xl font-bold mb-6;
+}
+
+.markdown h1 code {
+  @apply text-5xl font-medium;
+}
+
+.markdown h2 {
+  @apply text-4xl font-bold mb-4 mt-8;
+}
+
+.markdown h2 code {
+  @apply text-4xl font-medium;
+}
+
+.markdown h3 {
+  @apply text-3xl font-bold mb-4 mt-6;
+}
+
+.markdown h3 code {
+  @apply text-2xl;
+}
+
+.markdown h4 {
+  @apply font-bold;
+}
+
+.markdown pre {
+  @apply my-2 bg-zinc-800 p-3 w-full rounded border border-zinc-600 text-lg leading-tight whitespace-pre-wrap;
+}
+
+.markdown code {
+  @apply text-lg font-mono normal-nums bg-zinc-800 rounded border border-zinc-600 px-1.5 py-0.5 mx-0.5 whitespace-nowrap;
+}
+
+.markdown blockquote {
+  @apply bg-zinc-700/30 my-6 p-2 pl-4 border-zinc-400 border-l-4 border rounded-r-2xl;
+}
+
+.markdown ol,
+.markdown ul {
+  @apply pl-6 my-1;
+}
+
+.markdown ol {
+  @apply list-decimal;
+}
+
+.markdown ul {
+  @apply list-disc;
+}
+
+.markdown hr {
+  @apply my-6 border-t-2 border-neutral-400/50;
+}
+
+.markdown a {
+  @apply underline hover:no-underline;
+}
+
+.markdown .footnote-definition {
+  @apply flex flex-row items-center text-base;
+}
+
+.markdown .footnote-definition p {
+  @apply my-0;
+}
