@@ -6,7 +6,7 @@ use codee::string::JsonSerdeCodec;
 use gloo_net::http::Request;
 use lazy_static::lazy_static;
 use leptos::SignalGetUntracked;
-use leptos_use::storage::use_local_storage;
+use leptos_use::{use_cookie_with_options, SameSite, UseCookieOptions};
 use serde::{Deserialize, Serialize};
 
 use crate::types::{IsAdminResponse, LoginRequest, LoginResponse, Post, Profile, RegisterRequest};
@@ -77,7 +77,12 @@ impl Api {
         email: impl Into<String>,
         password: impl Into<String>,
     ) -> Result<(), ApiError> {
-        let (_, set_token, _) = use_local_storage::<LoginResponse, JsonSerdeCodec>("token");
+        let (_, set_token) = use_cookie_with_options::<LoginResponse, JsonSerdeCodec>(
+            "token",
+            UseCookieOptions::default()
+                .max_age(3_600_000 * 24) // one day
+                .same_site(SameSite::Strict),
+        );
         match Request::post(format!("{}/login", API_PATH).as_str())
             .json(&LoginRequest {
                 email: email.into(),
@@ -92,7 +97,7 @@ impl Api {
                     .json::<LoginResponse>()
                     .await
                     .map_err(ApiError::json)?;
-                set_token(token.clone());
+                set_token(Some(token.clone()));
                 *TOKEN.write().await = token.token;
                 Ok(())
             }
@@ -101,8 +106,13 @@ impl Api {
     }
 
     pub async fn logout() {
-        let (_, _, delete_token) = use_local_storage::<LoginResponse, JsonSerdeCodec>("token");
-        delete_token();
+        let (_, set_token) = use_cookie_with_options::<LoginResponse, JsonSerdeCodec>(
+            "token",
+            UseCookieOptions::default()
+                .max_age(3_600_000 * 24) // one day
+                .same_site(SameSite::Strict),
+        );
+        set_token(None);
         *TOKEN.write().await = "".to_string();
     }
 
@@ -137,7 +147,12 @@ impl Api {
         password: impl Into<String>,
         name: impl Into<String>,
     ) -> Result<(), ApiError> {
-        let (_, set_token, _) = use_local_storage::<LoginResponse, JsonSerdeCodec>("token");
+        let (_, set_token) = use_cookie_with_options::<LoginResponse, JsonSerdeCodec>(
+            "token",
+            UseCookieOptions::default()
+                .max_age(3_600_000 * 24) // one day
+                .same_site(SameSite::Strict),
+        );
         match Request::post(format!("{}/register", API_PATH).as_str())
             .json(&RegisterRequest {
                 name: name.into(),
@@ -153,7 +168,7 @@ impl Api {
                     .json::<LoginResponse>()
                     .await
                     .map_err(ApiError::json)?;
-                set_token(token.clone());
+                set_token(Some(token.clone()));
                 *TOKEN.write().await = token.token;
                 Ok(())
             }
@@ -169,13 +184,18 @@ impl Api {
     }
 
     pub async fn initialize() -> bool {
-        let (token, _, _) = use_local_storage::<LoginResponse, JsonSerdeCodec>("token");
+        let (token, _) = use_cookie_with_options::<LoginResponse, JsonSerdeCodec>(
+            "token",
+            UseCookieOptions::default()
+                .max_age(3_600_000 * 24) // one day
+                .same_site(SameSite::Strict),
+        );
         let token = token.get_untracked();
-        if token.token.is_empty() {
-            false
-        } else {
-            *TOKEN.write().await = token.token;
+        if let Some(t) = token {
+            *TOKEN.write().await = t.token;
             true
+        } else {
+            false
         }
     }
 

@@ -81,8 +81,9 @@ pub fn App() -> impl IntoView {
                             </Show>
                         }
                     }>
-                        <Route path="/" view=AdminPage/>
-                    </Route>
+                        <Route path="/" view=move || view! { <AdminPage logged_in blog_posts/>} />
+                        <Route path="?tab" view=move || view! { <AdminPage logged_in blog_posts/>} />
+                        </Route>
                 </Route>
             </Routes>
         </Router>
