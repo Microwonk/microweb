@@ -9,7 +9,9 @@ use leptos::SignalGetUntracked;
 use leptos_use::{use_cookie_with_options, SameSite, UseCookieOptions};
 use serde::{Deserialize, Serialize};
 
-use crate::types::{IsAdminResponse, LoginRequest, LoginResponse, Post, Profile, RegisterRequest};
+use crate::types::{
+    IsAdminResponse, LoginRequest, LoginResponse, Post, Profile, RegisterRequest, User,
+};
 
 // fn generate_json_ld(post: &Post) -> String {
 //     format!(
@@ -126,6 +128,10 @@ impl Api {
 
     pub async fn all_blog_posts() -> Result<Vec<Post>, ApiError> {
         Self::simple_get(format!("{}/posts", API_PATH), false).await
+    }
+
+    pub async fn all_users() -> Result<Vec<User>, ApiError> {
+        Self::simple_get(format!("{}/users", API_PATH), true).await
     }
 
     async fn simple_get<T: for<'de> Deserialize<'de>>(

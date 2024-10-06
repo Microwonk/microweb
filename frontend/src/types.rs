@@ -41,3 +41,13 @@ pub struct Post {
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: Option<chrono::NaiveDateTime>,
 }
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct User {
+    pub id: i32,
+    pub name: String,
+    pub email: String,
+    pub admin: bool,
+    pub passwordhash: String,
+    pub created_at: chrono::NaiveDateTime,
+}
