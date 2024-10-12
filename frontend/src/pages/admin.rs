@@ -1,12 +1,17 @@
 use crate::{
     components::{header::Header, side_menu::SideMenu},
     pages::loading::LoadingPage,
-    types::{Post, User},
+    types::{Media, Post, User},
     util::Api,
 };
+use chrono::Utc;
+use html::Div;
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
+use leptos_use::{
+    use_drop_zone_with_options, UseDropZoneEvent, UseDropZoneOptions, UseDropZoneReturn,
+};
 
 #[derive(Params, PartialEq)]
 struct TabQuery {
@@ -19,6 +24,7 @@ pub fn AdminPage(logged_in: ReadSignal<bool>, blog_posts: ReadSignal<Vec<Post>>)
 
     let (current_tab, set_current_tab) = create_signal(String::new());
     let (users, set_users) = create_signal(Vec::new());
+    let (media, set_media) = create_signal(Vec::new());
 
     create_effect(move |_| {
         if let Some(t) = query.with(|q| q.as_ref().map(|t| t.tab.clone()).ok()) {
@@ -40,6 +46,8 @@ pub fn AdminPage(logged_in: ReadSignal<bool>, blog_posts: ReadSignal<Vec<Post>>)
                     <div class="p-6">
                         {move || match current_tab.get().as_str() {
                             "users" => view! { <UserSection users set_users/>},
+                            "media" => view! { <MediaSection media set_media blog_posts/>},
+                            "blogs" => view! { <BlogSection blog_posts/>},
                             _ => view! { <LoadingPage/> }
                         }}
                     </div>
@@ -85,13 +93,213 @@ pub fn UserSection(
                                     <td class="whitespace-nowrap px-4 py-2 text-gray-700">{if user.admin { "yes "} else { "no" }}</td>
                                     // <td class="whitespace-nowrap px-4 py-2 text-gray-700">{user.passwordhash}</td>
                                     <td class="whitespace-nowrap px-4 py-2 text-gray-700">{user.created_at.to_string()}</td>
-                                    <td class="whitespace-nowrap px-4 py-2">
+                                    // <td class="whitespace-nowrap px-4 py-2">
                                     // <a
                                     //     href="#"
                                     //     class="inline-block rounded bg-indigo-600 px-4 py-2 text-xs font-medium text-white hover:bg-indigo-700"
                                     // >
                                     //     View
                                     // </a>
+                                    // </td>
+                                </tr>
+                            }
+                        }
+                    />
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+#[component]
+pub fn MediaSection(
+    media: ReadSignal<Vec<Media>>,
+    set_media: WriteSignal<Vec<Media>>,
+    blog_posts: ReadSignal<Vec<Post>>,
+) -> impl IntoView {
+    spawn_local(async move {
+        set_media(Api::all_media().await.unwrap_or_default());
+    });
+
+    let (post_id, set_post_id) = create_signal(0);
+    let (get_files, set_files) = create_signal(Vec::new());
+
+    let drop_zone_el = NodeRef::<Div>::new();
+
+    let on_drop = move |event: UseDropZoneEvent| {
+        set_files(event.files);
+    };
+
+    let UseDropZoneReturn { files, .. } =
+        use_drop_zone_with_options(drop_zone_el, UseDropZoneOptions::default().on_drop(on_drop));
+
+    view! {
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y-2 divide-gray-200 text-sm">
+                <thead class="text-left">
+                <tr>
+                    <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">ID</th>
+                    <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Post</th>
+                    <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Name</th>
+                    <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Path</th>
+                    <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">MIME Type</th>
+                    <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Created At</th>
+                    <th class="px-4 py-2"></th>
+                </tr>
+                </thead>
+
+                <tbody class="divide-y divide-gray-200">
+                <For
+                        each=move || media.get()
+                        key=|media| media.id
+                        children=move |media: Media| {
+                            let post = blog_posts.get().iter().find(|&p| p.id == media.post_id).cloned();
+                            let path = format!("https://microblog.shuttleapp.rs/upload/{}", media.id);
+                            view! {
+                                <tr class="odd:bg-gray-50">
+                                    <td class="whitespace-nowrap px-4 py-2 text-gray-700">{media.id}</td>
+                                    <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">{if let Some(p) = post { p.title } else {format!("No Post? ID {}", media.post_id)}}</td>
+                                    <td class="whitespace-nowrap px-4 py-2 text-gray-700">{media.name}</td>
+                                    <td class="whitespace-nowrap px-4 py-2 text-gray-700">
+                                        <a href={path} target="_blank">{format!("/upload/{}", media.id)}</a>
+                                    </td>
+                                    <td class="whitespace-nowrap px-4 py-2 text-gray-700">{media.media_type}</td>
+                                    <td class="whitespace-nowrap px-4 py-2 text-gray-700">{media.created_at.to_string()}</td>
+                                    <td class="whitespace-nowrap px-4 py-2">
+                                    <button
+                                        class="border-none inline-block rounded bg-red-600 px-4 py-2 text-xs font-medium text-white hover:bg-red-700"
+                                        on:click=move |_| {
+                                            spawn_local(async move {
+                                                if (Api::delete_media(media.id).await).is_ok() {
+                                                    // refresh
+                                                    web_sys::window().unwrap().location().reload().unwrap();
+                                                };
+                                            });
+                                        }
+                                    >
+                                        Delete
+                                    </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    />
+                <tr class="odd:bg-gray-50">
+                    <td class="whitespace-nowrap px-4 py-2 text-gray-700">{move || {
+                        media
+                            .get()
+                            .iter()
+                            .map(|m| m.id)
+                            .max().map(|i| i + 1)
+                            .unwrap_or_default()
+                    }}</td>
+                    <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">
+                        <select
+                            on:change=move |ev| {
+                                let new_value = event_target_value(&ev);
+                                set_post_id(new_value.parse().unwrap());
+                            }
+                            prop:value=move || post_id.get().to_string()
+                        >
+                            <option value=0 hidden>Please select a post</option>
+                            {move || {
+                                blog_posts.get().iter().cloned().map(|p| view! {
+                                    <option value={p.id} on:click=move |ev| {
+                                        let new_value = event_target_value(&ev);
+                                        set_post_id(new_value.parse().unwrap());
+                                    }>
+                                        {p.title}
+                                    </option>
+                                }).collect_view()
+                            }}
+                        </select>
+                    </td>
+                    <td class="whitespace-nowrap px-4 py-2 text-gray-700">
+                        <div node_ref=drop_zone_el class="flex flex-col w-full min-h-[200px] h-auto bg-gray-400/10 justify-center items-center pt-6">
+                            "Drop files here"
+                            <For each=files key=|f| f.name() let:file>
+                                <div class="w-200px pa-6">
+                                    <p>Name: {file.name()}, Size: {file.size()}</p>
+                                </div>
+                            </For>
+                        </div>
+                    </td>
+                    <td class="whitespace-nowrap px-4 py-2 text-gray-700">{move || {
+                        format!("/upload/{}",
+                        media
+                                .get()
+                                .iter()
+                                .map(|m| m.id)
+                                .max().map(|i| i + 1)
+                                .unwrap_or_default()
+                            )
+                    }}</td>
+                    <td class="whitespace-nowrap px-4 py-2 text-gray-700">?</td>
+                    <td class="whitespace-nowrap px-4 py-2 text-gray-700">{move || {
+                        Utc::now().naive_local().to_string()
+                    }}</td>
+                    <td class="whitespace-nowrap px-4 py-2 text-gray-700">
+                        <button
+                            class="border-none inline-block rounded bg-indigo-600 px-4 py-2 text-xs font-medium text-white hover:bg-indigo-700"
+                            on:click=move |_| {
+                                let id = post_id.get();
+                                if blog_posts.get().iter().all(|p| p.id != id) {
+                                    return;
+                                }
+                                let files = get_files.get();
+                                spawn_local(async move {
+                                    match Api::upload(id, files).await {
+                                        Ok(_results) => {
+                                            // refresh
+                                            web_sys::window().unwrap().location().reload().unwrap();
+                                        },
+                                        Err(_e) => {}
+                                    }
+                                });
+                            }
+                        >
+                            Add
+                        </button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+#[component]
+pub fn BlogSection(blog_posts: ReadSignal<Vec<Post>>) -> impl IntoView {
+    view! {
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y-2 divide-gray-200 text-sm">
+                <thead class="text-left">
+                <tr>
+                    <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">ID</th>
+                    <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Title</th>
+                    <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Created At</th>
+                    <th class="px-4 py-2"></th>
+                </tr>
+                </thead>
+
+                <tbody class="divide-y divide-gray-200">
+                <For
+                        each=move || blog_posts.get()
+                        key=|post| post.id
+                        children=move |post: Post| {
+                            view! {
+                                <tr class="odd:bg-gray-50">
+                                    <td class="whitespace-nowrap px-4 py-2 text-gray-700">{post.id}</td>
+                                    <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">{post.title}</td>
+                                    <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">{post.created_at.to_string()}</td>
+                                    <td class="whitespace-nowrap px-4 py-2 text-gray-700">
+                                        <a
+                                            class="border-none inline-block rounded bg-indigo-600 px-4 py-2 text-xs font-medium text-white hover:bg-indigo-700"
+                                            href={format!("/admin/posts/{}", post.slug)}
+                                            target="_blank"
+                                        >
+                                            Edit
+                                        </a>
                                     </td>
                                 </tr>
                             }

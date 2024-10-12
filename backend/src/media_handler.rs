@@ -110,7 +110,7 @@ pub async fn upload(
             .await
             {
                 Ok(media) => successes.push(media),
-                Err(_) => failures.push(format!("Database insert failed for file: {}", file_name)),
+                Err(e) => failures.push(format!("Database error {} for file: {}", e, file_name)),
             }
         }
     }

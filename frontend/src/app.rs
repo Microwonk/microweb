@@ -6,8 +6,8 @@ use leptos_use::*;
 use crate::{
     components::ReRouter,
     pages::{
-        admin::AdminPage, blog_post::BlogPostPage, home::HomePage, loading::LoadingPage,
-        login::LoginPage, logout::LogOut, p404::Page404, profile::ProfilePage,
+        admin::AdminPage, blog_post::BlogPostPage, edit_blog_post::EditBlogPostPage,
+        home::HomePage, loading::LoadingPage, login::LoginPage, logout::LogOut, p404::Page404,
         register::RegisterPage,
     },
     types::IsAdminResponse,
@@ -59,18 +59,6 @@ pub fn App() -> impl IntoView {
                     <Route path="/posts/:slug" view=move || view! { <BlogPostPage logged_in blog_posts/> }/>
                     <Route path="/*any" view=Page404/>
 
-                    <Route path="/profile" view=move || {
-                        view! {
-                            <Show when=move || logged_in.get() fallback=|| view! {
-                                <ReRouter route="/"/>
-                            }>
-                                <Outlet/>
-                            </Show>
-                        }
-                    }>
-                        <Route path="/" view=ProfilePage/>
-                    </Route>
-
                     // Admin routes
                     <Route path="/admin" view=move || {
                         view! {
@@ -83,6 +71,7 @@ pub fn App() -> impl IntoView {
                     }>
                         <Route path="/" view=move || view! { <AdminPage logged_in blog_posts/>} />
                         <Route path="?tab" view=move || view! { <AdminPage logged_in blog_posts/>} />
+                        <Route path="/posts/:slug" view=move || view! { <EditBlogPostPage blog_posts/> }/>
                         </Route>
                 </Route>
             </Routes>

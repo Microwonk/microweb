@@ -8,9 +8,11 @@ use lazy_static::lazy_static;
 use leptos::SignalGetUntracked;
 use leptos_use::{use_cookie_with_options, SameSite, UseCookieOptions};
 use serde::{Deserialize, Serialize};
+use web_sys::{File, FormData};
 
 use crate::types::{
-    IsAdminResponse, LoginRequest, LoginResponse, Post, Profile, RegisterRequest, User,
+    IsAdminResponse, LoginRequest, LoginResponse, Media, NewPost, Post, Profile, RegisterRequest,
+    UploadReturn, User,
 };
 
 // fn generate_json_ld(post: &Post) -> String {
@@ -107,6 +109,19 @@ impl Api {
         }
     }
 
+    pub async fn update_blog_post(post_id: i32, post: NewPost) -> Result<Post, ApiError> {
+        match Request::put(format!("{}/user/post/{}", API_PATH, post_id).as_str())
+            .header("Authorization", &format!("Bearer {}", TOKEN.read().await))
+            .json(&post)
+            .map_err(ApiError::json)?
+            .send()
+            .await
+        {
+            Ok(response) => Ok(response.json().await.map_err(ApiError::json)?),
+            Err(e) => Err(serde_json::from_str(e.to_string().as_str()).map_err(ApiError::json)?),
+        }
+    }
+
     pub async fn logout() {
         let (_, set_token) = use_cookie_with_options::<LoginResponse, JsonSerdeCodec>(
             "token",
@@ -134,6 +149,10 @@ impl Api {
         Self::simple_get(format!("{}/users", API_PATH), true).await
     }
 
+    pub async fn all_media() -> Result<Vec<Media>, ApiError> {
+        Self::simple_get(format!("{}/media", API_PATH), true).await
+    }
+
     async fn simple_get<T: for<'de> Deserialize<'de>>(
         path: impl Into<String>,
         authenticated: bool,
@@ -145,6 +164,50 @@ impl Api {
         match r.send().await {
             Ok(response) => Ok(response.json::<T>().await.map_err(ApiError::json)?),
             Err(e) => Err(ApiError::json(e)),
+        }
+    }
+
+    pub async fn upload(post_id: i32, files: Vec<File>) -> Result<UploadReturn, ApiError> {
+        let form_data = FormData::new().map_err(|e| ApiError {
+            message: "Could not create Form.".into(),
+            error_info: e.as_string(),
+            status_code: 418,
+        })?;
+
+        for file in files {
+            form_data
+                .append_with_blob("file_upload", &file)
+                .map_err(|e| ApiError {
+                    message: "Could not create Form.".into(),
+                    error_info: e.as_string(),
+                    status_code: 418,
+                })?;
+        }
+
+        match Request::post(format!("{}/post/{}/upload", API_PATH, post_id).as_str())
+            .header("Authorization", &format!("Bearer {}", TOKEN.read().await))
+            .body(form_data)
+            .map_err(ApiError::json)?
+            .send()
+            .await
+        {
+            Ok(response) => Ok(response.json().await.map_err(ApiError::json)?),
+            Err(e) => Err(serde_json::from_str(e.to_string().as_str()).map_err(ApiError::json)?),
+        }
+    }
+
+    pub async fn delete_media(upload_id: i32) -> Result<(), ApiError> {
+        match Request::delete(format!("{}/upload/{}", API_PATH, upload_id).as_str())
+            .header("Authorization", &format!("Bearer {}", TOKEN.read().await))
+            .send()
+            .await
+        {
+            Ok(_) => Ok(()),
+            Err(e) => Err(ApiError {
+                message: "Failed to delete upload/media.".into(),
+                error_info: Some(e.to_string()),
+                status_code: 418,
+            }),
         }
     }
 

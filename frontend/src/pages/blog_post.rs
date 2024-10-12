@@ -46,15 +46,8 @@ pub fn BlogPostPage(
 #[component]
 pub fn BlogPost(#[prop(into)] content: String) -> impl IntoView {
     view! {
-        <BodyToHtml content />
+        <div class="markdown" inner_html=markdown_to_html(content.as_str())></div>
     }
-}
-
-#[component]
-fn BodyToHtml(#[prop(into)] content: String) -> impl IntoView {
-    leptos::leptos_dom::html::div()
-        .attr("class", "markdown")
-        .inner_html(markdown_to_html(content.as_str()).clone())
 }
 
 fn markdown_to_html(markdown: &str) -> String {

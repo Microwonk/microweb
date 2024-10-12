@@ -58,14 +58,6 @@ pub fn Header(logged_in: ReadSignal<bool>) -> impl IntoView {
                                 <li>
                                 <a class="text-gray-500 transition hover:text-gray-500/75" href="/feed"> Feed </a>
                                 </li>
-
-                                <li>
-                                <a class="text-gray-500 transition hover:text-gray-500/75" href="/subscribe"> Subscribe </a>
-                                </li>
-
-                                <li>
-                                <a class="text-gray-500 transition hover:text-gray-500/75" href="/profile"> Profile </a>
-                                </li>
                             </ul>
                         </nav>
 
@@ -127,8 +119,6 @@ pub fn Header(logged_in: ReadSignal<bool>) -> impl IntoView {
                                         vec![
                                             ("About", "https://www.nicolas-frey.com", Some("_blank")),
                                             ("Feed", "/feed", None),
-                                            ("Subscribe", "/subscribe", None),
-                                            ("Profile", "/profile", None),
                                         ]
                                     }/>
                                 </Show>

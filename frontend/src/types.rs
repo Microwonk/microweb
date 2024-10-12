@@ -30,7 +30,7 @@ pub struct IsAdminResponse {
     pub admin: bool,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub struct Post {
     pub id: i32,
     pub author: i32,
@@ -50,4 +50,26 @@ pub struct User {
     pub admin: bool,
     pub passwordhash: String,
     pub created_at: chrono::NaiveDateTime,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Media {
+    pub id: i32,
+    pub post_id: i32,
+    pub name: String,
+    pub media_type: String,
+    pub created_at: chrono::NaiveDateTime,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct UploadReturn {
+    success: Vec<Media>,
+    failure: Vec<String>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct NewPost {
+    pub title: String,
+    pub description: String,
+    pub markdown_content: String,
 }

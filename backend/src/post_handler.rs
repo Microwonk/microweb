@@ -144,7 +144,7 @@ pub async fn update_post(
         UPDATE posts
         SET title = $1, slug = $2, description = $3, markdown_content = $4, updated_at = $5
         WHERE id = $6
-        RETURNING id, author, title, slug, markdown_content, created_at, updated_at
+        RETURNING id, author, title, slug, markdown_content, created_at, updated_at, description
         "#,
     )
     .bind(post.title.as_str())

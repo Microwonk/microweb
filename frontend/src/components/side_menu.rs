@@ -6,7 +6,7 @@ pub fn SideMenu() -> impl IntoView {
     let (tabs, set_tabs) = create_signal(Vec::new());
 
     set_tabs(
-        ["General", "Blogs", "Media", "Manage", "Users"]
+        ["General", "Blogs", "Media", "Users"]
             .iter()
             .enumerate()
             .map(|t| (t.0, t.1.to_string(), t.1.to_lowercase()))

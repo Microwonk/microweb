@@ -511,6 +511,7 @@ dependencies = [
  "console_error_panic_hook",
  "console_log",
  "gloo-net",
+ "gloo-timers",
  "icondata",
  "lazy_static",
  "leptos",
