@@ -38,6 +38,7 @@ pub struct Post {
     pub description: String,
     pub slug: String,
     pub markdown_content: String,
+    pub released: bool,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: Option<chrono::NaiveDateTime>,
 }

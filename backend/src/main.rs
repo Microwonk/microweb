@@ -123,6 +123,11 @@ fn authenticated_routes(state: ServerState) -> Router {
                 .put(post_handler::update_post)
                 .get(post_handler::get_post_by_id),
         )
+        .route("/user/post/:id/release", post(post_handler::release_post))
+        .route(
+            "/user/post/:id/unrelease",
+            post(post_handler::unrelease_post),
+        )
         // get all posts from a user by their identity (token)
         .route("/user/posts", get(post_handler::get_posts_by_identity))
         // get all users

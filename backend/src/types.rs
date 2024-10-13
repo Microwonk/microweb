@@ -10,6 +10,7 @@ pub struct Post {
     pub description: String,
     pub slug: String,
     pub markdown_content: String,
+    pub released: bool,
     pub created_at: sqlx::types::chrono::NaiveDateTime,
     pub updated_at: Option<sqlx::types::chrono::NaiveDateTime>,
 }

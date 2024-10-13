@@ -105,7 +105,7 @@ impl Api {
                 *TOKEN.write().await = token.token;
                 Ok(())
             }
-            Err(e) => Err(serde_json::from_str(e.to_string().as_str()).map_err(ApiError::json)?),
+            Err(e) => Err(ApiError::json(e)),
         }
     }
 
@@ -118,7 +118,7 @@ impl Api {
             .await
         {
             Ok(response) => Ok(response.json().await.map_err(ApiError::json)?),
-            Err(e) => Err(serde_json::from_str(e.to_string().as_str()).map_err(ApiError::json)?),
+            Err(e) => Err(ApiError::json(e)),
         }
     }
 
@@ -145,6 +145,10 @@ impl Api {
         Self::simple_get(format!("{}/posts", API_PATH), false).await
     }
 
+    pub async fn admin_blog_posts() -> Result<Vec<Post>, ApiError> {
+        Self::simple_get(format!("{}/user/posts", API_PATH), true).await
+    }
+
     pub async fn all_users() -> Result<Vec<User>, ApiError> {
         Self::simple_get(format!("{}/users", API_PATH), true).await
     }
@@ -163,6 +167,52 @@ impl Api {
         }
         match r.send().await {
             Ok(response) => Ok(response.json::<T>().await.map_err(ApiError::json)?),
+            Err(e) => Err(ApiError::json(e)),
+        }
+    }
+
+    pub async fn post_unrelease(post_id: i32) -> Result<Post, ApiError> {
+        match Request::post(format!("{}/user/post/{}/unrelease", API_PATH, post_id).as_str())
+            .header("Authorization", &format!("Bearer {}", TOKEN.read().await))
+            .send()
+            .await
+        {
+            Ok(response) => Ok(response.json().await.map_err(ApiError::json)?),
+            Err(e) => Err(ApiError::json(e)),
+        }
+    }
+
+    pub async fn post_release(post_id: i32) -> Result<Post, ApiError> {
+        match Request::post(format!("{}/user/post/{}/release", API_PATH, post_id).as_str())
+            .header("Authorization", &format!("Bearer {}", TOKEN.read().await))
+            .send()
+            .await
+        {
+            Ok(response) => Ok(response.json().await.map_err(ApiError::json)?),
+            Err(e) => Err(ApiError::json(e)),
+        }
+    }
+
+    pub async fn create_post() -> Result<Post, ApiError> {
+        match Request::post(format!("{}/user/post", API_PATH).as_str())
+            .header("Authorization", &format!("Bearer {}", TOKEN.read().await))
+            .json(&NewPost {
+                title: "Your New Blog Post!".into(),
+                description: "A Very Cool Blog Post.".into(),
+                markdown_content: r#"
+# Heading
+```rs
+pub fn main() {
+    println("Hello World!");
+}
+"#
+                .into(),
+            })
+            .map_err(ApiError::json)?
+            .send()
+            .await
+        {
+            Ok(response) => Ok(response.json().await.map_err(ApiError::json)?),
             Err(e) => Err(ApiError::json(e)),
         }
     }
@@ -192,7 +242,22 @@ impl Api {
             .await
         {
             Ok(response) => Ok(response.json().await.map_err(ApiError::json)?),
-            Err(e) => Err(serde_json::from_str(e.to_string().as_str()).map_err(ApiError::json)?),
+            Err(e) => Err(ApiError::json(e)),
+        }
+    }
+
+    pub async fn post_delete(post_id: i32) -> Result<(), ApiError> {
+        match Request::delete(format!("{}/user/post/{}", API_PATH, post_id).as_str())
+            .header("Authorization", &format!("Bearer {}", TOKEN.read().await))
+            .send()
+            .await
+        {
+            Ok(_) => Ok(()),
+            Err(e) => Err(ApiError {
+                message: "Failed to delete post.".into(),
+                error_info: Some(e.to_string()),
+                status_code: 418,
+            }),
         }
     }
 
@@ -241,7 +306,7 @@ impl Api {
                 *TOKEN.write().await = token.token;
                 Ok(())
             }
-            Err(e) => Err(serde_json::from_str(e.to_string().as_str()).map_err(ApiError::json)?),
+            Err(e) => Err(ApiError::json(e)),
         }
     }
 

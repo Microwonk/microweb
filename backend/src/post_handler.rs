@@ -22,7 +22,7 @@ pub async fn create_post(
         VALUES (
             $1, $2, $3, $4, $5
         )
-        RETURNING id, author, slug, title, description, markdown_content, created_at, updated_at
+        RETURNING id, author, slug, title, description, markdown_content, created_at, updated_at, released
         "#,
     )
     .bind(identity.id)
@@ -43,8 +43,50 @@ pub async fn create_post(
     }
 }
 
+pub async fn release_post(
+    Path(id): Path<i32>,
+    Extension(identity): Extension<User>,
+    State(state): State<ServerState>,
+) -> ApiResult<impl IntoResponse> {
+    // TODO: implement mailing on release? newsletter?
+    admin_check(&identity)?;
+    releaser(id, state, true).await
+}
+
+pub async fn unrelease_post(
+    Path(id): Path<i32>,
+    Extension(identity): Extension<User>,
+    State(state): State<ServerState>,
+) -> ApiResult<impl IntoResponse> {
+    admin_check(&identity)?;
+    releaser(id, state, false).await
+}
+
+async fn releaser(id: i32, state: ServerState, release: bool) -> ApiResult<impl IntoResponse> {
+    match sqlx::query_as::<_, Post>(
+        r#"
+        UPDATE posts
+        SET released = $1
+        WHERE id = $2
+        RETURNING id, author, title, slug, markdown_content, created_at, updated_at, description, released
+        "#,
+    )
+    .bind(release)
+    .bind(id)
+    .fetch_one(&state.pool)
+    .await
+    {
+        Ok(response) => ok!(response),
+        Err(e) => Err(ApiError::werr(
+            "Could not update Post.",
+            StatusCode::BAD_REQUEST,
+            e,
+        )),
+    }
+}
+
 pub async fn get_all_posts(State(state): State<ServerState>) -> ApiResult<impl IntoResponse> {
-    match sqlx::query_as::<_, Post>("SELECT * FROM posts")
+    match sqlx::query_as::<_, Post>("SELECT * FROM posts WHERE released = true")
         .fetch_all(&state.pool)
         .await
     {
@@ -144,7 +186,7 @@ pub async fn update_post(
         UPDATE posts
         SET title = $1, slug = $2, description = $3, markdown_content = $4, updated_at = $5
         WHERE id = $6
-        RETURNING id, author, title, slug, markdown_content, created_at, updated_at, description
+        RETURNING id, author, title, slug, markdown_content, created_at, updated_at, description, released
         "#,
     )
     .bind(post.title.as_str())

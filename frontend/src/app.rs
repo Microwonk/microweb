@@ -27,13 +27,16 @@ pub fn App() -> impl IntoView {
     spawn_local(async move {
         Api::initialize().await;
         set_logged_in(Api::is_logged_in().await);
-        set_is_admin(
-            Api::is_admin()
-                .await
-                .unwrap_or(IsAdminResponse { admin: false })
-                .admin,
-        );
-        set_blog_posts(Api::all_blog_posts().await.unwrap_or(Vec::new()));
+        let admin = Api::is_admin()
+            .await
+            .unwrap_or(IsAdminResponse { admin: false })
+            .admin;
+        set_is_admin(admin);
+        set_blog_posts(if admin {
+            Api::admin_blog_posts().await.unwrap_or(Vec::new())
+        } else {
+            Api::all_blog_posts().await.unwrap_or(Vec::new())
+        });
         set_loaded(true);
     });
 

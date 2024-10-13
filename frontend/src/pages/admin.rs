@@ -270,6 +270,19 @@ pub fn MediaSection(
 
 #[component]
 pub fn BlogSection(blog_posts: ReadSignal<Vec<Post>>) -> impl IntoView {
+    let (max_id, set_max_id) = create_signal(0);
+    create_effect(move |_| {
+        set_max_id(
+            blog_posts
+                .get()
+                .iter()
+                .map(|m| m.id)
+                .max()
+                .map(|i| i + 1)
+                .unwrap_or_default(),
+        )
+    });
+
     view! {
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y-2 divide-gray-200 text-sm">
@@ -278,6 +291,9 @@ pub fn BlogSection(blog_posts: ReadSignal<Vec<Post>>) -> impl IntoView {
                     <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">ID</th>
                     <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Title</th>
                     <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Created At</th>
+                    <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Released</th>
+                    <th class="px-4 py-2"></th>
+                    <th class="px-4 py-2"></th>
                     <th class="px-4 py-2"></th>
                 </tr>
                 </thead>
@@ -292,6 +308,7 @@ pub fn BlogSection(blog_posts: ReadSignal<Vec<Post>>) -> impl IntoView {
                                     <td class="whitespace-nowrap px-4 py-2 text-gray-700">{post.id}</td>
                                     <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">{post.title}</td>
                                     <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">{post.created_at.to_string()}</td>
+                                    <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">{if post.released { "yes "} else { "no" }}</td>
                                     <td class="whitespace-nowrap px-4 py-2 text-gray-700">
                                         <a
                                             class="border-none inline-block rounded bg-indigo-600 px-4 py-2 text-xs font-medium text-white hover:bg-indigo-700"
@@ -301,10 +318,80 @@ pub fn BlogSection(blog_posts: ReadSignal<Vec<Post>>) -> impl IntoView {
                                             Edit
                                         </a>
                                     </td>
+                                    <td class="whitespace-nowrap px-4 py-2 text-gray-700">
+                                        <button
+                                            class="border-none inline-block rounded bg-indigo-600 px-4 py-2 text-xs font-medium text-white hover:bg-indigo-700"
+                                            on:click=move |_| {
+                                                spawn_local(async move {
+                                                    match if post.released { Api::post_unrelease(post.id).await } else { Api::post_release(post.id).await } {
+                                                        Ok(_results) => {
+                                                            // refresh
+                                                            web_sys::window().unwrap().location().reload().unwrap();
+                                                        },
+                                                        Err(e) => {
+                                                            log::error!("{:?}", e);
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                        >
+                                            {move || {if post.released { "Unrelease" } else { "Release" } } }
+                                        </button>
+                                    </td>
+                                    <td class="whitespace-nowrap px-4 py-2 text-gray-700">
+                                        <button
+                                            class="border-none inline-block rounded bg-red-600 px-4 py-2 text-xs font-medium text-white hover:bg-red-700"
+                                            on:click=move |_| {
+                                                spawn_local(async move {
+                                                    match Api::post_delete(post.id).await {
+                                                        Ok(_results) => {
+                                                            // refresh
+                                                            web_sys::window().unwrap().location().reload().unwrap();
+                                                        },
+                                                        Err(e) => {
+                                                            log::error!("{:?}", e);
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                        >
+                                            Delete
+                                        </button>
+                                    </td>
                                 </tr>
                             }
                         }
                     />
+                    <tr class="odd:bg-gray-50">
+                        <td class="whitespace-nowrap px-4 py-2 text-gray-700">{move || max_id.get() + 1}</td>
+                        <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Add a New Blog Post!</td>
+                        <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">{move || {
+                            Utc::now().naive_local().to_string()
+                        }}</td>
+                        <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">nope</td>
+                        <td class="whitespace-nowrap px-4 py-2 text-gray-700">
+                        <button
+                            class="border-none inline-block rounded bg-indigo-600 px-4 py-2 text-xs font-medium text-white hover:bg-indigo-700"
+                            on:click=move |_| {
+                                spawn_local(async move {
+                                    match Api::create_post().await {
+                                        Ok(_results) => {
+                                            // refresh
+                                            web_sys::window().unwrap().location().reload().unwrap();
+                                        },
+                                        Err(e) => {
+                                            log::error!("{:?}", e);
+                                        }
+                                    }
+                                });
+                            }
+                        >
+                            Create
+                        </button>
+                    </td>
+                    <td class="whitespace-nowrap px-4 py-2 text-gray-700"></td>
+                    <td class="whitespace-nowrap px-4 py-2 text-gray-700"></td>
+                    </tr>
                 </tbody>
             </table>
         </div>
