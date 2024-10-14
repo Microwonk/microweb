@@ -1,9 +1,11 @@
-use std::io::Cursor;
-
+use flate2::write::DeflateEncoder;
+use flate2::Compression;
 use leptos::*;
 use leptos_meta::Title;
 use leptos_router::use_params_map;
 use pulldown_cmark::*;
+use std::io::{Cursor, Write};
+use syntect::{highlighting::ThemeSet, html::highlighted_html_for_string, parsing::SyntaxSet};
 
 use crate::{components::header::Header, pages::loading::LoadingPage, types::Post};
 
@@ -18,21 +20,6 @@ pub fn BlogPostPage(
 
     // filter slug to find blog post
     set_blog_post(blog_posts.get().iter().find(|&b| b.slug == slug()).cloned());
-
-    // WORKS
-    //     let code = r#"
-    // # TEST
-
-    // ![alt text](https://microblog.shuttleapp.rs/upload/3)
-    // ```rust
-    // fn main() {
-    //     println!("Hello, world!");
-    //     let x = 5;
-    //     let y = 10;
-    //     println!("x + y = {}", x + y);
-    // }
-    // ```"#
-    //         .to_string();
 
     view! {
         <Title text=move || blog_post.get().map_or("No Title Found".into(), |p| p.title)/>
@@ -97,10 +84,7 @@ fn add_markdown_heading_ids(events: Vec<Event<'_>>) -> Vec<Event<'_>> {
 }
 
 fn highlight_code(events: Vec<Event<'_>>) -> Vec<Event<'_>> {
-    use syntect::{highlighting::ThemeSet, html::highlighted_html_for_string, parsing::SyntaxSet};
-
     let mut in_code_block = false;
-
     let syntax_set = SyntaxSet::load_defaults_nonewlines();
     let mut syntax = syntax_set.find_syntax_plain_text();
 
@@ -117,12 +101,15 @@ fn highlight_code(events: Vec<Event<'_>>) -> Vec<Event<'_>> {
     let mut to_highlight = String::new();
     let mut out_events = Vec::new();
 
+    let mut plantuml = false;
+
     for event in events {
         match event {
             Event::Start(Tag::CodeBlock(kind)) => {
                 match kind {
                     CodeBlockKind::Fenced(lang) => {
-                        syntax = syntax_set.find_syntax_by_token(&lang).unwrap_or(syntax)
+                        plantuml = lang == "plantuml".into();
+                        syntax = syntax_set.find_syntax_by_token(&lang).unwrap_or(syntax);
                     }
                     CodeBlockKind::Indented => {}
                 }
@@ -132,12 +119,22 @@ fn highlight_code(events: Vec<Event<'_>>) -> Vec<Event<'_>> {
                 if !in_code_block {
                     panic!("this should never happen");
                 }
-                let html = highlighted_html_for_string(&to_highlight, &syntax_set, syntax, &theme)
-                    .unwrap();
+
+                if plantuml {
+                    let diagram_url = generate_plantuml_diagram_url(&to_highlight);
+                    let img_tag =
+                        format!("<img src=\"{}\" alt=\"PlantUML Diagram\" />", diagram_url);
+                    out_events.push(Event::Html(CowStr::from(img_tag)));
+                } else {
+                    // Regular code block, highlight syntax
+                    let html =
+                        highlighted_html_for_string(&to_highlight, &syntax_set, syntax, &theme)
+                            .unwrap();
+                    out_events.push(Event::Html(CowStr::from(html)));
+                }
 
                 to_highlight.clear();
                 in_code_block = false;
-                out_events.push(Event::Html(CowStr::from(html)));
             }
             Event::Text(t) => {
                 if in_code_block {
@@ -153,4 +150,60 @@ fn highlight_code(events: Vec<Event<'_>>) -> Vec<Event<'_>> {
     }
 
     out_events
+}
+
+fn generate_plantuml_diagram_url(plantuml_code: &str) -> String {
+    let encoded = encode64(&compress_data(plantuml_code));
+    let url = format!("http://www.plantuml.com/plantuml/png/{}", encoded);
+    url
+}
+
+fn compress_data(data: &str) -> Vec<u8> {
+    let mut encoder = DeflateEncoder::new(Vec::new(), Compression::best());
+    encoder.write_all(data.as_bytes()).unwrap();
+    encoder.finish().unwrap()
+}
+
+fn encode6bit(b: u8) -> char {
+    match b {
+        0..=9 => (b + 48) as char,        // '0'..'9'
+        10..=35 => (b - 10 + 65) as char, // 'A'..'Z'
+        36..=61 => (b - 36 + 97) as char, // 'a'..'z'
+        62 => '-',                        // '-'
+        63 => '_',                        // '_'
+        _ => '?',                         // Fallback (should not happen)
+    }
+}
+
+fn append3bytes(b1: u8, b2: u8, b3: u8) -> String {
+    let c1 = b1 >> 2;
+    let c2 = ((b1 & 0x3) << 4) | (b2 >> 4);
+    let c3 = ((b2 & 0xF) << 2) | (b3 >> 6);
+    let c4 = b3 & 0x3F;
+
+    let mut r = String::new();
+    r.push(encode6bit(c1 & 0x3F));
+    r.push(encode6bit(c2 & 0x3F));
+    r.push(encode6bit(c3 & 0x3F));
+    r.push(encode6bit(c4 & 0x3F));
+
+    r
+}
+
+fn encode64(c: &[u8]) -> String {
+    let mut str = String::new();
+    let len = c.len();
+
+    let mut i = 0;
+    while i < len {
+        if i + 2 == len {
+            str.push_str(&append3bytes(c[i], c[i + 1], 0));
+        } else if i + 1 == len {
+            str.push_str(&append3bytes(c[i], 0, 0));
+        } else {
+            str.push_str(&append3bytes(c[i], c[i + 1], c[i + 2]));
+        }
+        i += 3;
+    }
+    str
 }

@@ -510,6 +510,7 @@ dependencies = [
  "codee",
  "console_error_panic_hook",
  "console_log",
+ "flate2",
  "gloo-net",
  "gloo-timers",
  "icondata",
