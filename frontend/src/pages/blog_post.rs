@@ -1,6 +1,7 @@
 use std::io::Cursor;
 
 use leptos::*;
+use leptos_meta::Title;
 use leptos_router::use_params_map;
 use pulldown_cmark::*;
 
@@ -34,6 +35,7 @@ pub fn BlogPostPage(
     //         .to_string();
 
     view! {
+        <Title text=move || blog_post.get().map_or("No Title Found".into(), |p| p.title)/>
         <Header logged_in/>
         <div class="w-1/2 py-10 pl-32">
         <Show when=move || blog_post.get().is_some() fallback=LoadingPage>

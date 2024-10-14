@@ -30,7 +30,8 @@ pub fn AdminPage(logged_in: ReadSignal<bool>, blog_posts: ReadSignal<Vec<Post>>)
         if let Some(t) = query.with(|q| q.as_ref().map(|t| t.tab.clone()).ok()) {
             set_current_tab(t);
         } else {
-            set_current_tab("general".to_string());
+            use_navigate()("/admin?tab=general", Default::default());
+            // set_current_tab("general".to_string());
         }
     });
 
@@ -48,12 +49,20 @@ pub fn AdminPage(logged_in: ReadSignal<bool>, blog_posts: ReadSignal<Vec<Post>>)
                             "users" => view! { <UserSection users set_users/>},
                             "media" => view! { <MediaSection media set_media blog_posts/>},
                             "blogs" => view! { <BlogSection blog_posts/>},
+                            "general" => view! { <GeneralSection/> },
                             _ => view! { <LoadingPage/> }
                         }}
                     </div>
                 </div>
             </div>
         </div>
+    }
+}
+
+#[component]
+pub fn GeneralSection() -> impl IntoView {
+    view! {
+        TODO
     }
 }
 

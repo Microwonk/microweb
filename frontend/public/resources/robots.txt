@@ -1,13 +1,4 @@
-# Allow search engines to index the main pages of your blog
 User-agent: *
-Disallow: /admin
-Disallow: /admin
-Disallow: /login
-Disallow: /logout
-Disallow: /register
-Disallow: /profile
-Disallow: /posts/*any
-Disallow: /*?*
 Allow: /
 
 # TODO: for SEO
