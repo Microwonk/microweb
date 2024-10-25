@@ -2,7 +2,9 @@ use core::str;
 
 use anyhow::Context;
 use microblog::{
-    auth_handler, media_handler, post_handler, user_handler, ApiError, ApiResult, ServerState,
+    auth_handler,
+    comments_handler::{create_comment, get_comments_of_post, get_comments_of_post_tree},
+    media_handler, post_handler, user_handler, ApiError, ApiResult, ServerState,
 };
 use shuttle_runtime::SecretStore;
 use sqlx::PgPool;
@@ -76,6 +78,10 @@ fn unauthenticated_routes(state: ServerState) -> Router {
         .route("/media/:media_id", get(media_handler::get_media))
         // get single post from slug
         .route("/post/:slug", get(post_handler::get_post))
+        // get all comments from a post
+        .route("/post/:id/comments", get(get_comments_of_post))
+        // get all comments from a post, as a tree structure
+        .route("/post/:id/comments/tree", get(get_comments_of_post_tree))
         // get all posts from user with path
         .route("/user/:id/posts", get(post_handler::get_posts_by_user))
         // get all posts
@@ -134,6 +140,7 @@ fn authenticated_routes(state: ServerState) -> Router {
         .route("/users", get(user_handler::get_all_users))
         // get all users that are admins
         .route("/users/admins", get(user_handler::get_all_admin_users))
+        // # AUTHENTICATED ROUTES
         // check if the user is an admin for frontend purposes
         .route("/user/admin", get(user_handler::is_admin))
         // get profile and update profile (user)
@@ -141,6 +148,8 @@ fn authenticated_routes(state: ServerState) -> Router {
             "/profile",
             get(user_handler::get_profile).put(user_handler::change_profile),
         )
+        // post a new comment on a post
+        .route("/post/:id/comment", post(create_comment))
         // auth middleware
         .layer(axum::middleware::from_fn_with_state(
             state.clone(),

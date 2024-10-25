@@ -17,7 +17,7 @@ pub async fn get_all_users(
     State(state): State<ServerState>,
 ) -> ApiResult<impl IntoResponse> {
     admin_check(&identity)?;
-    match sqlx::query_as::<_, User>("SELECT * FROM users")
+    match sqlx::query_as::<_, User>("SELECT * FROM users ORDER BY created_at DESC")
         .fetch_all(&state.pool)
         .await
     {
@@ -36,9 +36,11 @@ pub async fn get_all_admin_users(
     State(state): State<ServerState>,
 ) -> ApiResult<impl IntoResponse> {
     admin_check(&identity)?;
-    match sqlx::query_as::<_, User>("SELECT * FROM users WHERE admin = true")
-        .fetch_all(&state.pool)
-        .await
+    match sqlx::query_as::<_, User>(
+        "SELECT * FROM users WHERE admin = true ORDER BY created_at DESC",
+    )
+    .fetch_all(&state.pool)
+    .await
     {
         Ok(response) => ok!(response),
         Err(e) => Err(ApiError::werr(

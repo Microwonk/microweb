@@ -302,7 +302,7 @@ pub async fn get_all_media(
     admin_check(&identity)?;
 
     match sqlx::query_as::<_, MediaNoData>(
-        "SELECT id, post_id, name, media_type, created_at FROM media",
+        "SELECT id, post_id, name, media_type, created_at FROM media ORDER BY created_at DESC",
     )
     .fetch_all(&state.pool)
     .await

@@ -1,5 +1,6 @@
 pub mod api_response;
 pub mod auth_handler;
+pub mod comments_handler;
 pub mod media_handler;
 pub mod post_handler;
 pub mod types;

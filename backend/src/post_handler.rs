@@ -86,9 +86,11 @@ async fn releaser(id: i32, state: ServerState, release: bool) -> ApiResult<impl 
 }
 
 pub async fn get_all_posts(State(state): State<ServerState>) -> ApiResult<impl IntoResponse> {
-    match sqlx::query_as::<_, Post>("SELECT * FROM posts WHERE released = true")
-        .fetch_all(&state.pool)
-        .await
+    match sqlx::query_as::<_, Post>(
+        "SELECT * FROM posts WHERE released = true ORDER BY created_at DESC",
+    )
+    .fetch_all(&state.pool)
+    .await
     {
         Ok(response) => ok!(response),
         Err(e) => Err(ApiError::werr(
@@ -104,10 +106,12 @@ pub async fn get_posts_by_identity(
     Extension(identity): Extension<User>,
 ) -> ApiResult<impl IntoResponse> {
     admin_check(&identity)?;
-    match sqlx::query_as::<_, Post>("SELECT * FROM posts WHERE author = $1")
-        .bind(identity.id)
-        .fetch_all(&state.pool)
-        .await
+    match sqlx::query_as::<_, Post>(
+        "SELECT * FROM posts WHERE author = $1 ORDER BY created_at DESC",
+    )
+    .bind(identity.id)
+    .fetch_all(&state.pool)
+    .await
     {
         Ok(response) => ok!(response),
         Err(e) => Err(ApiError::werr(
@@ -122,10 +126,12 @@ pub async fn get_posts_by_user(
     Path(id): Path<i32>,
     State(state): State<ServerState>,
 ) -> ApiResult<impl IntoResponse> {
-    match sqlx::query_as::<_, Post>("SELECT * FROM posts WHERE author = $1")
-        .bind(id)
-        .fetch_all(&state.pool)
-        .await
+    match sqlx::query_as::<_, Post>(
+        "SELECT * FROM posts WHERE author = $1 ORDER BY created_at DESC",
+    )
+    .bind(id)
+    .fetch_all(&state.pool)
+    .await
     {
         Ok(response) => ok!(response),
         Err(e) => Err(ApiError::werr(

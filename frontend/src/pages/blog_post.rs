@@ -24,10 +24,10 @@ pub fn BlogPostPage(
     view! {
         <Title text=move || blog_post.get().map_or("No Title Found".into(), |p| p.title)/>
         <Header logged_in/>
-        <div class="w-1/2 py-10 pl-32">
-        <Show when=move || blog_post.get().is_some() fallback=LoadingPage>
-            <BlogPost content=blog_post.get().unwrap().markdown_content />
-        </Show>
+        <div class="min-w-full pt-10 px-64">
+            <Show when=move || blog_post.get().is_some() fallback=LoadingPage>
+                <BlogPost content=blog_post.get().unwrap().markdown_content />
+            </Show>
         </div>
     }
 }

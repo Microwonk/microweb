@@ -1,29 +1,39 @@
-@font-face {
-	font-family: 'Iosevka Custom';
-	font-display: swap;
-	font-weight: 100 900;
-	font-style: normal;
-	src:
-		url('fonts/IosevkaCustom-Regular.ttf') format('truetype')
-		url('fonts/IosevkaCustom-Bold.ttf') format('truetype')
-		url('fonts/IosevkaCustom-Italic.ttf') format('truetype');
-}
-
-@font-face {
-  font-family: 'FiraSans';
-  font-display: swap;
-  font-weight: 100 900;
-  font-style: normal;
-  src: url("fonts/Firava.woff2");
-}
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+
+  @font-face {
+    font-family: 'Iosevka Custom';
+    font-display: swap;
+    font-weight: 100 900;
+    font-style: normal;
+    src:
+      url('fonts/IosevkaCustom-Regular.ttf') format('truetype')
+      url('fonts/IosevkaCustom-Bold.ttf') format('truetype')
+      url('fonts/IosevkaCustom-Italic.ttf') format('truetype');
+  }
+  
+  @font-face {
+    font-family: 'FiraSans';
+    font-display: swap;
+    font-weight: 100 900;
+    font-style: normal;
+    src: url("fonts/Firava.woff2");
+  }
+
+  @font-face {
+    font-family: "rosmatika";
+    src: url("fonts/RosmatikaRegular-BWA45.ttf") format("truetype");
+  }
+
     html {
       font-family: "FiraSans", Averta, system-ui, sans-serif;
+    }
+    html,
+    body {
+      @apply bg-nf-white;
     }
     a {
       @apply no-underline;
