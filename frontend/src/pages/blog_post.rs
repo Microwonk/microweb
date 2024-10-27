@@ -4,10 +4,18 @@ use leptos::*;
 use leptos_meta::Title;
 use leptos_router::use_params_map;
 use pulldown_cmark::*;
-use std::io::{Cursor, Write};
+use std::{
+    collections::HashMap,
+    io::{Cursor, Write},
+};
 use syntect::{highlighting::ThemeSet, html::highlighted_html_for_string, parsing::SyntaxSet};
 
-use crate::{components::header::Header, pages::loading::LoadingPage, types::Post};
+use crate::{
+    components::{comment::CommentSection, header::Header},
+    pages::loading::LoadingPage,
+    types::{Comment, Post},
+    util::Api,
+};
 
 #[component]
 pub fn BlogPostPage(
@@ -15,11 +23,29 @@ pub fn BlogPostPage(
     blog_posts: ReadSignal<Vec<Post>>,
 ) -> impl IntoView {
     let (blog_post, set_blog_post) = create_signal(None::<Post>);
+    let (comments, set_comments) = create_signal(HashMap::<i32, Vec<Comment>>::new());
+
     let params = use_params_map();
     let slug = move || params.with(|params| params.get("slug").cloned().unwrap());
 
     // filter slug to find blog post
-    set_blog_post(blog_posts.get().iter().find(|&b| b.slug == slug()).cloned());
+    set_blog_post(
+        blog_posts
+            .get_untracked()
+            .iter()
+            .find(|&b| b.slug == slug())
+            .cloned(),
+    );
+
+    create_effect(move |_| {
+        spawn_local(async move {
+            set_comments(
+                Api::get_comments(blog_post.get().unwrap().id)
+                    .await
+                    .unwrap_or_default(),
+            );
+        });
+    });
 
     view! {
         <Title text=move || blog_post.get().map_or("No Title Found".into(), |p| p.title)/>
@@ -29,6 +55,7 @@ pub fn BlogPostPage(
                 <BlogPost content=blog_post.get().unwrap().markdown_content />
             </Show>
         </div>
+        <CommentSection comments/>
     }
 }
 

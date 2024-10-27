@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
@@ -93,45 +91,12 @@ pub struct Comment {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow, Default)]
-pub struct CommentTreeNode {
+pub struct ProcessedComment {
     pub id: i32,
     pub author_name: Option<String>,
     pub content: String,
     pub replying_to: Option<i32>,
     pub created_at: sqlx::types::chrono::NaiveDateTime,
-    #[sqlx(skip)]
-    pub children: Vec<CommentTreeNode>,
-}
-
-impl From<Vec<CommentTreeNode>> for CommentTreeNode {
-    fn from(comments: Vec<CommentTreeNode>) -> Self {
-        let mut comments_by_id: HashMap<i32, CommentTreeNode> = comments
-            .into_iter()
-            .map(|mut comment| {
-                comment.children = vec![]; // Initialize children
-                (comment.id, comment)
-            })
-            .collect();
-
-        // Temporary vector to store root nodes.
-        let mut roots = Vec::new();
-
-        // Build the tree
-        for comment in comments_by_id.values() {
-            if let Some(parent_id) = comment.replying_to {
-                if let Some(parent) = comments_by_id.get_mut(&parent_id) {
-                    parent.children.push(comment.clone()); // Attach child to parent
-                }
-            } else {
-                roots.push(comment.clone()); // Collect root comments
-            }
-        }
-
-        // Assuming you want to return a single root node,
-        // we can return the first root. This logic can change
-        // based on your use case.
-        roots.into_iter().next().unwrap_or_default()
-    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

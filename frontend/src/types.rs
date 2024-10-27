@@ -74,3 +74,12 @@ pub struct NewPost {
     pub description: String,
     pub markdown_content: String,
 }
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default)]
+pub struct Comment {
+    pub id: i32,
+    pub author_name: String,
+    pub content: String,
+    pub replying_to: Option<i32>,
+    pub created_at: chrono::NaiveDateTime,
+}

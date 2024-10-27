@@ -6,7 +6,7 @@ use http::StatusCode;
 use response::IntoResponse;
 
 use crate::{
-    created, ok, ApiError, ApiResult, Comment, CommentTreeNode, NewComment, ServerState, User,
+    created, ok, ApiError, ApiResult, Comment, NewComment, ProcessedComment, ServerState, User,
 };
 
 pub async fn create_comment(
@@ -65,7 +65,7 @@ pub async fn get_comments_of_post_tree(
     Path(post_id): Path<i32>,
     State(state): State<ServerState>,
 ) -> ApiResult<impl IntoResponse> {
-    match sqlx::query_as::<_, CommentTreeNode>(
+    match sqlx::query_as::<_, ProcessedComment>(
         r#"
         SELECT 
             comments.id,
@@ -95,32 +95,13 @@ pub async fn get_comments_of_post_tree(
     }
 }
 
-fn build_comment_tree(comments: Vec<CommentTreeNode>) -> Vec<CommentTreeNode> {
-    let mut comments_by_id: HashMap<i32, CommentTreeNode> = comments
-        .into_iter()
-        .map(|mut comment| {
-            comment.children = vec![]; // Initialize children
-            (comment.id, comment)
-        })
-        .collect();
-
-    // Temporary vector to store root nodes.
-    let mut roots = Vec::new();
-
-    let comments = comments_by_id.clone();
-    let comments = comments.values();
-    // Insert each child into its parent's children vector.
+fn build_comment_tree(comments: Vec<ProcessedComment>) -> HashMap<String, Vec<ProcessedComment>> {
+    let mut comments_by_parents: HashMap<String, Vec<ProcessedComment>> = HashMap::new();
     for comment in comments {
-        if let Some(parent_id) = comment.replying_to {
-            {
-                if let Some(parent) = comments_by_id.get_mut(&parent_id) {
-                    parent.children.push(comment.clone()); // Attach child to parent
-                }
-            }
-        } else {
-            roots.push(comment.clone()); // Collect root comments
-        }
+        comments_by_parents
+            .entry(comment.replying_to.unwrap_or_default().to_string())
+            .or_default()
+            .push(comment);
     }
-
-    roots
+    comments_by_parents
 }

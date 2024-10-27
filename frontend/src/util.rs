@@ -1,4 +1,4 @@
-use std::{error::Error, sync::Arc};
+use std::{collections::HashMap, error::Error, sync::Arc};
 
 use tokio::sync::RwLock;
 
@@ -11,8 +11,8 @@ use serde::{Deserialize, Serialize};
 use web_sys::{File, FormData};
 
 use crate::types::{
-    IsAdminResponse, LoginRequest, LoginResponse, Media, NewPost, Post, Profile, RegisterRequest,
-    UploadReturn, User,
+    Comment, IsAdminResponse, LoginRequest, LoginResponse, Media, NewPost, Post, Profile,
+    RegisterRequest, UploadReturn, User,
 };
 
 // fn generate_json_ld(post: &Post) -> String {
@@ -155,6 +155,10 @@ impl Api {
 
     pub async fn all_media() -> Result<Vec<Media>, ApiError> {
         Self::simple_get(format!("{}/media", API_PATH), true).await
+    }
+
+    pub async fn get_comments(post_id: i32) -> Result<HashMap<i32, Vec<Comment>>, ApiError> {
+        Self::simple_get(format!("{}/post/{}/comments/tree", API_PATH, post_id), true).await
     }
 
     async fn simple_get<T: for<'de> Deserialize<'de>>(
