@@ -246,6 +246,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "clone_dyn_types"
+version = "0.26.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c23e9c07455288757e5142aaeb0e999f9f34dd2d3c27c9b5f8e3f85f4cb1eda"
+
+[[package]]
 name = "codee"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -514,6 +520,7 @@ dependencies = [
  "gloo-net",
  "gloo-timers",
  "icondata",
+ "iter_tools",
  "lazy_static",
  "leptos",
  "leptos-use",
@@ -1018,6 +1025,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f958d3d68f4167080a18141e10381e7634563984a537f2a49a30fd8e53ac5767"
 
 [[package]]
+name = "iter_tools"
+version = "0.24.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "49a92afdf43693047a6079d379c88064970968bd6552a10f45c135a1c29e1094"
+dependencies = [
+ "clone_dyn_types",
+ "itertools 0.11.0",
+]
+
+[[package]]
+name = "itertools"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1c173a5686ce8bfa551b3563d0c2170bf24ca44da99c7ca4bfdab5418c3fe57"
+dependencies = [
+ "either",
+]
+
+[[package]]
 name = "itertools"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1116,7 +1142,7 @@ dependencies = [
  "getrandom",
  "html-escape",
  "indexmap",
- "itertools",
+ "itertools 0.12.1",
  "js-sys",
  "leptos_reactive",
  "once_cell",
@@ -1161,7 +1187,7 @@ dependencies = [
  "cfg-if",
  "convert_case",
  "html-escape",
- "itertools",
+ "itertools 0.12.1",
  "leptos_hot_reload",
  "prettyplease",
  "proc-macro-error2",
@@ -1223,7 +1249,7 @@ checksum = "8d71dea7d42c0d29c40842750232d3425ed1cf10e313a1f898076d20871dad32"
 dependencies = [
  "cfg-if",
  "gloo-net",
- "itertools",
+ "itertools 0.12.1",
  "js-sys",
  "lazy_static",
  "leptos",

@@ -55,7 +55,7 @@ pub fn BlogPostPage(
                 <BlogPost content=blog_post.get().unwrap().markdown_content />
             </Show>
         </div>
-        <CommentSection comments/>
+        <CommentSection comments root=0/>
     }
 }
 
