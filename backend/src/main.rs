@@ -148,6 +148,10 @@ fn authenticated_routes(state: ServerState) -> Router {
             "/profile",
             get(user_handler::get_profile).put(user_handler::change_profile),
         )
+        .route(
+            "/user/:id",
+            delete(user_handler::delete_user).put(user_handler::update_user),
+        )
         // post a new comment on a post
         .route("/post/:id/comment", post(create_comment))
         // auth middleware

@@ -61,6 +61,12 @@ pub struct UserProfile {
     pub email: String,
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct UserUpdate {
+    pub name: String,
+    pub email: String,
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
 pub struct Media {
     pub id: i32,

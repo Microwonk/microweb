@@ -1,7 +1,7 @@
 use crate::{
     components::{header::Header, side_menu::SideMenu},
     pages::loading::LoadingPage,
-    types::{Media, Post, User},
+    types::{Media, Post, User, UserUpdate},
     util::Api,
 };
 use chrono::Utc;
@@ -71,6 +71,9 @@ pub fn UserSection(
     users: ReadSignal<Vec<User>>,
     set_users: WriteSignal<Vec<User>>,
 ) -> impl IntoView {
+    let edit_row = create_rw_signal(None::<i32>);
+    let username = create_rw_signal("".to_string());
+    let email = create_rw_signal("".to_string());
     spawn_local(async move {
         set_users(Api::all_users().await.unwrap_or_default());
     });
@@ -83,40 +86,137 @@ pub fn UserSection(
                     <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Name</th>
                     <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Email</th>
                     <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Admin</th>
-                    // <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">PWHash</th>
                     <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Created At</th>
-                    // <th class="px-4 py-2"></th>
+                    <th class="px-4 py-2"></th>
+                    <th class="px-4 py-2"></th>
                 </tr>
                 </thead>
 
                 <tbody class="divide-y divide-gray-200">
                 <For
-                        each=move || users.get()
-                        key=|user| user.id
-                        children=move |user: User| {
-                            view! {
-                                <tr class="odd:bg-gray-50">
-                                    <td class="whitespace-nowrap px-4 py-2 text-gray-700">{user.id}</td>
-                                    <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">{user.name}</td>
-                                    <td class="whitespace-nowrap px-4 py-2 text-gray-700">{user.email}</td>
-                                    <td class="whitespace-nowrap px-4 py-2 text-gray-700">{if user.admin { "yes "} else { "no" }}</td>
-                                    // <td class="whitespace-nowrap px-4 py-2 text-gray-700">{user.passwordhash}</td>
-                                    <td class="whitespace-nowrap px-4 py-2 text-gray-700">{user.created_at.to_string()}</td>
-                                    // <td class="whitespace-nowrap px-4 py-2">
-                                    // <a
-                                    //     href="#"
-                                    //     class="inline-block rounded bg-indigo-600 px-4 py-2 text-xs font-medium text-white hover:bg-indigo-700"
-                                    // >
-                                    //     View
-                                    // </a>
-                                    // </td>
-                                </tr>
-                            }
+                    each=move || users.get()
+                    key=|user| user.id
+                    children=move |user: User| {
+                        let user_c = user.clone();
+                        view! {
+                            <Show when=move || edit_row.get().is_some_and(|row| row == user.id) fallback=move || view! {
+                                <UserRow user=user_c.clone() edit_row/>
+                            }>
+                                <UserEditRow user=user.clone() username email/>
+                            </Show>
                         }
-                    />
+                    }
+                />
                 </tbody>
             </table>
         </div>
+    }
+}
+
+#[component]
+pub fn UserRow(
+    #[prop(into)] user: MaybeSignal<User>,
+    #[prop(into)] edit_row: RwSignal<Option<i32>>,
+) -> impl IntoView {
+    let user = user.get();
+    view! {
+        <tr class="odd:bg-gray-50">
+            <td class="whitespace-nowrap px-4 py-2 text-gray-700">{user.id}</td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">{user.name}</td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-700">{user.email}</td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-700">{if user.admin { "yes "} else { "no" }}</td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-700">{user.created_at.to_string()}</td>
+            <td class="whitespace-nowrap px-4 py-2">
+            <button
+                class="border-none inline-block rounded bg-red-600 px-4 py-2 text-xs font-medium text-white hover:bg-red-700"
+                on:click=move |_| {
+                    spawn_local(async move {
+                        if (Api::delete_user(user.id).await).is_ok() {
+                            // refresh
+                            web_sys::window().unwrap().location().reload().unwrap();
+                        };
+                    });
+                }
+            >
+                Delete
+            </button>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2">
+            <button
+                class="border-none inline-block rounded bg-indigo-600 px-4 py-2 text-xs font-medium text-white hover:bg-indigo-700"
+                on:click=move |_| {
+                    edit_row.set(Some(user.id));
+                }
+            >
+                Edit
+            </button>
+            </td>
+        </tr>
+    }
+}
+
+#[component]
+pub fn UserEditRow(
+    #[prop(into)] user: MaybeSignal<User>,
+    #[prop(into)] username: RwSignal<String>,
+    #[prop(into)] email: RwSignal<String>,
+) -> impl IntoView {
+    let user = user.get();
+    username.set(user.name.clone());
+    email.set(user.email.clone());
+
+    view! {
+        <tr class="bg-nf-color">
+            <td class="whitespace-nowrap px-4 py-2 text-gray-700">{user.id}</td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">
+            <input on:input=move |ev| {
+                let new_value = event_target_value(&ev);
+                username.set(new_value);
+            }
+            prop:value=user.name>
+            </input>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">
+            <input on:input=move |ev| {
+                let new_value = event_target_value(&ev);
+                email.set(new_value);
+            }
+            prop:value=user.email>
+            </input>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-700">{if user.admin { "yes "} else { "no" }}</td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-700">{user.created_at.to_string()}</td>
+            <td class="whitespace-nowrap px-4 py-2">
+            <button
+                class="border-none inline-block rounded bg-red-600 px-4 py-2 text-xs font-medium text-white hover:bg-red-700"
+                on:click=move |_| {
+                    spawn_local(async move {
+                        if (Api::delete_user(user.id).await).is_ok() {
+                            // refresh
+                            web_sys::window().unwrap().location().reload().unwrap();
+                        };
+                    });
+                }
+            >
+                Delete
+            </button>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2">
+            <button
+                class="border-none inline-block rounded bg-indigo-600 px-4 py-2 text-xs font-medium text-white hover:bg-indigo-700"
+                on:click=move |_| {
+                    spawn_local(async move {
+                        if (Api::update_user(user.id, UserUpdate { name: username.get(), email: email.get() }).await).is_ok() {
+                            // refresh
+                            web_sys::window().unwrap().location().reload().unwrap();
+                        };
+                    });
+                }
+            >
+                Save
+            </button>
+            </td>
+        </tr>
     }
 }
 

@@ -4,16 +4,13 @@ use leptos::*;
 use leptos_meta::Title;
 use leptos_router::use_params_map;
 use pulldown_cmark::*;
-use std::{
-    collections::HashMap,
-    io::{Cursor, Write},
-};
+use std::io::{Cursor, Write};
 use syntect::{highlighting::ThemeSet, html::highlighted_html_for_string, parsing::SyntaxSet};
 
 use crate::{
     components::{comment::CommentSection, header::Header},
     pages::loading::LoadingPage,
-    types::{Comment, Post},
+    types::Post,
     util::Api,
 };
 
@@ -23,26 +20,19 @@ pub fn BlogPostPage(
     blog_posts: ReadSignal<Vec<Post>>,
 ) -> impl IntoView {
     let (blog_post, set_blog_post) = create_signal(None::<Post>);
-    let (comments, set_comments) = create_signal(HashMap::<i32, Vec<Comment>>::new());
+    let (comments, set_comments) = create_signal(None::<Vec<_>>);
 
     let params = use_params_map();
-    let slug = move || params.with(|params| params.get("slug").cloned().unwrap());
-
-    // filter slug to find blog post
-    set_blog_post(
-        blog_posts
-            .get_untracked()
-            .iter()
-            .find(|&b| b.slug == slug())
-            .cloned(),
-    );
+    let slug = move || params.with_untracked(|params| params.get("slug").cloned().unwrap());
 
     create_effect(move |_| {
+        // filter slug to find blog post
+        set_blog_post(blog_posts.get().iter().find(|&b| b.slug == slug()).cloned());
         spawn_local(async move {
             set_comments(
-                Api::get_comments(blog_post.get().unwrap().id)
+                Api::get_comments(blog_post.get_untracked().unwrap().id)
                     .await
-                    .unwrap_or_default(),
+                    .ok(),
             );
         });
     });
@@ -55,7 +45,7 @@ pub fn BlogPostPage(
                 <BlogPost content=blog_post.get().unwrap().markdown_content />
             </Show>
         </div>
-        <CommentSection comments root=0/>
+        <CommentSection comments post_id=blog_post.get().unwrap_or_default().id/>
     }
 }
 

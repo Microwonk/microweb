@@ -1,4 +1,4 @@
-use std::{collections::HashMap, error::Error, sync::Arc};
+use std::{error::Error, sync::Arc};
 
 use tokio::sync::RwLock;
 
@@ -11,8 +11,8 @@ use serde::{Deserialize, Serialize};
 use web_sys::{File, FormData};
 
 use crate::types::{
-    Comment, IsAdminResponse, LoginRequest, LoginResponse, Media, NewPost, Post, Profile,
-    RegisterRequest, UploadReturn, User,
+    Comment, IsAdminResponse, LoginRequest, LoginResponse, Media, NewComment, NewPost, Post,
+    Profile, RegisterRequest, UploadReturn, User, UserUpdate,
 };
 
 // fn generate_json_ld(post: &Post) -> String {
@@ -122,6 +122,19 @@ impl Api {
         }
     }
 
+    pub async fn update_user(user_id: i32, user: UserUpdate) -> Result<User, ApiError> {
+        match Request::put(format!("{}/user/{}", API_PATH, user_id).as_str())
+            .header("Authorization", &format!("Bearer {}", TOKEN.read().await))
+            .json(&user)
+            .map_err(ApiError::json)?
+            .send()
+            .await
+        {
+            Ok(response) => Ok(response.json().await.map_err(ApiError::json)?),
+            Err(e) => Err(ApiError::json(e)),
+        }
+    }
+
     pub async fn logout() {
         let (_, set_token) = use_cookie_with_options::<LoginResponse, JsonSerdeCodec>(
             "token",
@@ -157,8 +170,8 @@ impl Api {
         Self::simple_get(format!("{}/media", API_PATH), true).await
     }
 
-    pub async fn get_comments(post_id: i32) -> Result<HashMap<i32, Vec<Comment>>, ApiError> {
-        Self::simple_get(format!("{}/post/{}/comments/tree", API_PATH, post_id), true).await
+    pub async fn get_comments(post_id: i32) -> Result<Vec<Comment>, ApiError> {
+        Self::simple_get(format!("{}/post/{}/comments", API_PATH, post_id), false).await
     }
 
     async fn simple_get<T: for<'de> Deserialize<'de>>(
@@ -221,6 +234,19 @@ pub fn main() {
         }
     }
 
+    pub async fn create_comment(post_id: i32, comment: NewComment) -> Result<Comment, ApiError> {
+        match Request::post(format!("{}/post/{}/comment", API_PATH, post_id).as_str())
+            .header("Authorization", &format!("Bearer {}", TOKEN.read().await))
+            .json(&comment)
+            .map_err(ApiError::json)?
+            .send()
+            .await
+        {
+            Ok(response) => Ok(response.json().await.map_err(ApiError::json)?),
+            Err(e) => Err(ApiError::json(e)),
+        }
+    }
+
     pub async fn upload(post_id: i32, files: Vec<File>) -> Result<UploadReturn, ApiError> {
         let form_data = FormData::new().map_err(|e| ApiError {
             message: "Could not create Form.".into(),
@@ -267,6 +293,21 @@ pub fn main() {
 
     pub async fn delete_media(upload_id: i32) -> Result<(), ApiError> {
         match Request::delete(format!("{}/upload/{}", API_PATH, upload_id).as_str())
+            .header("Authorization", &format!("Bearer {}", TOKEN.read().await))
+            .send()
+            .await
+        {
+            Ok(_) => Ok(()),
+            Err(e) => Err(ApiError {
+                message: "Failed to delete upload/media.".into(),
+                error_info: Some(e.to_string()),
+                status_code: 418,
+            }),
+        }
+    }
+
+    pub async fn delete_user(user_id: i32) -> Result<(), ApiError> {
+        match Request::delete(format!("{}/user/{}", API_PATH, user_id).as_str())
             .header("Authorization", &format!("Bearer {}", TOKEN.read().await))
             .send()
             .await

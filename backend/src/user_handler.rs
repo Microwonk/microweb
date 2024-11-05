@@ -1,8 +1,14 @@
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Extension, Json};
+use axum::{
+    extract::{Path, State},
+    http::StatusCode,
+    response::IntoResponse,
+    Extension, Json,
+};
 use bcrypt::{hash, DEFAULT_COST};
 
 use crate::{
     admin_check, ok, ApiError, ApiResult, IsAdminResponse, NewUser, ServerState, User, UserProfile,
+    UserUpdate,
 };
 
 pub async fn is_admin(Extension(identity): Extension<User>) -> ApiResult<impl IntoResponse> {
@@ -82,6 +88,56 @@ pub async fn change_profile(
         )
     })?)
     .bind(identity.id)
+    .fetch_one(&state.pool)
+    .await
+    {
+        Ok(response) => ok!(response),
+        Err(e) => Err(ApiError::werr(
+            "Could not update User.",
+            StatusCode::BAD_REQUEST,
+            e,
+        )),
+    }
+}
+
+pub async fn delete_user(
+    Path(id): Path<i32>,
+    Extension(identity): Extension<User>,
+    State(state): State<ServerState>,
+) -> ApiResult<impl IntoResponse> {
+    admin_check(&identity)?;
+    match sqlx::query("DELETE FROM users WHERE id = $1")
+        .bind(id)
+        .execute(&state.pool)
+        .await
+    {
+        Ok(_) => ok!(),
+        Err(e) => Err(ApiError::werr(
+            "Could not delete User.",
+            StatusCode::BAD_REQUEST,
+            e,
+        )),
+    }
+}
+
+pub async fn update_user(
+    Path(id): Path<i32>,
+    Extension(identity): Extension<User>,
+    State(state): State<ServerState>,
+    Json(user): Json<UserUpdate>,
+) -> ApiResult<impl IntoResponse> {
+    admin_check(&identity)?;
+    match sqlx::query_as::<_, User>(
+        r#"
+        UPDATE users
+        SET name = $1, email = $2
+        WHERE id = $3
+        RETURNING id, name, email, admin, passwordhash, created_at
+        "#,
+    )
+    .bind(user.name)
+    .bind(user.email)
+    .bind(id)
     .fetch_one(&state.pool)
     .await
     {

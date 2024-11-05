@@ -83,3 +83,14 @@ pub struct Comment {
     pub replying_to: Option<i32>,
     pub created_at: chrono::NaiveDateTime,
 }
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default)]
+pub struct NewComment {
+    pub content: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct UserUpdate {
+    pub name: String,
+    pub email: String,
+}

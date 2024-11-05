@@ -47,10 +47,24 @@ pub async fn get_comments_of_post(
     Path(post_id): Path<i32>,
     State(state): State<ServerState>,
 ) -> ApiResult<impl IntoResponse> {
-    match sqlx::query_as::<_, Comment>("SELECT * FROM comments WHERE post = $1")
-        .bind(post_id)
-        .fetch_all(&state.pool)
-        .await
+    match sqlx::query_as::<_, ProcessedComment>(
+        r#"
+        SELECT 
+            comments.id,
+            users.name AS author_name,
+            comments.content,
+            comments.replying_to,
+            comments.created_at
+        FROM comments
+        JOIN posts ON comments.post = posts.id
+        LEFT JOIN users ON comments.author = users.id
+        WHERE comments.post = $1
+        ORDER BY comments.created_at
+        "#,
+    )
+    .bind(post_id)
+    .fetch_all(&state.pool)
+    .await
     {
         Ok(response) => ok!(response),
         Err(e) => Err(ApiError::werr(

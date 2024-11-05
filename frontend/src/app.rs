@@ -47,7 +47,7 @@ pub fn App() -> impl IntoView {
         <Router>
             <Routes>
                 <Route path="/" view=move || view! {
-                    <Show  when=move || loaded.get() fallback=LoadingPage>
+                    <Show when=move || loaded.get() fallback=LoadingPage>
                         <Outlet/>
                     </Show>
                 }>
