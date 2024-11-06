@@ -1,17 +1,21 @@
 use crate::{
     components::{blog_card::BlogCard, header::Header},
-    types::Post,
+    types::{Post, Profile},
 };
 use leptos::*;
 use leptos_meta::*;
 use rand::seq::SliceRandom;
 
 #[component]
-pub fn HomePage(logged_in: ReadSignal<bool>, blog_posts: ReadSignal<Vec<Post>>) -> impl IntoView {
+pub fn HomePage(
+    logged_in: ReadSignal<bool>,
+    blog_posts: ReadSignal<Vec<Post>>,
+    user: ReadSignal<Option<Profile>>,
+) -> impl IntoView {
     view! {
         <Title text="Nicolas' Blog"/>
 
-        <Header logged_in=logged_in/>
+        <Header user logged_in/>
         <div class="mx-auto max-w-screen-xl px-4 pb-8 lg:pb-12 pt-8 lg:pt-12">
             <ul class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 list-none">
                 <For
@@ -21,7 +25,7 @@ pub fn HomePage(logged_in: ReadSignal<bool>, blog_posts: ReadSignal<Vec<Post>>) 
                         let icon = get_random_icon();
                         view! {
                             <li>
-                                <BlogCard title={post.title} description={post.description} link={post.slug} icon/>
+                                <BlogCard title={post.title} description={post.description} link={post.slug} date={post.created_at} icon/>
                             </li>
                         }
                     }

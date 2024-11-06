@@ -116,3 +116,73 @@
 .markdown .footnote-definition p {
   @apply my-0;
 }
+
+/* EXPERIENCE ANIMATIONS */
+
+.experience {
+  @apply relative;
+  @apply overflow-hidden;
+  transform: translateZ(0);
+  transition: transform 0.3s;
+}
+
+.experience:hover,
+.experience:focus,
+.experience:active {
+  transition: transform 0.6s cubic-bezier(0.34, 5.56, 0.64, 1);
+}
+
+.experience-cta-ripple {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  overflow: hidden;
+  transform: translateZ(0);
+}
+
+.experience-cta-ripple span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: translateY(101%);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0, 1);
+}
+
+.experience-cta:hover .experience-cta-ripple span,
+.experience-cta:focus .experience-cta-ripple span,
+.experience-cta:active .experience-cta-ripple span {
+  transform: translateY(0);
+  transition-duration: 0.5s, 0.9s;
+}
+
+.experience-cta-title {
+  position: relative;
+  display: block;
+  padding: 0 0.16em 0 0;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.experience-cta-title span {
+  display: flex;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.experience-cta:hover .experience-cta-title span,
+.experience-cta:focus .experience-cta-title span,
+.experience-cta:active .experience-cta-title span {
+  transform: translateY(-110%);
+}
+
+.experience-cta-title span:after {
+  content: attr(data-text);
+  display: block;
+  width: 100%;
+  position: absolute;
+  top: 110%;
+  left: 0;
+}

@@ -10,14 +10,16 @@ use syntect::{highlighting::ThemeSet, html::highlighted_html_for_string, parsing
 use crate::{
     components::{comment::CommentSection, header::Header},
     pages::loading::LoadingPage,
-    types::Post,
+    types::{Post, Profile},
     util::Api,
 };
 
 #[component]
 pub fn BlogPostPage(
     logged_in: ReadSignal<bool>,
+    is_admin: ReadSignal<bool>,
     blog_posts: ReadSignal<Vec<Post>>,
+    user: ReadSignal<Option<Profile>>,
 ) -> impl IntoView {
     let (blog_post, set_blog_post) = create_signal(None::<Post>);
     let (comments, set_comments) = create_signal(None::<Vec<_>>);
@@ -39,13 +41,13 @@ pub fn BlogPostPage(
 
     view! {
         <Title text=move || blog_post.get().map_or("No Title Found".into(), |p| p.title)/>
-        <Header logged_in/>
+        <Header user logged_in/>
         <div class="min-w-full pt-10 px-64">
             <Show when=move || blog_post.get().is_some() fallback=LoadingPage>
                 <BlogPost content=blog_post.get().unwrap().markdown_content />
             </Show>
         </div>
-        <CommentSection comments post_id=blog_post.get().unwrap_or_default().id/>
+        <CommentSection is_admin user comments blog_post/>
     }
 }
 

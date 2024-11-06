@@ -79,6 +79,7 @@ pub struct NewPost {
 pub struct Comment {
     pub id: i32,
     pub author_name: String,
+    pub author_id: i32,
     pub content: String,
     pub replying_to: Option<i32>,
     pub created_at: chrono::NaiveDateTime,

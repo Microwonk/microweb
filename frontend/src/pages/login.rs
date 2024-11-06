@@ -3,10 +3,13 @@ use leptos_meta::*;
 use leptos_router::{use_navigate, NavigateOptions};
 use regex::Regex;
 
-use crate::util::Api;
+use crate::{types::Profile, util::Api};
 
 #[component]
-pub fn LoginPage(set_logged_in: WriteSignal<bool>) -> impl IntoView {
+pub fn LoginPage(
+    set_logged_in: WriteSignal<bool>,
+    set_user: WriteSignal<Option<Profile>>,
+) -> impl IntoView {
     let (email, set_email) = create_signal("".to_string());
     let (password, set_password) = create_signal("".to_string());
     let (email_error, set_email_error) = create_signal(None::<String>);
@@ -137,6 +140,7 @@ pub fn LoginPage(set_logged_in: WriteSignal<bool>) -> impl IntoView {
                                     match Api::login(email_value, password_value).await {
                                         Ok(_) => {
                                             set_logged_in(true);
+                                            set_user(Api::get_profile().await.ok());
                                             let navigate = use_navigate();
                                             navigate("/", NavigateOptions::default());
                                         },

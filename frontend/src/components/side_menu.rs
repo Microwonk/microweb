@@ -14,7 +14,7 @@ pub fn SideMenu() -> impl IntoView {
     );
 
     view! {
-        <div class="flex h-full flex-col shadow-inner justify-between">
+        <div class="flex h-full flex-col justify-between">
             <div class="px-4 py-6">
                 <ul class="mt-6 space-y-1 list-none">
                     <For

@@ -6,7 +6,8 @@ use http::StatusCode;
 use response::IntoResponse;
 
 use crate::{
-    created, ok, ApiError, ApiResult, Comment, NewComment, ProcessedComment, ServerState, User,
+    admin_check, created, ok, ApiError, ApiResult, Comment, NewComment, ProcessedComment,
+    ServerState, User,
 };
 
 pub async fn create_comment(
@@ -43,6 +44,43 @@ pub async fn create_comment(
     }
 }
 
+pub async fn delete_comment(
+    Path(id): Path<i32>,
+    Extension(identity): Extension<User>,
+    State(state): State<ServerState>,
+) -> ApiResult<impl IntoResponse> {
+    match sqlx::query_as::<_, Comment>("SELECT * FROM comments WHERE id = $1")
+        .bind(id)
+        .fetch_one(&state.pool)
+        .await
+    {
+        Ok(comment) => {
+            // if the requested deleters identity does not match the comments author/owner, we make an admin check
+            // and if the user is not an admin, no deletion is possible. Admin user can delete any comments!
+            if !comment.author.is_some_and(|a| a == identity.id) {
+                admin_check(&identity)?;
+            }
+            match sqlx::query("DELETE FROM comments WHERE id = $1")
+                .bind(id)
+                .execute(&state.pool)
+                .await
+            {
+                Ok(_) => ok!(),
+                Err(e) => Err(ApiError::werr(
+                    "Could not delete Comment.",
+                    StatusCode::BAD_REQUEST,
+                    e,
+                )),
+            }
+        }
+        Err(e) => Err(ApiError::werr(
+            "Error checking comment Ownership.",
+            StatusCode::BAD_REQUEST,
+            e,
+        )),
+    }
+}
+
 pub async fn get_comments_of_post(
     Path(post_id): Path<i32>,
     State(state): State<ServerState>,
@@ -52,6 +90,7 @@ pub async fn get_comments_of_post(
         SELECT 
             comments.id,
             users.name AS author_name,
+            comments.author AS author_id,
             comments.content,
             comments.replying_to,
             comments.created_at
@@ -84,6 +123,7 @@ pub async fn get_comments_of_post_tree(
         SELECT 
             comments.id,
             users.name AS author_name,
+            comments.author AS author_id,
             comments.content,
             comments.replying_to,
             comments.created_at

@@ -100,6 +100,7 @@ pub struct Comment {
 pub struct ProcessedComment {
     pub id: i32,
     pub author_name: Option<String>,
+    pub author_id: Option<i32>,
     pub content: String,
     pub replying_to: Option<i32>,
     pub created_at: sqlx::types::chrono::NaiveDateTime,

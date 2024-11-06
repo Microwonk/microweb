@@ -85,6 +85,7 @@ impl Api {
             "token",
             UseCookieOptions::default()
                 .max_age(3_600_000 * 24) // one day
+                .path("/")
                 .same_site(SameSite::Strict),
         );
         match Request::post(format!("{}/login", API_PATH).as_str())
@@ -140,6 +141,7 @@ impl Api {
             "token",
             UseCookieOptions::default()
                 .max_age(3_600_000 * 24) // one day
+                .path("/")
                 .same_site(SameSite::Strict),
         );
         set_token(None);
@@ -234,7 +236,7 @@ pub fn main() {
         }
     }
 
-    pub async fn create_comment(post_id: i32, comment: NewComment) -> Result<Comment, ApiError> {
+    pub async fn create_comment(post_id: i32, comment: NewComment) -> Result<(), ApiError> {
         match Request::post(format!("{}/post/{}/comment", API_PATH, post_id).as_str())
             .header("Authorization", &format!("Bearer {}", TOKEN.read().await))
             .json(&comment)
@@ -242,7 +244,7 @@ pub fn main() {
             .send()
             .await
         {
-            Ok(response) => Ok(response.json().await.map_err(ApiError::json)?),
+            Ok(_) => Ok(()),
             Err(e) => Err(ApiError::json(e)),
         }
     }
@@ -321,6 +323,21 @@ pub fn main() {
         }
     }
 
+    pub async fn delete_comment(comment_id: i32) -> Result<(), ApiError> {
+        match Request::delete(format!("{}/comment/{}", API_PATH, comment_id).as_str())
+            .header("Authorization", &format!("Bearer {}", TOKEN.read().await))
+            .send()
+            .await
+        {
+            Ok(_) => Ok(()),
+            Err(e) => Err(ApiError {
+                message: "Could not delete Comment.".into(),
+                error_info: Some(e.to_string()),
+                status_code: 418,
+            }),
+        }
+    }
+
     pub async fn register(
         email: impl Into<String>,
         password: impl Into<String>,
@@ -330,6 +347,7 @@ pub fn main() {
             "token",
             UseCookieOptions::default()
                 .max_age(3_600_000 * 24) // one day
+                .path("/")
                 .same_site(SameSite::Strict),
         );
         match Request::post(format!("{}/register", API_PATH).as_str())
@@ -367,6 +385,7 @@ pub fn main() {
             "token",
             UseCookieOptions::default()
                 .max_age(3_600_000 * 24) // one day
+                .path("/")
                 .same_site(SameSite::Strict),
         );
         let token = token.get_untracked();

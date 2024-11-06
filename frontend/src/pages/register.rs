@@ -3,10 +3,13 @@ use leptos_meta::*;
 use leptos_router::{use_navigate, NavigateOptions};
 use regex::Regex;
 
-use crate::util::Api;
+use crate::{types::Profile, util::Api};
 
 #[component]
-pub fn RegisterPage(set_logged_in: WriteSignal<bool>) -> impl IntoView {
+pub fn RegisterPage(
+    set_logged_in: WriteSignal<bool>,
+    set_user: WriteSignal<Option<Profile>>,
+) -> impl IntoView {
     let (email, set_email) = create_signal("".to_string());
     let (password, set_password) = create_signal("".to_string());
     let (username, set_username) = create_signal("".to_string());
@@ -24,7 +27,7 @@ pub fn RegisterPage(set_logged_in: WriteSignal<bool>) -> impl IntoView {
                 Creating an account lets you post comments!
                 </p>
 
-                <form action="#" class="mb-0 mt-6 space-y-4 rounded-lg p-4 shadow-lg sm:p-6 lg:p-8">
+                <div class="mb-0 mt-6 space-y-4 rounded-lg p-4 shadow-lg sm:p-6 lg:p-8">
 
                 <div>
                     <label for="username" class="sr-only">Username</label>
@@ -184,6 +187,7 @@ pub fn RegisterPage(set_logged_in: WriteSignal<bool>) -> impl IntoView {
                                 match Api::register(email_value, password_value, username_value).await {
                                     Ok(_) => {
                                         set_logged_in(true);
+                                        set_user(Api::get_profile().await.ok());
                                         let navigate = use_navigate();
                                         navigate("/", NavigateOptions::default());
                                     },
@@ -200,7 +204,7 @@ pub fn RegisterPage(set_logged_in: WriteSignal<bool>) -> impl IntoView {
                     Already have an account?
                     <a class="underline text-black" href="/login">Sign in</a>
                 </p>
-                </form>
+                </div>
             </div>
         </div>
     }

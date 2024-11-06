@@ -2,9 +2,8 @@ use core::str;
 
 use anyhow::Context;
 use microblog::{
-    auth_handler,
-    comments_handler::{create_comment, get_comments_of_post, get_comments_of_post_tree},
-    media_handler, post_handler, user_handler, ApiError, ApiResult, ServerState,
+    auth_handler, comments_handler, media_handler, post_handler, user_handler, ApiError, ApiResult,
+    ServerState,
 };
 use shuttle_runtime::SecretStore;
 use sqlx::PgPool;
@@ -79,9 +78,15 @@ fn unauthenticated_routes(state: ServerState) -> Router {
         // get single post from slug
         .route("/post/:slug", get(post_handler::get_post))
         // get all comments from a post
-        .route("/post/:id/comments", get(get_comments_of_post))
+        .route(
+            "/post/:id/comments",
+            get(comments_handler::get_comments_of_post),
+        )
         // get all comments from a post, as a tree structure
-        .route("/post/:id/comments/tree", get(get_comments_of_post_tree))
+        .route(
+            "/post/:id/comments/tree",
+            get(comments_handler::get_comments_of_post_tree),
+        )
         // get all posts from user with path
         .route("/user/:id/posts", get(post_handler::get_posts_by_user))
         // get all posts
@@ -153,7 +158,8 @@ fn authenticated_routes(state: ServerState) -> Router {
             delete(user_handler::delete_user).put(user_handler::update_user),
         )
         // post a new comment on a post
-        .route("/post/:id/comment", post(create_comment))
+        .route("/post/:id/comment", post(comments_handler::create_comment))
+        .route("/comment/:id", delete(comments_handler::delete_comment))
         // auth middleware
         .layer(axum::middleware::from_fn_with_state(
             state.clone(),

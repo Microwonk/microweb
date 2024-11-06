@@ -9,7 +9,7 @@ use crate::{
         home::HomePage, loading::LoadingPage, login::LoginPage, logout::LogOut, p404::Page404,
         register::RegisterPage,
     },
-    types::IsAdminResponse,
+    types::{IsAdminResponse, Profile},
     util::Api,
 };
 
@@ -21,6 +21,7 @@ pub fn App() -> impl IntoView {
     let (logged_in, set_logged_in) = create_signal(false);
     let (loaded, set_loaded) = create_signal(false);
     let (blog_posts, set_blog_posts) = create_signal(Vec::new());
+    let (user, set_user) = create_signal(None::<Profile>);
 
     // Initialize state and check if logged in
     spawn_local(async move {
@@ -36,6 +37,8 @@ pub fn App() -> impl IntoView {
         } else {
             Api::all_blog_posts().await.unwrap_or(Vec::new())
         });
+        set_user(Api::get_profile().await.ok());
+
         set_loaded(true);
     });
 
@@ -52,11 +55,11 @@ pub fn App() -> impl IntoView {
                     </Show>
                 }>
                     // Public routes
-                    <Route path="/" view=move || view! { <HomePage logged_in blog_posts/> }/>
-                    <Route path="/register" view=move || view! { <RegisterPage set_logged_in/> }/>
-                    <Route path="/login" view=move || view! { <LoginPage set_logged_in/> }/>
-                    <Route path="/logout" view=move || view! { <LogOut set_logged_in/> }/>
-                    <Route path="/posts/:slug" view=move || view! { <BlogPostPage logged_in blog_posts/> }/>
+                    <Route path="/" view=move || view! { <HomePage user logged_in blog_posts/> }/>
+                    <Route path="/register" view=move || view! { <RegisterPage set_user set_logged_in/> }/>
+                    <Route path="/login" view=move || view! { <LoginPage set_user set_logged_in/> }/>
+                    <Route path="/logout" view=move || view! { <LogOut set_user set_logged_in/> }/>
+                    <Route path="/posts/:slug" view=move || view! { <BlogPostPage user logged_in is_admin blog_posts/> }/>
                     <Route path="/*any" view=Page404/>
 
                     // Admin routes
@@ -69,8 +72,8 @@ pub fn App() -> impl IntoView {
                             </Show>
                         }
                     }>
-                        <Route path="/" view=move || view! { <AdminPage logged_in blog_posts/>} />
-                        <Route path="?tab" view=move || view! { <AdminPage logged_in blog_posts/>} />
+                        <Route path="/" view=move || view! { <AdminPage blog_posts/>} />
+                        <Route path="?tab" view=move || view! { <AdminPage blog_posts/>} />
                         <Route path="/posts/:slug" view=move || view! { <EditBlogPostPage blog_posts/> }/>
                         </Route>
                 </Route>

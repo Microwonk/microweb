@@ -1,5 +1,5 @@
 use crate::{
-    components::{header::Header, side_menu::SideMenu},
+    components::side_menu::SideMenu,
     pages::loading::LoadingPage,
     types::{Media, Post, User, UserUpdate},
     util::Api,
@@ -19,7 +19,7 @@ struct TabQuery {
 }
 
 #[component]
-pub fn AdminPage(logged_in: ReadSignal<bool>, blog_posts: ReadSignal<Vec<Post>>) -> impl IntoView {
+pub fn AdminPage(blog_posts: ReadSignal<Vec<Post>>) -> impl IntoView {
     let query = use_query::<TabQuery>();
 
     let (current_tab, set_current_tab) = create_signal(String::new());
@@ -38,7 +38,6 @@ pub fn AdminPage(logged_in: ReadSignal<bool>, blog_posts: ReadSignal<Vec<Post>>)
     view! {
         <Title text="Admin Dashboard"/>
         <div class="flex flex-col min-h-screen"> // Container that ensures full screen height
-            <Header logged_in/>
             <div class="flex-grow grid grid-cols-6 gap-4"> // Grid takes up the remaining space
                 <div class="md:col-span-2 lg:col-span-1">
                     <SideMenu/>
