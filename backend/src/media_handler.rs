@@ -1,6 +1,8 @@
 use std::{io::BufWriter, num::NonZeroU32};
 
-use crate::{admin_check, ok, ApiError, ApiResult, Media, MediaNoData, ServerState, User};
+use crate::{
+    admin_check, logs_handler::Log, ok, ApiError, ApiResult, Media, MediaNoData, ServerState, User,
+};
 use axum::{
     body::Bytes,
     extract::{Multipart, Path, State},
@@ -22,7 +24,7 @@ pub async fn upload(
     State(state): State<ServerState>,
     mut multipart: Multipart,
 ) -> ApiResult<impl IntoResponse> {
-    admin_check(&identity)?;
+    admin_check(&identity, &state).await?;
 
     let mut successes = vec![];
     let mut failures = vec![];
@@ -114,6 +116,15 @@ pub async fn upload(
             }
         }
     }
+
+    Log::warn(
+        format!(
+            "Upload failed for one or multiple files. Errors: {:?}",
+            failures
+        ),
+        &state,
+    )
+    .await?;
 
     // Prepare response with both successes and failures
     let response = serde_json::json!({
@@ -280,7 +291,7 @@ pub async fn delete_media(
     Path(id): Path<i32>,
     State(state): State<ServerState>,
 ) -> ApiResult<impl IntoResponse> {
-    admin_check(&identity)?;
+    admin_check(&identity, &state).await?;
     match sqlx::query("DELETE FROM media WHERE id = $1")
         .bind(id)
         .execute(&state.pool)
@@ -299,7 +310,7 @@ pub async fn get_all_media(
     Extension(identity): Extension<User>,
     State(state): State<ServerState>,
 ) -> ApiResult<impl IntoResponse> {
-    admin_check(&identity)?;
+    admin_check(&identity, &state).await?;
 
     match sqlx::query_as::<_, MediaNoData>(
         "SELECT id, post_id, name, media_type, created_at FROM media ORDER BY created_at DESC",
@@ -321,7 +332,7 @@ pub async fn get_all_media_by_post(
     Path(post_id): Path<i32>,
     State(state): State<ServerState>,
 ) -> ApiResult<impl IntoResponse> {
-    admin_check(&identity)?;
+    admin_check(&identity, &state).await?;
     match sqlx::query_as::<_, MediaNoData>(
         "SELECT id, post_id, name, media_type, created_at FROM media WHERE post_id = $1",
     )

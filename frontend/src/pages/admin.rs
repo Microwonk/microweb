@@ -1,7 +1,7 @@
 use crate::{
     components::side_menu::SideMenu,
     pages::loading::LoadingPage,
-    types::{Media, Post, User, UserUpdate},
+    types::{LogEntry, Media, Post, User, UserUpdate},
     util::Api,
 };
 use chrono::Utc;
@@ -24,14 +24,14 @@ pub fn AdminPage(blog_posts: ReadSignal<Vec<Post>>) -> impl IntoView {
 
     let (current_tab, set_current_tab) = create_signal(String::new());
     let (users, set_users) = create_signal(Vec::new());
+    let (logs, set_logs) = create_signal(Vec::new());
     let (media, set_media) = create_signal(Vec::new());
 
     create_effect(move |_| {
         if let Some(t) = query.with(|q| q.as_ref().map(|t| t.tab.clone()).ok()) {
             set_current_tab(t);
         } else {
-            use_navigate()("/admin?tab=general", Default::default());
-            // set_current_tab("general".to_string());
+            use_navigate()("/admin?tab=logs", Default::default());
         }
     });
 
@@ -48,7 +48,7 @@ pub fn AdminPage(blog_posts: ReadSignal<Vec<Post>>) -> impl IntoView {
                             "users" => view! { <UserSection users set_users/>},
                             "media" => view! { <MediaSection media set_media blog_posts/>},
                             "blogs" => view! { <BlogSection blog_posts/>},
-                            "general" => view! { <GeneralSection/> },
+                            "logs" => view! { <LogSection logs set_logs/> },
                             _ => view! { <LoadingPage/> }
                         }}
                     </div>
@@ -59,9 +59,59 @@ pub fn AdminPage(blog_posts: ReadSignal<Vec<Post>>) -> impl IntoView {
 }
 
 #[component]
-pub fn GeneralSection() -> impl IntoView {
+pub fn LogSection(
+    logs: ReadSignal<Vec<LogEntry>>,
+    set_logs: WriteSignal<Vec<LogEntry>>,
+) -> impl IntoView {
+    spawn_local(async move {
+        set_logs(Api::get_logs().await.unwrap_or_default());
+    });
     view! {
-        TODO
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y-2 divide-gray-200 text-sm">
+                <thead class="text-left">
+                <tr>
+                    <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">ID</th>
+                    <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Message</th>
+                    <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Context</th>
+                    <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Time</th>
+                </tr>
+                </thead>
+
+                <tbody class="divide-y divide-gray-200">
+                <For
+                    each=move || logs.get()
+                    key=|log| log.id
+                    children=move |log: LogEntry| {
+                        view! {
+                            <LogRow log/>
+                        }
+                    }
+                />
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+#[component]
+pub fn LogRow(#[prop(into)] log: MaybeSignal<LogEntry>) -> impl IntoView {
+    let log = log.get();
+    let color = match log.context.as_str() {
+        "info" => "bg-green-300",
+        "error" => "bg-red-300",
+        "warn" => "bg-yellow-300",
+        "debug" => "blue-300",
+        "notice" => "bg-pink-300",
+        _ => "bg-nf-white",
+    };
+    view! {
+        <tr class={color}>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-700">{log.id}</td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">{log.message}</td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-700">{log.context}</td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-700">{log.log_time.to_string()}</td>
+        </tr>
     }
 }
 

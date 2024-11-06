@@ -6,8 +6,8 @@ use http::StatusCode;
 use response::IntoResponse;
 
 use crate::{
-    admin_check, created, ok, ApiError, ApiResult, Comment, NewComment, ProcessedComment,
-    ServerState, User,
+    admin_check, created, logs_handler::Log, ok, ApiError, ApiResult, Comment, NewComment,
+    ProcessedComment, ServerState, User,
 };
 
 pub async fn create_comment(
@@ -35,7 +35,17 @@ pub async fn create_comment(
     .await;
 
     match result {
-        Ok(comment) => created!(comment),
+        Ok(comment) => {
+            Log::info(
+                format!(
+                    "User [{} | {}] with email {} commented on Post with id {}.",
+                    identity.id, identity.name, identity.email, comment.post
+                ),
+                &state,
+            )
+            .await?;
+            created!(comment)
+        }
         Err(e) => Err(ApiError::werr(
             "Error creating comment.",
             StatusCode::BAD_REQUEST,
@@ -58,14 +68,28 @@ pub async fn delete_comment(
             // if the requested deleters identity does not match the comments author/owner, we make an admin check
             // and if the user is not an admin, no deletion is possible. Admin user can delete any comments!
             if !comment.author.is_some_and(|a| a == identity.id) {
-                admin_check(&identity)?;
+                admin_check(&identity, &state).await?;
             }
             match sqlx::query("DELETE FROM comments WHERE id = $1")
                 .bind(id)
                 .execute(&state.pool)
                 .await
             {
-                Ok(_) => ok!(),
+                Ok(_) => {
+                    Log::info(
+                        format!(
+                            "User [{} | {}] with email {} deleted Comment with id {} on Post with id {}.",
+                            identity.id,
+                            identity.name,
+                            identity.email,
+                            comment.id,
+                            comment.post
+                        ),
+                        &state,
+                    )
+                    .await?;
+                    ok!()
+                }
                 Err(e) => Err(ApiError::werr(
                     "Could not delete Comment.",
                     StatusCode::BAD_REQUEST,

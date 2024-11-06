@@ -6,14 +6,17 @@ use axum::{
 };
 use chrono::Utc;
 
-use crate::{admin_check, created, ok, ApiError, ApiResult, NewPost, Post, ServerState, User};
+use crate::{
+    admin_check, created, logs_handler::Log, ok, ApiError, ApiResult, NewPost, Post, ServerState,
+    User,
+};
 
 pub async fn create_post(
     Extension(identity): Extension<User>,
     State(state): State<ServerState>,
     Json(post): Json<NewPost>,
 ) -> ApiResult<impl IntoResponse> {
-    admin_check(&identity)?;
+    admin_check(&identity, &state).await?;
     let result = sqlx::query_as::<_, Post>(
         r#"
         INSERT INTO posts (
@@ -34,7 +37,15 @@ pub async fn create_post(
     .await;
 
     match result {
-        Ok(post) => created!(post),
+        Ok(post) => {
+            Log::info(
+                format!("New Blog Post [{} | {}] created.", post.id, post.title),
+                &state,
+            )
+            .await?;
+            created!(post)
+        }
+
         Err(e) => Err(ApiError::werr(
             "Error creating post.",
             StatusCode::BAD_REQUEST,
@@ -49,7 +60,7 @@ pub async fn release_post(
     State(state): State<ServerState>,
 ) -> ApiResult<impl IntoResponse> {
     // TODO: implement mailing on release? newsletter?
-    admin_check(&identity)?;
+    admin_check(&identity, &state).await?;
     releaser(id, state, true).await
 }
 
@@ -58,7 +69,7 @@ pub async fn unrelease_post(
     Extension(identity): Extension<User>,
     State(state): State<ServerState>,
 ) -> ApiResult<impl IntoResponse> {
-    admin_check(&identity)?;
+    admin_check(&identity, &state).await?;
     releaser(id, state, false).await
 }
 
@@ -76,7 +87,13 @@ async fn releaser(id: i32, state: ServerState, release: bool) -> ApiResult<impl 
     .fetch_one(&state.pool)
     .await
     {
-        Ok(response) => ok!(response),
+        Ok(post) => {
+            Log::info(
+                format!("Blog Post [{} | {}] {}.", post.id, post.title, if release { "released" } else { "unreleased" }),
+                &state,
+            )
+            .await?;
+            ok!(post)},
         Err(e) => Err(ApiError::werr(
             "Could not update Post.",
             StatusCode::BAD_REQUEST,
@@ -105,7 +122,7 @@ pub async fn get_posts_by_identity(
     State(state): State<ServerState>,
     Extension(identity): Extension<User>,
 ) -> ApiResult<impl IntoResponse> {
-    admin_check(&identity)?;
+    admin_check(&identity, &state).await?;
     match sqlx::query_as::<_, Post>(
         "SELECT * FROM posts WHERE author = $1 ORDER BY created_at DESC",
     )
@@ -165,13 +182,16 @@ pub async fn delete_post(
     Extension(identity): Extension<User>,
     State(state): State<ServerState>,
 ) -> ApiResult<impl IntoResponse> {
-    admin_check(&identity)?;
+    admin_check(&identity, &state).await?;
     match sqlx::query("DELETE FROM posts WHERE id = $1")
         .bind(id)
         .execute(&state.pool)
         .await
     {
-        Ok(_) => ok!(),
+        Ok(_) => {
+            Log::info(format!("Blog Post with id {} deleted.", id), &state).await?;
+            ok!()
+        }
         Err(e) => Err(ApiError::werr(
             "Could not delete Post.",
             StatusCode::BAD_REQUEST,
@@ -186,7 +206,7 @@ pub async fn update_post(
     State(state): State<ServerState>,
     Json(post): Json<NewPost>,
 ) -> ApiResult<impl IntoResponse> {
-    admin_check(&identity)?;
+    admin_check(&identity, &state).await?;
     match sqlx::query_as::<_, Post>(
         r#"
         UPDATE posts
@@ -204,7 +224,14 @@ pub async fn update_post(
     .fetch_one(&state.pool)
     .await
     {
-        Ok(response) => ok!(response),
+        Ok(post) => {
+            Log::info(
+                format!("Blog Post [{} | {}] updated.", post.id, post.title),
+                &state,
+            )
+            .await?;
+            ok!(post)
+        },
         Err(e) => Err(ApiError::werr(
             "Could not update Post.",
             StatusCode::BAD_REQUEST,
@@ -218,7 +245,7 @@ pub async fn get_post_by_id(
     Extension(identity): Extension<User>,
     State(state): State<ServerState>,
 ) -> ApiResult<impl IntoResponse> {
-    admin_check(&identity)?;
+    admin_check(&identity, &state).await?;
     match sqlx::query_as::<_, Post>("SELECT * FROM posts WHERE id = $1")
         .bind(id)
         .fetch_one(&state.pool)

@@ -11,7 +11,10 @@ use chrono::{Duration, Utc};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, TokenData, Validation};
 use serde::{Deserialize, Serialize};
 
-use crate::{ok, ApiError, ApiResult, LoginRequest, LoginResponse, NewUser, ServerState, User};
+use crate::{
+    logs_handler::Log, ok, ApiError, ApiResult, LoginRequest, LoginResponse, NewUser, ServerState,
+    User,
+};
 
 pub async fn register(
     State(state): State<ServerState>,
@@ -22,7 +25,16 @@ pub async fn register(
         .fetch_one(&state.pool)
         .await;
 
-    if user.is_ok() {
+    if let Ok(u) = user {
+        Log::info(
+            format!(
+                "Registering eser: User with email {} already exists.",
+                u.email
+            ),
+            &state,
+        )
+        .await?;
+
         return Err(ApiError::new(
             "User with this email already exists.",
             StatusCode::CONFLICT,
@@ -51,8 +63,18 @@ pub async fn register(
     {
         Ok(user) => {
             // directly also login when registering.
+            Log::info(
+                format!(
+                    "Created user [{} | {}] with email {}",
+                    user.id,
+                    user.name.as_str(),
+                    user.email.as_str()
+                ),
+                &state,
+            )
+            .await?;
             login(
-                State(state.clone()),
+                State(state),
                 Json(LoginRequest {
                     email: user.email,
                     password: new_user.password,
@@ -73,7 +95,7 @@ pub async fn login(
     Json(login): Json<LoginRequest>,
 ) -> ApiResult<impl IntoResponse> {
     let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE email = $1")
-        .bind(login.email)
+        .bind(login.email.as_str())
         .fetch_one(&state.pool)
         .await;
 
@@ -83,16 +105,34 @@ pub async fn login(
         false
     };
 
+    let u = user.unwrap_or_default();
+
     if !matches {
+        Log::info(
+            format!(
+                "User [{} | {}] with email {} tried logging in with wrong credentials.",
+                u.id, u.name, login.email
+            ),
+            &state,
+        )
+        .await?;
         return Err(ApiError::new(
             "Wrong Credentials.",
             StatusCode::UNAUTHORIZED,
         ));
     }
 
-    let token = encode_jwt(user.unwrap().email, state.secret_key)
+    let token = encode_jwt(u.email.clone(), state.clone().secret_key)
         .map_err(|c| ApiError::new("Error encoding jwt.", c))?;
 
+    Log::info(
+        format!(
+            "User [{} | {}] with email {} logged in successfully",
+            u.id, u.name, u.email
+        ),
+        &state,
+    )
+    .await?;
     ok!(LoginResponse { token })
 }
 

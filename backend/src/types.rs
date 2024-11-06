@@ -24,7 +24,7 @@ pub struct NewPost {
 
 // TODO: profile picture
 
-#[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, Default)]
 pub struct User {
     pub id: i32,
     pub name: String,
@@ -126,4 +126,24 @@ pub struct LoginResponse {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct IsAdminResponse {
     pub admin: bool,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, Default)]
+pub struct LogEntry {
+    pub id: i32,
+    pub message: String,
+    pub context: String,
+    pub log_time: sqlx::types::chrono::NaiveDateTime,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default)]
+pub struct NewLogEntry {
+    pub message: String,
+    pub context: String,
+}
+
+impl NewLogEntry {
+    pub fn new(message: String, context: String) -> Self {
+        Self { message, context }
+    }
 }

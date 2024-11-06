@@ -11,8 +11,8 @@ use serde::{Deserialize, Serialize};
 use web_sys::{File, FormData};
 
 use crate::types::{
-    Comment, IsAdminResponse, LoginRequest, LoginResponse, Media, NewComment, NewPost, Post,
-    Profile, RegisterRequest, UploadReturn, User, UserUpdate,
+    Comment, IsAdminResponse, LogEntry, LoginRequest, LoginResponse, Media, NewComment, NewPost,
+    Post, Profile, RegisterRequest, UploadReturn, User, UserUpdate,
 };
 
 // fn generate_json_ld(post: &Post) -> String {
@@ -174,6 +174,10 @@ impl Api {
 
     pub async fn get_comments(post_id: i32) -> Result<Vec<Comment>, ApiError> {
         Self::simple_get(format!("{}/post/{}/comments", API_PATH, post_id), false).await
+    }
+
+    pub async fn get_logs() -> Result<Vec<LogEntry>, ApiError> {
+        Self::simple_get(format!("{}/admin/logs", API_PATH), true).await
     }
 
     async fn simple_get<T: for<'de> Deserialize<'de>>(

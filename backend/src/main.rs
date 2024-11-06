@@ -2,8 +2,8 @@ use core::str;
 
 use anyhow::Context;
 use microblog::{
-    auth_handler, comments_handler, media_handler, post_handler, user_handler, ApiError, ApiResult,
-    ServerState,
+    auth_handler, comments_handler, logs_handler, media_handler, post_handler, user_handler,
+    ApiError, ApiResult, ServerState,
 };
 use shuttle_runtime::SecretStore;
 use sqlx::PgPool;
@@ -159,7 +159,10 @@ fn authenticated_routes(state: ServerState) -> Router {
         )
         // post a new comment on a post
         .route("/post/:id/comment", post(comments_handler::create_comment))
+        // delete comment (also edit in the future if needed)
         .route("/comment/:id", delete(comments_handler::delete_comment))
+        // get all logs
+        .route("/admin/logs", get(logs_handler::get_all_logs))
         // auth middleware
         .layer(axum::middleware::from_fn_with_state(
             state.clone(),

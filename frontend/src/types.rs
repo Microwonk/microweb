@@ -95,3 +95,11 @@ pub struct UserUpdate {
     pub name: String,
     pub email: String,
 }
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default)]
+pub struct LogEntry {
+    pub id: i32,
+    pub message: String,
+    pub context: String,
+    pub log_time: chrono::NaiveDateTime,
+}
