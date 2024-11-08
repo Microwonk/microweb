@@ -69,8 +69,11 @@ pub fn BlogPostHeader(
                 <div class="flex items-center md:space-x-2">
                     <p class="text-sm">{
                         move ||
-                            // TODO: get actual author as String form in backend
-                            format!("{} • {}", blog_post.get().unwrap().author, blog_post.get().unwrap().created_at.format("%b. %d, %Y"))
+                            if let Some(post) = blog_post.get() {
+                                format!("{} • {}", post.author_name, post.created_at.format("%b. %d, %Y"))
+                            } else {
+                                "".into()
+                            }
                         }
                     </p>
                 </div>

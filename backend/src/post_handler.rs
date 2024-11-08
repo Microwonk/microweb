@@ -7,8 +7,8 @@ use axum::{
 use chrono::Utc;
 
 use crate::{
-    admin_check, created, logs_handler::Log, ok, ApiError, ApiResult, NewPost, Post, ServerState,
-    User,
+    admin_check, created, logs_handler::Log, ok, ApiError, ApiResult, NewPost, Post, ProcessedPost,
+    ServerState, User,
 };
 
 pub async fn create_post(
@@ -103,8 +103,21 @@ async fn releaser(id: i32, state: ServerState, release: bool) -> ApiResult<impl 
 }
 
 pub async fn get_all_posts(State(state): State<ServerState>) -> ApiResult<impl IntoResponse> {
-    match sqlx::query_as::<_, Post>(
-        "SELECT * FROM posts WHERE released = true ORDER BY created_at DESC",
+    match sqlx::query_as::<_, ProcessedPost>(
+        r#"SELECT 
+            posts.id,
+            users.name AS author_name,
+            posts.author AS author,
+            posts.description,
+            posts.title,
+            posts.slug,
+            posts.markdown_content,
+            posts.released,
+            posts.created_at,
+            posts.updated_at
+        FROM posts
+        JOIN users ON posts.author = users.id
+        WHERE released = true ORDER BY created_at DESC"#,
     )
     .fetch_all(&state.pool)
     .await
@@ -123,8 +136,21 @@ pub async fn get_posts_by_identity(
     Extension(identity): Extension<User>,
 ) -> ApiResult<impl IntoResponse> {
     admin_check(&identity, &state).await?;
-    match sqlx::query_as::<_, Post>(
-        "SELECT * FROM posts WHERE author = $1 ORDER BY created_at DESC",
+    match sqlx::query_as::<_, ProcessedPost>(
+        r#"SELECT 
+            posts.id,
+            users.name AS author_name,
+            posts.author AS author,
+            posts.description,
+            posts.title,
+            posts.slug,
+            posts.markdown_content,
+            posts.released,
+            posts.created_at,
+            posts.updated_at
+        FROM posts
+        JOIN users ON posts.author = users.id
+        WHERE author = $1 ORDER BY created_at DESC"#,
     )
     .bind(identity.id)
     .fetch_all(&state.pool)
@@ -143,8 +169,20 @@ pub async fn get_posts_by_user(
     Path(id): Path<i32>,
     State(state): State<ServerState>,
 ) -> ApiResult<impl IntoResponse> {
-    match sqlx::query_as::<_, Post>(
-        "SELECT * FROM posts WHERE author = $1 ORDER BY created_at DESC",
+    match sqlx::query_as::<_, ProcessedPost>(
+        r#"SELECT 
+            posts.id,
+            users.name AS author_name,
+            posts.author AS author,
+            posts.description,
+            posts.title,
+            posts.slug,
+            posts.markdown_content,
+            posts.released,
+            posts.created_at,
+            posts.updated_at
+        FROM posts
+        WHERE author = $1 ORDER BY created_at DESC"#,
     )
     .bind(id)
     .fetch_all(&state.pool)
@@ -163,10 +201,26 @@ pub async fn get_post(
     Path(slug): Path<String>,
     State(state): State<ServerState>,
 ) -> ApiResult<impl IntoResponse> {
-    match sqlx::query_as::<_, Post>("SELECT * FROM posts WHERE slug = $1")
-        .bind(slug.as_str())
-        .fetch_one(&state.pool)
-        .await
+    match sqlx::query_as::<_, ProcessedPost>(
+        r#"SELECT 
+            posts.id,
+            users.name AS author_name,
+            posts.author AS author,
+            posts.description,
+            posts.title,
+            posts.slug,
+            posts.markdown_content,
+            posts.released,
+            posts.created_at,
+            posts.updated_at
+        FROM posts
+        JOIN users ON posts.author = users.id
+        WHERE posts.slug = $1
+        ORDER BY posts.created_at DESC"#,
+    )
+    .bind(slug.as_str())
+    .fetch_one(&state.pool)
+    .await
     {
         Ok(response) => ok!(response),
         Err(e) => Err(ApiError::werr(

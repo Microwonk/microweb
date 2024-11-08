@@ -34,6 +34,7 @@ pub struct IsAdminResponse {
 pub struct Post {
     pub id: i32,
     pub author: i32,
+    pub author_name: String,
     pub title: String,
     pub description: String,
     pub slug: String,

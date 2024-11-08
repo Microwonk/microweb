@@ -22,6 +22,20 @@ pub struct NewPost {
     pub markdown_content: String,
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
+pub struct ProcessedPost {
+    pub id: i32,
+    pub author: i32,
+    pub author_name: String,
+    pub title: String,
+    pub description: String,
+    pub slug: String,
+    pub markdown_content: String,
+    pub released: bool,
+    pub created_at: sqlx::types::chrono::NaiveDateTime,
+    pub updated_at: Option<sqlx::types::chrono::NaiveDateTime>,
+}
+
 // TODO: profile picture
 
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow, Default)]

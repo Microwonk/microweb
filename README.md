@@ -14,7 +14,8 @@
 - [ ] Email send client for newsletter, verification etc.
 - [ ] Actually write blogs
 - [ ] Comments without an author (deleted) should have the name Deleted User on them
-- [ ] Blog Post Heading with date, Title, read time, social links
+- [x] Blog Post Heading with date, Title, read time, social links
 - [ ] (maybe) make comments have markdown support as well?
-- [ ] Add logs to database (simple String messages + time + status (error, info, urgent etc.)) to see in admin panel (general) (comments, account creation, media creation, requests, denies, blog creation/updated)
+- [x] Add logs to database (simple String messages + time + status (error, info, urgent etc.)) to see in admin panel (general) (comments, account creation, media creation, requests, denies, blog creation/updated)
 - [ ] feed panel (all posts + comments in date order, what has been happening on the blog)
+- [ ] tag system for blogs (currently only have the tables set up for it)

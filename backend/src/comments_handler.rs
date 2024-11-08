@@ -122,7 +122,7 @@ pub async fn get_comments_of_post(
         JOIN posts ON comments.post = posts.id
         LEFT JOIN users ON comments.author = users.id
         WHERE comments.post = $1
-        ORDER BY comments.created_at
+        ORDER BY comments.created_at DESC
         "#,
     )
     .bind(post_id)
@@ -155,7 +155,7 @@ pub async fn get_comments_of_post_tree(
         JOIN posts ON comments.post = posts.id
         LEFT JOIN users ON comments.author = users.id
         WHERE comments.post = $1
-        ORDER BY comments.created_at
+        ORDER BY comments.created_at DESC
         "#,
     )
     .bind(post_id)
