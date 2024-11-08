@@ -4,6 +4,7 @@ use leptos::*;
 use leptos_meta::Title;
 use leptos_router::use_params_map;
 use pulldown_cmark::*;
+use regex::Regex;
 use std::io::{Cursor, Write};
 use syntect::{highlighting::ThemeSet, html::highlighted_html_for_string, parsing::SyntaxSet};
 
@@ -42,13 +43,59 @@ pub fn BlogPostPage(
     view! {
         <Title text=move || blog_post.get().map_or("No Title Found".into(), |p| p.title)/>
         <Header user logged_in/>
-        <div class="min-w-full pt-10 px-64">
+        <article class="min-w-full pt-10 px-64">
             <Show when=move || blog_post.get().is_some() fallback=LoadingPage>
+                <BlogPostHeader blog_post num_comments=comments.get().unwrap_or_default().len()/>
                 <BlogPost content=blog_post.get().unwrap().markdown_content />
             </Show>
-        </div>
+        </article>
         <CommentSection is_admin user comments blog_post/>
     }
+}
+
+#[component]
+pub fn BlogPostHeader(
+    #[prop(into)] blog_post: ReadSignal<Option<Post>>,
+    #[prop(into)] num_comments: usize,
+) -> impl IntoView {
+    let read_time = blog_post
+        .get()
+        .map(|post| calculate_read_time(&post.markdown_content));
+
+    view! {
+        <div class="space-y-6 mb-12">
+            <h1 class="text-4xl font-bold md:tracking-tight md:text-5xl">{move || blog_post.get().unwrap().title}</h1>
+            <div class="flex flex-col items-start justify-between w-full md:flex-row md:items-center dark:text-gray-600">
+                <div class="flex items-center md:space-x-2">
+                    <p class="text-sm">{
+                        move ||
+                            // TODO: get actual author as String form in backend
+                            format!("{} • {}", blog_post.get().unwrap().author, blog_post.get().unwrap().created_at.format("%b. %d, %Y"))
+                        }
+                    </p>
+                </div>
+                <p class="flex-shrink-0 mt-3 text-sm md:mt-0">{format!("{} min read • {} comments", read_time.unwrap_or(10), num_comments)}</p>
+            </div>
+        </div>
+    }
+}
+
+pub fn calculate_read_time(markdown_content: &str) -> usize {
+    // Parse Markdown and strip to plain text
+    let parser = pulldown_cmark::Parser::new(markdown_content);
+    let mut plain_text = String::new();
+    for event in parser {
+        if let Event::Text(text) = event {
+            plain_text.push_str(&text);
+        }
+    }
+
+    // Count words in the plain text using regex
+    let re = Regex::new(r"\b\w+\b").unwrap();
+    let word_count = re.find_iter(&plain_text).count();
+
+    // Calculate read time (200 words per minute)
+    (word_count as f64 / 200.0).ceil() as usize
 }
 
 #[component]
