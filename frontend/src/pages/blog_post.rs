@@ -43,7 +43,7 @@ pub fn BlogPostPage(
     view! {
         <Title text=move || blog_post.get().map_or("No Title Found".into(), |p| p.title)/>
         <Header user logged_in/>
-        <article class="min-w-full pt-10 px-64">
+        <article class="min-w-full py-12 px-64">
             <Show when=move || blog_post.get().is_some() fallback=LoadingPage>
                 <BlogPostHeader blog_post num_comments=comments.get().unwrap_or_default().len()/>
                 <BlogPost content=blog_post.get().unwrap().markdown_content />

@@ -37,7 +37,6 @@ pub fn App() -> impl IntoView {
         } else {
             Api::all_blog_posts().await.unwrap_or(Vec::new())
         });
-        log::debug!("{:?}", blog_posts.get());
         set_user(Api::get_profile().await.ok());
 
         set_loaded(true);

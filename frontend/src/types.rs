@@ -79,8 +79,8 @@ pub struct NewPost {
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]
 pub struct Comment {
     pub id: i32,
-    pub author_name: String,
-    pub author_id: i32,
+    pub author_name: Option<String>,
+    pub author_id: Option<i32>,
     pub content: String,
     pub replying_to: Option<i32>,
     pub created_at: chrono::NaiveDateTime,

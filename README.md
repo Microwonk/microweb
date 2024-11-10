@@ -8,14 +8,18 @@
 - [x] Media Caching
 - [x] Markdown renderer
 - [x] Use Design from hyperui
-- [ ] Refresh token impl for better ux
+- [x] view errors on login/register, comments
+- [x] backend validation of text in comments (ammonia)
 - [x] Admin page for making blog posts
 - [x] Draft and or Archive boolean for blog posts
-- [ ] Email send client for newsletter, verification etc.
-- [ ] Actually write blogs
-- [ ] Comments without an author (deleted) should have the name Deleted User on them
+- [x] Add logs
+- [x] Comments without an author (deleted) should have the name Deleted User on them
 - [x] Blog Post Heading with date, Title, read time, social links
-- [ ] (maybe) make comments have markdown support as well?
-- [x] Add logs to database (simple String messages + time + status (error, info, urgent etc.)) to see in admin panel (general) (comments, account creation, media creation, requests, denies, blog creation/updated)
 - [ ] feed panel (all posts + comments in date order, what has been happening on the blog)
-- [ ] tag system for blogs (currently only have the tables set up for it)
+- [ ] Refresh token impl for better ux
+- [ ] Email send client for newsletter, verification etc.
+- [ ] tag system for blogs (currently only have the DB tables set up for it)
+    - [ ] frontend to see tags of a post
+    - [ ] manage tags through admin panel, and add them to posts
+    - [ ] filter blogs through tags/categories (feed/subscription)
+    - [ ] blog card frontend to see tags

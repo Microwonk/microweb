@@ -61,9 +61,9 @@ pub struct Api;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ApiError {
-    message: String,
-    error_info: Option<String>,
-    status_code: u16,
+    pub message: String,
+    pub error_info: Option<String>,
+    pub status_code: u16,
 }
 
 impl ApiError {

@@ -29,7 +29,7 @@ pub async fn create_comment(
     )
     .bind(identity.id)
     .bind(post_id)
-    .bind(comment.content)
+    .bind(ammonia::clean(&comment.content))
     .bind(comment.replying_to)
     .fetch_one(&state.pool)
     .await;

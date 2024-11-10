@@ -144,7 +144,10 @@ pub fn LoginPage(
                                             let navigate = use_navigate();
                                             navigate("/", NavigateOptions::default());
                                         },
-                                        Err(_) => () // TODO
+                                        Err(_) => {
+                                            set_email_error(None);
+                                            set_password_error(Some("Wrong password or E-Mail.".to_string()));
+                                        }
                                     }
                                 }
                             });

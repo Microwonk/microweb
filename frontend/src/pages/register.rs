@@ -191,7 +191,10 @@ pub fn RegisterPage(
                                         let navigate = use_navigate();
                                         navigate("/", NavigateOptions::default());
                                     },
-                                    Err(_) => () // TODO
+                                    Err(_) => {
+                                        set_email_error(None);
+                                        set_password_error(Some("An error occurred, try again.".to_string()));
+                                    }
                                 }
                             }
                         });

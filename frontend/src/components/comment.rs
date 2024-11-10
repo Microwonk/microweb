@@ -31,7 +31,9 @@ pub fn CommentComponent(
                         fill=icon.fill.unwrap_or("currentColor")
                         inner_html=icon.data
                     ></svg>
-                        {comment.author_name}
+                        <div class=move || if comment.author_id.is_none() {"text-red-500"} else {""}>
+                            {comment.author_name.unwrap_or("DELETED USER".into())}
+                        </div>
                     </p>
                     <p class="text-sm text-gray-600"><time pubdate datetime={comment.created_at.format("%Y-%m-%d").to_string()}
                     >{comment.created_at.format("%b. %d, %Y").to_string()}</time></p>
@@ -66,7 +68,7 @@ pub fn CommentComponent(
                 </Show>
 
             </footer>
-            <p class="text-gray-500">{comment.content}</p>
+            <p class="text-nf-dark">{comment.content}</p>
         </article>
     }
 }
@@ -80,7 +82,7 @@ pub fn CommentSection(
 ) -> impl IntoView {
     let (content, set_content) = create_signal("".to_string());
     view! {
-        <div class="bg-nf-dark p-4">
+        <div class="bg-nf-dark p-4 pb-12">
             // heading for the commentsection
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-lg lg:text-2xl font-bold text-nf-white">{move || format!("Comments ({})", comments.get().unwrap_or_default().len())}</h2>
@@ -93,34 +95,34 @@ pub fn CommentSection(
                 </p>
             }>
                 // textarea for new comment
-                <div class="mb-6">
-                <div class="py-2 px-4 m-4 bg-nf-white rounded-lg">
-                    <label for="comment" class="sr-only">Your comment</label>
-                    <textarea rows="6"
-                        class="px-0 w-full text-sm text-nf-dark border-0 focus:ring-0 focus:outline-none placeholder-gray-900 bg-nf-white"
-                        placeholder="Write a (plaintext) comment..." required
-                        on:input=move |ev| {
-                            let new_value = event_target_value(&ev);
-                            set_content(new_value);
+                <div class="mb-6 min-w-full px-48">
+                    <div class="py-2 px-4 m-4 bg-nf-white rounded-lg">
+                        <label for="comment" class="sr-only">Your comment</label>
+                        <textarea rows="6"
+                            class="px-0 w-full text-sm text-nf-dark border-0 focus:ring-0 focus:outline-none placeholder-gray-900 bg-nf-white"
+                            placeholder="Write a (plaintext) comment..." required
+                            on:input=move |ev| {
+                                let new_value = event_target_value(&ev);
+                                set_content(new_value);
+                            }>
+                        </textarea>
+                    </div>
+                    // post button
+                    <button
+                        class="ml-4 inline-flex items-center py-2.5 px-4 text-xs font-medium text-center text-nf-white bg-nf-color rounded-lg focus:ring-4 focus:ring-primary-200"
+                        on:click=move |_| {
+                            let content = ammonia::clean(&content.get());
+                            spawn_local(async move {
+                                if let Some(post) = blog_post.get() {
+                                    if (Api::create_comment(post.id, NewComment { content }).await).is_ok() {
+                                        // refresh
+                                        web_sys::window().unwrap().location().reload().unwrap();
+                                    };
+                                }
+                            });
                         }>
-                    </textarea>
-                </div>
-                // post button
-                <button
-                    class="ml-4 inline-flex items-center py-2.5 px-4 text-xs font-medium text-center text-nf-white bg-nf-color rounded-lg focus:ring-4 focus:ring-primary-200"
-                    on:click=move |_| {
-                        let content = ammonia::clean(&content.get());
-                        spawn_local(async move {
-                            if let Some(post) = blog_post.get() {
-                                if (Api::create_comment(post.id, NewComment { content }).await).is_ok() {
-                                    // refresh
-                                    web_sys::window().unwrap().location().reload().unwrap();
-                                };
-                            }
-                        });
-                    }>
-                    Post comment
-                </button>
+                        Post comment
+                    </button>
                 </div>
             </Show>
 
@@ -128,15 +130,15 @@ pub fn CommentSection(
             <Show when=move || comments.get().is_some_and(|comments| !comments.is_empty()) fallback=move || view! {
                 <h2 class="text-lg lg:text-2xl text-center font-bold text-nf-white mb-6">No Comments yet . . .</h2>
             }>
-                <ul class="grid gap-4 p-12">
+                <ul class="grid gap-4">
                     <For
                         each=move || comments.get().unwrap_or_default()
                         key=|c| c.id
                         children=move |comment: Comment| {
                             let (delete_btn, set_delete_btn) = create_signal(false);
-                            set_delete_btn(is_admin.get() || user.get().is_some_and(|u| u.id == comment.author_id));
+                            set_delete_btn(is_admin.get() || user.get().is_some_and(|u| u.id == comment.author_id.unwrap_or_default()));
                             view! {
-                                <li>
+                                <li class="px-48 min-w-full">
                                     <CommentComponent comment delete_btn/>
                                 </li>
                             }
