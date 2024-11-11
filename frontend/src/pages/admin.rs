@@ -482,7 +482,7 @@ pub fn BlogSection(blog_posts: ReadSignal<Vec<Post>>) -> impl IntoView {
                                             on:click=move |_| {
                                                 spawn_local(async move {
                                                     match if post.released { Api::post_unrelease(post.id).await } else { Api::post_release(post.id).await } {
-                                                        Ok(_results) => {
+                                                        Ok(_) => {
                                                             // refresh
                                                             web_sys::window().unwrap().location().reload().unwrap();
                                                         },
@@ -502,7 +502,7 @@ pub fn BlogSection(blog_posts: ReadSignal<Vec<Post>>) -> impl IntoView {
                                             on:click=move |_| {
                                                 spawn_local(async move {
                                                     match Api::post_delete(post.id).await {
-                                                        Ok(_results) => {
+                                                        Ok(_) => {
                                                             // refresh
                                                             web_sys::window().unwrap().location().reload().unwrap();
                                                         },

@@ -1,3 +1,4 @@
+use iter_tools::Itertools;
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
@@ -32,10 +33,13 @@ pub fn App() -> impl IntoView {
             .unwrap_or(IsAdminResponse { admin: false })
             .admin;
         set_is_admin(admin);
+        let mut all = Api::all_blog_posts().await.unwrap_or(Vec::new());
         set_blog_posts(if admin {
-            Api::admin_blog_posts().await.unwrap_or(Vec::new())
+            let mut comb = Api::admin_blog_posts().await.unwrap_or(Vec::new());
+            comb.append(&mut all);
+            comb.iter().unique_by(|p| p.id).cloned().collect()
         } else {
-            Api::all_blog_posts().await.unwrap_or(Vec::new())
+            all
         });
         set_user(Api::get_profile().await.ok());
 
