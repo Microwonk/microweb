@@ -20,7 +20,7 @@ pub fn generate_rss(title: &str, description: &str, link: &str, posts: &[Process
         <link>{link}</link>
         <language>en-us</language>
         <ttl>60</ttl>
-        <atom:link href="https://blog.nicolas-frey.com/rss" rel="self" type="application/rss+xml" />
+        <atom:link href="https://microblog.shuttleapp.rs/rss" rel="self" type="application/rss+xml" />
         {}
     </channel>
 </rss>   
@@ -51,6 +51,7 @@ pub async fn rss(State(state): State<ServerState>) -> ApiResult<impl IntoRespons
     {
         Ok(response) => Ok((
             StatusCode::OK,
+            [("Content-Type", "application/rss+xml")],
             generate_rss(
                 "Microwonk's Blog",
                 "Ramblings of an Aspiring (Game) Developer",
