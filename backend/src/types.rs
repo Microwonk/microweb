@@ -199,9 +199,10 @@ impl RssEntry {
             <pubDate>{}</pubDate>
             <link>{}</link>
             <guid isPermaLink="true">{}</guid>
+            <author>{}</author>
         </item>
       "#,
-            self.title, self.description, self.pub_date, self.link, self.guid
+            self.title, self.description, self.pub_date, self.link, self.guid, self.author
         )
     }
 }

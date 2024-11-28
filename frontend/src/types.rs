@@ -1,3 +1,4 @@
+use rss::{Channel, Item};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -103,4 +104,49 @@ pub struct LogEntry {
     pub message: String,
     pub context: String,
     pub log_time: chrono::NaiveDateTime,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct RssFeed {
+    pub title: String,
+    pub description: String,
+    pub link: String,
+    pub language: String,
+    pub items: Vec<RssEntry>,
+}
+
+impl From<Channel> for RssFeed {
+    fn from(c: Channel) -> Self {
+        let items: Vec<RssEntry> = c.items().iter().cloned().map(|i| i.into()).collect();
+        Self {
+            title: c.title,
+            description: c.description,
+            link: c.link,
+            language: c.language.unwrap_or_default(),
+            items,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct RssEntry {
+    pub title: String,
+    pub link: String,
+    pub description: String,
+    pub pub_date: String,
+    pub author: String,
+    pub guid: String,
+}
+
+impl From<Item> for RssEntry {
+    fn from(i: Item) -> Self {
+        Self {
+            title: i.title.unwrap_or_default(),
+            link: i.link.unwrap_or_default(),
+            description: i.description.unwrap_or_default(),
+            pub_date: i.pub_date.unwrap_or_default(),
+            author: i.author.unwrap_or_default(),
+            guid: i.guid.unwrap_or_default().value,
+        }
+    }
 }
