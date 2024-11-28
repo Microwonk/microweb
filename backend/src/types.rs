@@ -1,3 +1,4 @@
+use chrono::{TimeZone, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
@@ -159,5 +160,48 @@ pub struct NewLogEntry {
 impl NewLogEntry {
     pub fn new(message: String, context: String) -> Self {
         Self { message, context }
+    }
+}
+
+pub struct RssEntry {
+    pub title: String,
+    pub link: String,
+    pub description: String,
+    pub pub_date: String,
+    pub author: String,
+    pub guid: String,
+}
+
+impl From<ProcessedPost> for RssEntry {
+    fn from(post: ProcessedPost) -> Self {
+        let full_url = format!("https://blog.nicolas-frey.com/posts/{}", post.slug);
+        Self {
+            title: post.title,
+            link: full_url.clone(),
+            description: post.description,
+            pub_date: Utc
+                .from_utc_datetime(&post.updated_at.unwrap_or(post.created_at))
+                .to_rfc2822(),
+            author: post.author_name,
+            guid: full_url,
+        }
+    }
+}
+
+impl RssEntry {
+    // Converts an RSSEntry to a String containing the rss item tags
+    pub fn to_item(&self) -> String {
+        format!(
+            r#"
+        <item>
+            <title><![CDATA[{}]]></title>
+            <description><![CDATA[{}]]></description>
+            <pubDate>{}</pubDate>
+            <link>{}</link>
+            <guid isPermaLink="true">{}</guid>
+        </item>
+      "#,
+            self.title, self.description, self.pub_date, self.link, self.guid
+        )
     }
 }

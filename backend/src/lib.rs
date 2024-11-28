@@ -4,6 +4,7 @@ pub mod comments_handler;
 pub mod logs_handler;
 pub mod media_handler;
 pub mod post_handler;
+pub mod rss_handler;
 pub mod types;
 pub mod user_handler;
 

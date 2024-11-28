@@ -1,9 +1,7 @@
-use core::str;
-
 use anyhow::Context;
 use microblog::{
-    auth_handler, comments_handler, logs_handler, media_handler, post_handler, user_handler,
-    ApiError, ApiResult, ServerState,
+    auth_handler, comments_handler, logs_handler, media_handler, post_handler, rss_handler,
+    user_handler, ServerState,
 };
 use shuttle_runtime::SecretStore;
 use sqlx::PgPool;
@@ -11,27 +9,13 @@ use sqlx::PgPool;
 use axum::{
     http::{
         header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE},
-        HeaderValue, Method, StatusCode,
+        HeaderValue, Method,
     },
-    response::{Html, IntoResponse},
     routing::{delete, get, post},
     Router,
 };
 
 use tower_http::cors::CorsLayer;
-
-// needs to be async for axum
-async fn test() -> ApiResult<impl IntoResponse> {
-    Ok(Html(
-        str::from_utf8(include_bytes!("../public/index.html")).map_err(|e| {
-            ApiError::werr(
-                "Something went wrong.",
-                StatusCode::INTERNAL_SERVER_ERROR,
-                e,
-            )
-        })?,
-    ))
-}
 
 #[shuttle_runtime::main]
 async fn main(
@@ -94,7 +78,7 @@ fn unauthenticated_routes(state: ServerState) -> Router {
         // get upload
         .route("/upload/:id", get(media_handler::get_upload))
         // test route
-        .route("/test", get(test))
+        .route("/rss", get(rss_handler::rss))
         .with_state(state)
         .layer(cors)
 }
