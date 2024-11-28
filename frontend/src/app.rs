@@ -8,7 +8,7 @@ use crate::{
     pages::{
         admin::AdminPage, blog_post::BlogPostPage, edit_blog_post::EditBlogPostPage,
         home::HomePage, loading::LoadingPage, login::LoginPage, logout::LogOut, p404::Page404,
-        register::RegisterPage,
+        register::RegisterPage, rss::RSSPage,
     },
     types::{IsAdminResponse, Profile},
     util::Api,
@@ -27,7 +27,8 @@ pub fn App() -> impl IntoView {
     // Initialize state and check if logged in
     spawn_local(async move {
         Api::initialize().await;
-        set_logged_in(Api::is_logged_in().await);
+        let l_in = Api::is_logged_in().await;
+        set_logged_in(l_in);
         let admin = Api::is_admin()
             .await
             .unwrap_or(IsAdminResponse { admin: false })
@@ -41,7 +42,9 @@ pub fn App() -> impl IntoView {
         } else {
             all
         });
-        set_user(Api::get_profile().await.ok());
+        if l_in {
+            set_user(Api::get_profile().await.ok());
+        }
 
         set_loaded(true);
     });
@@ -64,7 +67,9 @@ pub fn App() -> impl IntoView {
                     <Route path="/login" view=move || view! { <LoginPage set_user set_logged_in/> }/>
                     <Route path="/logout" view=move || view! { <LogOut set_user set_logged_in/> }/>
                     <Route path="/posts/:slug" view=move || view! { <BlogPostPage user logged_in is_admin blog_posts/> }/>
+                    <Route path="/feed" view=move || view! { <RSSPage logged_in user/> }/>
                     <Route path="/*any" view=Page404/>
+
 
                     // Admin routes
                     <Route path="/admin" view=move || {

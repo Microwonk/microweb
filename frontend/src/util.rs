@@ -180,6 +180,16 @@ impl Api {
         Self::simple_get(format!("{}/admin/logs", API_PATH), true).await
     }
 
+    pub async fn get_rss() -> Result<String, ApiError> {
+        match Request::get(format!("{}/rss", API_PATH).as_str())
+            .send()
+            .await
+        {
+            Ok(response) => Ok(response.text().await.map_err(ApiError::json)?),
+            Err(e) => Err(ApiError::json(e)),
+        }
+    }
+
     async fn simple_get<T: for<'de> Deserialize<'de>>(
         path: impl Into<String>,
         authenticated: bool,

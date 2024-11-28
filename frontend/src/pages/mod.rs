@@ -7,3 +7,4 @@ pub mod login;
 pub mod logout;
 pub mod p404;
 pub mod register;
+pub mod rss;
