@@ -7,10 +7,11 @@ pub fn Header(logged_in: ReadSignal<bool>, user: ReadSignal<Option<Profile>>) ->
     view! {
         <header
             id="header"
-            class="sticky top-0 bg-nf-dark mx-auto max-w-full selection:bg-nf-white selection:text-nf-dark relative backdrop-invert-0 z-10"
+            class="sticky top-0 mx-auto max-w-full selection:bg-nf-white selection:text-nf-dark relative backdrop-invert-0 z-10"
+            style="backdrop-filter: blur(5px)"
         >
             <nav
-                class="w-full py-2 md:py-3 border-b-nf-white/[0.35] border-b-2 px-3 md:px-5"
+                class="w-full bg-nf-dark py-2 md:py-3 border-b-nf-white/[0.35] border-b-2 px-3 md:px-5"
                 aria-label="Global"
             >
                 <ul class="gap-4 flex-row flex items-center justify-between">
@@ -23,11 +24,11 @@ pub fn Header(logged_in: ReadSignal<bool>, user: ReadSignal<Option<Profile>>) ->
                 </ul>
             </nav>
             <nav
-                class="w-full py-2 md:py-3 bg-nf-white backdrop-blur border-b-nf-white/[0.35] border-b-2 px-3 md:px-5"
+                class="w-full py-2 md:py-3 bg-transparent border-b-nf-white/[0.35] border-b-2 px-3 md:px-5"
                 aria-label="Global"
             >
-                <ul class="gap-4 flex-row flex items-center justify-between">
-                    <li class="font-rosmatika hidden sm:block text-nf-dark text-md md:text-lg flex uppercase">
+                <ul class="gap-4 flex-row flex justify-between">
+                    <li class="font-rosmatika hidden sm:block text-nf-dark text-md md:text-lg flex uppercase hover:text-nf-color transition">
                         <a href="/">
                             Blog
                         </a>

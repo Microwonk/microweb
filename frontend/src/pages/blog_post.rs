@@ -77,7 +77,7 @@ pub fn BlogPostHeader(
                         }
                     </p>
                 </div>
-                <p class="flex-shrink-0 mt-3 text-sm md:mt-0">{format!("{} min read • {} comments", read_time.unwrap_or(10), num_comments)}</p>
+                <a href="#comment_section" class="flex-shrink-0 mt-3 text-sm md:mt-0 hover:underline">{format!("{} min read • {} comments", read_time.unwrap_or(10), num_comments)}</a>
             </div>
         </div>
     }

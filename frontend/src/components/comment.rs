@@ -84,7 +84,7 @@ pub fn CommentSection(
     view! {
         <div class="bg-nf-dark p-4 pb-12">
             // heading for the commentsection
-            <div class="flex justify-between items-center mb-6">
+            <div id="comment_section" class="flex justify-between items-center mb-6">
                 <h2 class="text-lg lg:text-2xl font-bold text-nf-white">{move || format!("Comments ({})", comments.get().unwrap_or_default().len())}</h2>
             </div>
 

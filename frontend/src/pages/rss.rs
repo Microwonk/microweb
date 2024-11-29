@@ -58,7 +58,7 @@ pub fn RSSPage(logged_in: ReadSignal<bool>, user: ReadSignal<Option<Profile>>) -
     view! {
         <Title text="RSS Feed"/>
         <Header logged_in user/>
-        <div class="py-12 md:px-0 md:mx-auto md:w-[96rem]">
+        <div class="py-12 px-0 mx-auto lg:w-[96rem]">
             <h1 class="text-4xl font-bold md:tracking-tight md:text-5xl">RSS Feed Viewer</h1>
             <div class="flex gap-4 my-4">
                 <button
@@ -104,7 +104,7 @@ pub fn RSSPage(logged_in: ReadSignal<bool>, user: ReadSignal<Option<Profile>>) -
                     <div inner_html=move || rss_content.get().unwrap_or("Loading . . .".into())></div>
                 </div>
             }>
-                <div class="w-1/2">
+                <div class="lg:w-1/2">
                     <div class="mx-auto max-w-screen-xl py-12 px-4  rounded-lg bg-white mb-4">
                         <div class="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
                             <div>
