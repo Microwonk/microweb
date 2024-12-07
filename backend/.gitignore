@@ -1,4 +1,5 @@
 /target
 .shuttle*
+.env
 Secrets*.toml
 public/files/*

@@ -21,7 +21,7 @@ async fn main() -> anyhow::Result<()> {
     dotenv::dotenv().ok();
 
     let database_url = std::env::var("DATABASE_URL").context("DATABASE_URL must be set")?;
-    let pool = PgPool::connect(&database_url)
+    let pool = PgPool::new().max_connections(10).connect(&database_url)
         .await
         .context("Failed to connect to Postgres")?;
 
