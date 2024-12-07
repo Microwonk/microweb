@@ -3,7 +3,7 @@ use microblog::{
     auth_handler, comments_handler, logs_handler, media_handler, post_handler, rss_handler,
     user_handler, ServerState,
 };
-use sqlx::PgPool;
+use sqlx::postgres::PgPoolOptions;
 
 use axum::{
     http::{
@@ -21,7 +21,9 @@ async fn main() -> anyhow::Result<()> {
     dotenv::dotenv().ok();
 
     let database_url = std::env::var("DATABASE_URL").context("DATABASE_URL must be set")?;
-    let pool = PgPool::new().max_connections(10).connect(&database_url)
+    let pool = PgPoolOptions::new()
+        .max_connections(10)
+        .connect(&database_url)
         .await
         .context("Failed to connect to Postgres")?;
 
