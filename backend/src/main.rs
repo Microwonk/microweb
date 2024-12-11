@@ -3,8 +3,7 @@ use microblog::{
     auth_handler, comments_handler, logs_handler, media_handler, post_handler, rss_handler,
     user_handler, ServerState,
 };
-use shuttle_runtime::SecretStore;
-use sqlx::PgPool;
+use sqlx::postgres::PgPoolOptions;
 
 use axum::{
     http::{
@@ -17,19 +16,23 @@ use axum::{
 
 use tower_http::cors::CorsLayer;
 
-#[shuttle_runtime::main]
-async fn main(
-    #[shuttle_shared_db::Postgres] pool: PgPool,
-    #[shuttle_runtime::Secrets] secrets: SecretStore,
-) -> shuttle_axum::ShuttleAxum {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    dotenv::dotenv().ok();
+
+    let database_url = std::env::var("DATABASE_URL").context("DATABASE_URL must be set")?;
+    let pool = PgPoolOptions::new()
+        .max_connections(10)
+        .connect(&database_url)
+        .await
+        .context("Failed to connect to Postgres")?;
+
     sqlx::migrate!()
         .run(&pool)
         .await
         .expect("Failed to run migrations");
 
-    let secret_key = secrets
-        .get("KEY")
-        .context("Could not find KEY in Secrets")?;
+    let secret_key = std::env::var("SECRET_KEY").context("SECRET_KEY must be set")?;
 
     let state = ServerState { pool, secret_key };
 
@@ -37,7 +40,10 @@ async fn main(
         .merge(unauthenticated_routes(state.clone()))
         .merge(authenticated_routes(state.clone()));
 
-    Ok(router.into())
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, router).await?;
+
+    Ok(())
 }
 
 fn unauthenticated_routes(state: ServerState) -> Router {

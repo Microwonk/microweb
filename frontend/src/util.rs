@@ -50,7 +50,7 @@ use crate::types::{
 //         .expect("Failed to inject JSON-LD");
 // }
 
-pub const API_PATH: &str = "https://microblog.shuttleapp.rs";
+pub const API_PATH: &str = "https://blogapi.nicolas-frey.com";
 
 lazy_static! {
     pub static ref TOKEN: Arc<RwLock<String>> = Arc::new(RwLock::new(String::new()));
