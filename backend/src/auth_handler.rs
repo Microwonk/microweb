@@ -187,12 +187,12 @@ fn encode_jwt(email: String, secret: String) -> Result<String, StatusCode> {
         email,
     };
 
-    return encode(
+    encode(
         &Header::default(),
         &claim,
         &EncodingKey::from_secret(secret.as_ref()),
     )
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR);
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
 }
 
 fn decode_jwt(jwt: String, secret: String) -> Result<TokenData<Claims>, StatusCode> {

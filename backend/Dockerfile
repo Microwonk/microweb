@@ -1,21 +1,26 @@
-FROM rust:latest as builder
+# Stage 1: Prepare the dependency cache
+FROM rust:latest AS chef
 
-WORKDIR /usr/src/app
+RUN cargo install cargo-chef
+WORKDIR /app
+
+FROM chef AS planner
 COPY . .
+RUN cargo chef prepare  --recipe-path recipe.json
 
-# Build the application
+FROM chef AS builder
+COPY --from=planner /app/recipe.json recipe.json
+# Build dependencies - this is the caching Docker layer!
+RUN cargo chef cook --release --recipe-path recipe.json
+# Build application
+COPY . .
 RUN cargo build --release
 
-# Use a lightweight image for production
-FROM debian:bookworm-slim
+# Stage 3: Create a minimal runtime image
+FROM gcr.io/distroless/cc AS runtime
 
 WORKDIR /app
-COPY --from=builder /usr/src/app/target/release/microblog /app/microblog
+COPY --from=builder /app/target/release/microblog /app/microblog
 
-RUN apt-get update && apt-get install -y libssl3 && rm -rf /var/lib/apt/lists/*
-
-# Expose the port the Axum app listens on
 EXPOSE 3000
-
-# Run the app
-CMD ["./microblog"]
+CMD ["/app/microblog"]

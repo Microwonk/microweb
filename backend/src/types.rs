@@ -12,6 +12,7 @@ pub struct Post {
     pub slug: String,
     pub markdown_content: String,
     pub released: bool,
+    pub release_date: Option<sqlx::types::chrono::NaiveDateTime>,
     pub created_at: sqlx::types::chrono::NaiveDateTime,
     pub updated_at: Option<sqlx::types::chrono::NaiveDateTime>,
 }
@@ -33,6 +34,7 @@ pub struct ProcessedPost {
     pub slug: String,
     pub markdown_content: String,
     pub released: bool,
+    pub release_date: Option<sqlx::types::chrono::NaiveDateTime>,
     pub created_at: sqlx::types::chrono::NaiveDateTime,
     pub updated_at: Option<sqlx::types::chrono::NaiveDateTime>,
 }

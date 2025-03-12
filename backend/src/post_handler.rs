@@ -25,7 +25,7 @@ pub async fn create_post(
         VALUES (
             $1, $2, $3, $4, $5
         )
-        RETURNING id, author, slug, title, description, markdown_content, created_at, updated_at, released
+        RETURNING *
         "#,
     )
     .bind(identity.id)
@@ -74,26 +74,47 @@ pub async fn unrelease_post(
 }
 
 async fn releaser(id: i32, state: ServerState, release: bool) -> ApiResult<impl IntoResponse> {
-    match sqlx::query_as::<_, Post>(
-        r#"
-        UPDATE posts
-        SET released = $1
-        WHERE id = $2
-        RETURNING id, author, title, slug, markdown_content, created_at, updated_at, description, released
-        "#,
-    )
-    .bind(release)
-    .bind(id)
-    .fetch_one(&state.pool)
+    match if release {
+        sqlx::query_as::<_, Post>(
+            r#"
+            UPDATE posts
+            SET released = $1, release_date = $2
+            WHERE id = $3
+            RETURNING *
+            "#,
+        )
+        .bind(release)
+        .bind(Utc::now())
+        .bind(id)
+        .fetch_one(&state.pool)
+    } else {
+        sqlx::query_as::<_, Post>(
+            r#"
+            UPDATE posts
+            SET released = $1
+            WHERE id = $2
+            RETURNING *
+            "#,
+        )
+        .bind(release)
+        .bind(id)
+        .fetch_one(&state.pool)
+    }
     .await
     {
         Ok(post) => {
             Log::info(
-                format!("Blog Post [{} | {}] {}.", post.id, post.title, if release { "released" } else { "unreleased" }),
+                format!(
+                    "Blog Post [{} | {}] {}.",
+                    post.id,
+                    post.title,
+                    if release { "released" } else { "unreleased" }
+                ),
                 &state,
             )
             .await?;
-            ok!(post)},
+            ok!(post)
+        }
         Err(e) => Err(ApiError::werr(
             "Could not update Post.",
             StatusCode::BAD_REQUEST,
@@ -266,7 +287,7 @@ pub async fn update_post(
         UPDATE posts
         SET title = $1, slug = $2, description = $3, markdown_content = $4, updated_at = $5
         WHERE id = $6
-        RETURNING id, author, title, slug, markdown_content, created_at, updated_at, description, released
+        RETURNING *
         "#,
     )
     .bind(post.title.as_str())
@@ -285,7 +306,7 @@ pub async fn update_post(
             )
             .await?;
             ok!(post)
-        },
+        }
         Err(e) => Err(ApiError::werr(
             "Could not update Post.",
             StatusCode::BAD_REQUEST,

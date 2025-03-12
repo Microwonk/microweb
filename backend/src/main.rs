@@ -18,7 +18,7 @@ use tower_http::cors::CorsLayer;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    dotenv::dotenv().ok();
+    dotenvy::dotenv().ok();
 
     let database_url = std::env::var("DATABASE_URL").context("DATABASE_URL must be set")?;
     let pool = PgPoolOptions::new()

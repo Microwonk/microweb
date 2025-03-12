@@ -67,7 +67,7 @@ pub async fn delete_comment(
         Ok(comment) => {
             // if the requested deleters identity does not match the comments author/owner, we make an admin check
             // and if the user is not an admin, no deletion is possible. Admin user can delete any comments!
-            if !comment.author.is_some_and(|a| a == identity.id) {
+            if comment.author.is_none_or(|a| a != identity.id) {
                 admin_check(&identity, &state).await?;
             }
             match sqlx::query("DELETE FROM comments WHERE id = $1")
