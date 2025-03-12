@@ -40,11 +40,12 @@ pub async fn rss(State(state): State<ServerState>) -> ApiResult<impl IntoRespons
             posts.slug,
             posts.markdown_content,
             posts.released,
+            posts.release_date,
             posts.created_at,
             posts.updated_at
         FROM posts
         JOIN users ON posts.author = users.id
-        WHERE released = true ORDER BY created_at DESC"#,
+        WHERE released = true ORDER BY release_date DESC"#,
     )
     .fetch_all(&state.pool)
     .await

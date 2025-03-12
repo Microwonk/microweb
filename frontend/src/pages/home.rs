@@ -25,7 +25,7 @@ pub fn HomePage(
                         let icon = get_random_icon();
                         view! {
                             <li>
-                                <BlogCard title={post.title} description={post.description} link={post.slug} date={post.updated_at.unwrap_or(post.created_at)} icon/>
+                                <BlogCard title={post.title} description={post.description} link={post.slug} date={post.release_date.unwrap_or(post.updated_at.unwrap_or(post.created_at))} icon/>
                             </li>
                         }
                     }

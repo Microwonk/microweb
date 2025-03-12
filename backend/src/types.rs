@@ -177,15 +177,20 @@ pub struct RssEntry {
 impl From<ProcessedPost> for RssEntry {
     fn from(post: ProcessedPost) -> Self {
         let full_url = format!("https://blog.nicolas-frey.com/posts/{}", post.slug);
+        let perm_url = format!("https://blog.nicolas-frey.com/posts/{}", post.id);
         Self {
             title: post.title,
-            link: full_url.clone(),
+            link: full_url,
             description: post.description,
             pub_date: Utc
-                .from_utc_datetime(&post.updated_at.unwrap_or(post.created_at))
+                .from_utc_datetime(
+                    &post
+                        .release_date
+                        .unwrap_or(post.updated_at.unwrap_or(post.created_at)),
+                )
                 .to_rfc2822(),
             author: post.author_name,
-            guid: full_url,
+            guid: perm_url,
         }
     }
 }

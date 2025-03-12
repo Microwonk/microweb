@@ -134,11 +134,12 @@ pub async fn get_all_posts(State(state): State<ServerState>) -> ApiResult<impl I
             posts.slug,
             posts.markdown_content,
             posts.released,
+            posts.release_date,
             posts.created_at,
             posts.updated_at
         FROM posts
         JOIN users ON posts.author = users.id
-        WHERE released = true ORDER BY created_at DESC"#,
+        WHERE released = true ORDER BY release_date DESC"#,
     )
     .fetch_all(&state.pool)
     .await
@@ -167,6 +168,7 @@ pub async fn get_posts_by_identity(
             posts.slug,
             posts.markdown_content,
             posts.released,
+            posts.release_date,
             posts.created_at,
             posts.updated_at
         FROM posts
@@ -232,12 +234,12 @@ pub async fn get_post(
             posts.slug,
             posts.markdown_content,
             posts.released,
+            posts.release_date,
             posts.created_at,
             posts.updated_at
         FROM posts
         JOIN users ON posts.author = users.id
-        WHERE posts.slug = $1
-        ORDER BY posts.created_at DESC"#,
+        WHERE posts.slug = $1"#,
     )
     .bind(slug.as_str())
     .fetch_one(&state.pool)
@@ -246,6 +248,40 @@ pub async fn get_post(
         Ok(response) => ok!(response),
         Err(e) => Err(ApiError::werr(
             format!("Error retrieving post with slug {}.", slug),
+            StatusCode::BAD_REQUEST,
+            e,
+        )),
+    }
+}
+
+pub async fn get_post_by_id(
+    Path(id): Path<i32>,
+    State(state): State<ServerState>,
+) -> ApiResult<impl IntoResponse> {
+    match sqlx::query_as::<_, ProcessedPost>(
+        r#"SELECT 
+            posts.id,
+            users.name AS author_name,
+            posts.author AS author,
+            posts.description,
+            posts.title,
+            posts.slug,
+            posts.markdown_content,
+            posts.released,
+            posts.release_date,
+            posts.created_at,
+            posts.updated_at
+        FROM posts
+        JOIN users ON posts.author = users.id
+        WHERE posts.id = $1"#,
+    )
+    .bind(id)
+    .fetch_one(&state.pool)
+    .await
+    {
+        Ok(response) => ok!(response),
+        Err(e) => Err(ApiError::werr(
+            format!("Error retrieving post with id {}.", id),
             StatusCode::BAD_REQUEST,
             e,
         )),
@@ -309,26 +345,6 @@ pub async fn update_post(
         }
         Err(e) => Err(ApiError::werr(
             "Could not update Post.",
-            StatusCode::BAD_REQUEST,
-            e,
-        )),
-    }
-}
-
-pub async fn get_post_by_id(
-    Path(id): Path<i32>,
-    Extension(identity): Extension<User>,
-    State(state): State<ServerState>,
-) -> ApiResult<impl IntoResponse> {
-    admin_check(&identity, &state).await?;
-    match sqlx::query_as::<_, Post>("SELECT * FROM posts WHERE id = $1")
-        .bind(id)
-        .fetch_one(&state.pool)
-        .await
-    {
-        Ok(response) => ok!(response),
-        Err(e) => Err(ApiError::werr(
-            "Error retrieving post.",
             StatusCode::BAD_REQUEST,
             e,
         )),

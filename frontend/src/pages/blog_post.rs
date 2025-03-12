@@ -70,7 +70,7 @@ pub fn BlogPostHeader(
                     <p class="text-sm">{
                         move ||
                             if let Some(post) = blog_post.get() {
-                                format!("{} • {}", post.author_name, post.updated_at.unwrap_or(post.created_at).format("%b. %d, %Y"))
+                                format!("{} • {}", post.author_name, post.release_date.unwrap_or(post.updated_at.unwrap_or(post.created_at)).format("%b. %d, %Y"))
                             } else {
                                 "".into()
                             }
