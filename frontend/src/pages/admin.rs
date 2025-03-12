@@ -450,6 +450,7 @@ pub fn BlogSection(blog_posts: ReadSignal<Vec<Post>>) -> impl IntoView {
                     <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Title</th>
                     <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Created At</th>
                     <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Released</th>
+                    <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Released At</th>
                     <th class="px-4 py-2"></th>
                     <th class="px-4 py-2"></th>
                     <th class="px-4 py-2"></th>
@@ -467,6 +468,7 @@ pub fn BlogSection(blog_posts: ReadSignal<Vec<Post>>) -> impl IntoView {
                                     <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">{post.title}</td>
                                     <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">{post.created_at.to_string()}</td>
                                     <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">{if post.released { "yes "} else { "no" }}</td>
+                                    <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">{post.release_date.map(|r| r.to_string()).unwrap_or("".to_string())}</td>
                                     <td class="whitespace-nowrap px-4 py-2 text-gray-700">
                                         <a
                                             class="border-none inline-block rounded bg-indigo-600 px-4 py-2 text-xs font-medium text-white hover:bg-indigo-700"

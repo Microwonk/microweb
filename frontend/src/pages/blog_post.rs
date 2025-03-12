@@ -30,7 +30,14 @@ pub fn BlogPostPage(
 
     create_effect(move |_| {
         // filter slug to find blog post
-        set_blog_post(blog_posts.get().iter().find(|&b| b.slug == slug()).cloned());
+        set_blog_post(
+            blog_posts
+                .get()
+                .iter()
+                // either slug or id
+                .find(|&b| b.slug == slug() || b.id == slug().parse::<i32>().unwrap_or(-1))
+                .cloned(),
+        );
         spawn_local(async move {
             set_comments(
                 Api::get_comments(blog_post.get_untracked().unwrap().id)

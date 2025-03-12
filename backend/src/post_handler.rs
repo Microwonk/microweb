@@ -74,32 +74,18 @@ pub async fn unrelease_post(
 }
 
 async fn releaser(id: i32, state: ServerState, release: bool) -> ApiResult<impl IntoResponse> {
-    match if release {
-        sqlx::query_as::<_, Post>(
-            r#"
+    match sqlx::query_as::<_, Post>(
+        r#"
             UPDATE posts
             SET released = $1, release_date = $2
             WHERE id = $3
             RETURNING *
             "#,
-        )
-        .bind(release)
-        .bind(Utc::now())
-        .bind(id)
-        .fetch_one(&state.pool)
-    } else {
-        sqlx::query_as::<_, Post>(
-            r#"
-            UPDATE posts
-            SET released = $1
-            WHERE id = $2
-            RETURNING *
-            "#,
-        )
-        .bind(release)
-        .bind(id)
-        .fetch_one(&state.pool)
-    }
+    )
+    .bind(release)
+    .bind(if release { Some(Utc::now()) } else { None })
+    .bind(id)
+    .fetch_one(&state.pool)
     .await
     {
         Ok(post) => {
