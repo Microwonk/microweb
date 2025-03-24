@@ -75,7 +75,7 @@ pub fn App() -> impl IntoView {
                         view! {
                             <Suspense>
                                 <Show when=move || !is_admin.get()>
-                                    <ReRouter route="/admin"/>
+                                    <ReRouter route="/"/>
                                 </Show>
                             </Suspense>
                             <Outlet/>
