@@ -4,7 +4,7 @@ use chrono::{DateTime, Datelike};
 use leptos::{html::Button, prelude::*, task::spawn_local};
 use leptos_meta::*;
 use leptos_router::components::A;
-use leptos_use::{use_element_hover_with_options, UseElementHoverOptions};
+use leptos_use::{use_timeout_fn, UseTimeoutFnReturn};
 use rss::Channel;
 use syntect::{highlighting::ThemeSet, html::highlighted_html_for_string, parsing::SyntaxSet};
 
@@ -22,8 +22,6 @@ pub fn RSSPage(logged_in: ReadSignal<bool>, user: ReadSignal<Option<Profile>>) -
     let (view_feed, set_view_feed) = signal(true);
 
     let el = NodeRef::<Button>::new();
-    let is_hovered =
-        use_element_hover_with_options(el, UseElementHoverOptions::default().delay_leave(2000));
 
     spawn_local(async move {
         let str_rss = Api::get_rss().await.unwrap_or_default();
@@ -43,12 +41,15 @@ pub fn RSSPage(logged_in: ReadSignal<bool>, user: ReadSignal<Option<Profile>>) -
         }
     });
 
+    let UseTimeoutFnReturn { start, .. } = use_timeout_fn(move |_| set_copied(false), 3000.0);
+
     let copy_to_clipboard = move |_| {
         let _ = window()
             .navigator()
             .clipboard()
             .write_text(format!("{}/rss", API_PATH).as_str());
         set_copied(true);
+        start(0);
     };
 
     let c_icon = icondata::IoCopy;
@@ -66,9 +67,6 @@ pub fn RSSPage(logged_in: ReadSignal<bool>, user: ReadSignal<Option<Profile>>) -
                     class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-nf-color rounded-lg hover:bg-nf-dark"
                 >
                     {move || if copied.get() {
-                        if is_hovered.get() {
-                            set_copied(false);
-                        }
                         "Copied!".into()
                     } else {
                         format!("{}/rss", API_PATH)

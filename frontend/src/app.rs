@@ -67,7 +67,7 @@ pub fn App() -> impl IntoView {
                     <Route path=path!("/") view=move || view! { <HomePage user logged_in blog_posts/> }/>
                     <Route path=path!("register") view=move || view! { <RegisterPage set_user set_logged_in/> }/>
                     <Route path=path!("login") view=move || view! { <LoginPage set_user set_logged_in/> }/>
-                    <Route path=path!("logout") view=move || view! { <LogOut set_user set_logged_in/> }/>
+                    <Route path=path!("logout") view=move || view! { <LogOut set_user set_logged_in logged_in/> }/>
                     <Route path=path!("posts/:slug") view=move || view! { <BlogPostPage user logged_in is_admin blog_posts/> }/>
                     <Route path=path!("feed") view=move || view! { <RSSPage logged_in user/> }/>
 

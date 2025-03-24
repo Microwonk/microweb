@@ -10,6 +10,7 @@ pub fn LoginPage(
     set_logged_in: WriteSignal<bool>,
     set_user: WriteSignal<Option<Profile>>,
 ) -> impl IntoView {
+    let navigate = use_navigate();
     let (email, set_email) = signal("".to_string());
     let (password, set_password) = signal("".to_string());
     let (email_error, set_email_error) = signal(None::<String>);
@@ -116,6 +117,7 @@ pub fn LoginPage(
                     <button
                         class="block w-full rounded-lg bg-black px-5 py-3 text-sm font-medium text-white"
                         on:click=move |_| {
+                            let navigate = navigate.clone();
                             let email_value = email.get();
                             let password_value = password.get();
 
@@ -141,7 +143,6 @@ pub fn LoginPage(
                                         Ok(_) => {
                                             set_logged_in(true);
                                             set_user(Api::get_profile().await.ok());
-                                            let navigate = use_navigate();
                                             navigate("/", NavigateOptions::default());
                                         },
                                         Err(_) => {

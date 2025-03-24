@@ -34,6 +34,8 @@
     html,
     body {
       @apply bg-nf-white;
+      background-image: url("/assets/paperb.png");
+      background-blend-mode: multiply;
     }
     a {
       @apply no-underline;
@@ -185,4 +187,9 @@
   position: absolute;
   top: 110%;
   left: 0;
+}
+
+.blog-card {
+  background-image: url("/assets/paper.png");
+  background-blend-mode: multiply;
 }

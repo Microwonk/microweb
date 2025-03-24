@@ -1,22 +1,21 @@
-use leptos::{prelude::*, task::spawn_local};
-use leptos_router::hooks::use_navigate;
-
-use crate::{types::Profile, util::Api};
+use crate::{components::ReRouter, types::Profile, util::Api};
+use leptos::prelude::*;
 
 #[component]
 pub fn LogOut(
     set_logged_in: WriteSignal<bool>,
+    logged_in: ReadSignal<bool>,
     set_user: WriteSignal<Option<Profile>>,
 ) -> impl IntoView {
-    spawn_local(async move {
-        Api::logout().await;
+    Effect::new(move || {
+        Api::logout();
         set_user(None);
         set_logged_in(false);
     });
+
     view! {
-        {move || {
-            let navigate = use_navigate();
-            navigate("/", Default::default());
-        }}
+        <Show when=move || !logged_in.get()>
+            <ReRouter route="/"/>
+        </Show>
     }
 }

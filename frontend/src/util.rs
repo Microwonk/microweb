@@ -1,6 +1,6 @@
 use std::{error::Error, sync::Arc};
 
-use leptos::prelude::GetUntracked;
+use leptos::{prelude::GetUntracked, task::spawn_local};
 use tokio::sync::RwLock;
 
 use codee::string::JsonSerdeCodec;
@@ -133,16 +133,18 @@ impl Api {
         }
     }
 
-    pub async fn logout() {
+    pub fn logout() {
         let (_, set_token) = use_cookie_with_options::<LoginResponse, JsonSerdeCodec>(
             "token",
             UseCookieOptions::default()
-                .max_age(3_600_000 * 24) // one day
+                .max_age(3_600_000 * 24) // remove
                 .path("/")
                 .same_site(SameSite::Strict),
         );
         set_token(None);
-        *TOKEN.write().await = "".to_string();
+        spawn_local(async move {
+            *TOKEN.write().await = "".to_string();
+        });
     }
 
     pub async fn get_profile() -> Result<Profile, ApiError> {

@@ -15,7 +15,7 @@ pub fn BlogCard(
             <span class="rounded-md absolute inset-0 border-2 border-dashed border-black"></span>
 
             <div
-                class="rounded-md relative flex h-full transform items-end border-2 border-solid border-black bg-white transition-transform group-hover:-translate-x-2 group-hover:-translate-y-2"
+                class="rounded-md relative flex h-full transform items-end border-2 border-solid border-black bg-white transition-transform group-hover:-translate-x-2 group-hover:-translate-y-2 blog-card"
             >
                 <div
                 class="p-4 !pt-0 transition-opacity text-black group-hover:absolute group-hover:opacity-0 sm:p-6 lg:p-8"

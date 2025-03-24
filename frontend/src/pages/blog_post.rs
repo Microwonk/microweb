@@ -9,7 +9,7 @@ use std::io::{Cursor, Write};
 use syntect::{highlighting::ThemeSet, html::highlighted_html_for_string, parsing::SyntaxSet};
 
 use crate::{
-    components::{comment::CommentSection, header::Header},
+    components::{comment::CommentSection, header::Header, links::Links},
     pages::loading::LoadingPage,
     types::{Post, Profile},
     util::Api,
@@ -54,6 +54,7 @@ pub fn BlogPostPage(
             <Show when=move || blog_post.get().is_some() fallback=LoadingPage>
                 <BlogPostHeader blog_post num_comments=comments.get().unwrap_or_default().len()/>
                 <BlogPost content=blog_post.get().unwrap().markdown_content />
+                <Links/>
             </Show>
         </article>
         <CommentSection is_admin user comments blog_post/>
