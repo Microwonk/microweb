@@ -1,4 +1,4 @@
-use leptos::*;
+use leptos::{prelude::*, task::spawn_local};
 
 use crate::{
     types::{self, Comment, NewComment, Post, Profile},
@@ -7,7 +7,7 @@ use crate::{
 
 #[component]
 pub fn CommentComponent(
-    #[prop(into)] comment: MaybeSignal<types::Comment>,
+    #[prop(into)] comment: Signal<types::Comment>,
     #[prop(into)] delete_btn: ReadSignal<bool>,
 ) -> impl IntoView {
     let icon = icondata::IoPersonCircleOutline;
@@ -35,7 +35,7 @@ pub fn CommentComponent(
                             {comment.author_name.unwrap_or("DELETED USER".into())}
                         </div>
                     </p>
-                    <p class="text-sm text-gray-600"><time pubdate datetime={comment.created_at.format("%Y-%m-%d").to_string()}
+                    <p class="text-sm text-gray-600"><time prop:pubdate datetime={comment.created_at.format("%Y-%m-%d").to_string()}
                     >{comment.created_at.format("%b. %d, %Y").to_string()}</time></p>
                 </div>
                 // delete icon
@@ -80,7 +80,7 @@ pub fn CommentSection(
     #[prop(into)] comments: ReadSignal<Option<Vec<Comment>>>,
     #[prop(into)] blog_post: ReadSignal<Option<Post>>,
 ) -> impl IntoView {
-    let (content, set_content) = create_signal("".to_string());
+    let (content, set_content) = signal("".to_string());
     view! {
         <div class="bg-nf-dark p-4 pb-12">
             // heading for the commentsection
@@ -135,7 +135,7 @@ pub fn CommentSection(
                         each=move || comments.get().unwrap_or_default()
                         key=|c| c.id
                         children=move |comment: Comment| {
-                            let (delete_btn, set_delete_btn) = create_signal(false);
+                            let (delete_btn, set_delete_btn) = signal(false);
                             set_delete_btn(is_admin.get() || user.get().is_some_and(|u| u.id == comment.author_id.unwrap_or_default()));
                             view! {
                                 <li class="px-48 min-w-full">

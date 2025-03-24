@@ -1,8 +1,8 @@
 use flate2::write::DeflateEncoder;
 use flate2::Compression;
-use leptos::*;
+use leptos::{prelude::*, task::spawn_local};
 use leptos_meta::Title;
-use leptos_router::use_params_map;
+use leptos_router::hooks::use_params_map;
 use pulldown_cmark::*;
 use regex::Regex;
 use std::io::{Cursor, Write};
@@ -22,13 +22,13 @@ pub fn BlogPostPage(
     blog_posts: ReadSignal<Vec<Post>>,
     user: ReadSignal<Option<Profile>>,
 ) -> impl IntoView {
-    let (blog_post, set_blog_post) = create_signal(None::<Post>);
-    let (comments, set_comments) = create_signal(None::<Vec<_>>);
+    let (blog_post, set_blog_post) = signal(None::<Post>);
+    let (comments, set_comments) = signal(None::<Vec<_>>);
 
     let params = use_params_map();
-    let slug = move || params.with_untracked(|params| params.get("slug").cloned().unwrap());
+    let slug = move || params.with_untracked(|params| params.get("slug").clone().unwrap());
 
-    create_effect(move |_| {
+    Effect::new(move |_| {
         // filter slug to find blog post
         set_blog_post(
             blog_posts

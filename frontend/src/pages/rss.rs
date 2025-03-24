@@ -1,10 +1,9 @@
 use std::io::Cursor;
 
 use chrono::{DateTime, Datelike};
-use html::Button;
-use leptos::*;
+use leptos::{html::Button, prelude::*, task::spawn_local};
 use leptos_meta::*;
-use leptos_router::A;
+use leptos_router::components::A;
 use leptos_use::{use_element_hover_with_options, UseElementHoverOptions};
 use rss::Channel;
 use syntect::{highlighting::ThemeSet, html::highlighted_html_for_string, parsing::SyntaxSet};
@@ -17,10 +16,10 @@ use crate::{
 
 #[component]
 pub fn RSSPage(logged_in: ReadSignal<bool>, user: ReadSignal<Option<Profile>>) -> impl IntoView {
-    let (rss_content, set_rss_content) = create_signal(None::<String>);
-    let (copied, set_copied) = create_signal(false);
-    let (rss_feed, set_rss_feed) = create_signal(None::<RssFeed>);
-    let (view_feed, set_view_feed) = create_signal(true);
+    let (rss_content, set_rss_content) = signal(None::<String>);
+    let (copied, set_copied) = signal(false);
+    let (rss_feed, set_rss_feed) = signal(None::<RssFeed>);
+    let (view_feed, set_view_feed) = signal(true);
 
     let el = NodeRef::<Button>::new();
     let is_hovered =
@@ -146,7 +145,6 @@ pub fn RSSPage(logged_in: ReadSignal<bool>, user: ReadSignal<Option<Profile>>) -
                                     <article class="flex bg-white transition hover:shadow-xl rounded-lg">
                                         <div class="rotate-180 p-2 [writing-mode:_vertical-lr]">
                                             <time
-                                                pubdate
                                                 datetime={date.format("%Y-%m-%d").to_string()}
                                                 class="flex items-center justify-between gap-4 text-xs font-bold uppercase text-nf-dark"
                                             >
@@ -173,7 +171,7 @@ pub fn RSSPage(logged_in: ReadSignal<bool>, user: ReadSignal<Option<Profile>>) -
                                                 <A
                                                     // TODO: fetch somewhere else? nah
                                                     href="https://www.nicolas-frey.com"
-                                                    class="flex px-6 py-3 text-center text-xs text-gray-700"
+                                                    attr:class="flex px-6 py-3 text-center text-xs text-gray-700"
                                                 >
                                                     {entry.author}
                                                 </A>
@@ -182,7 +180,7 @@ pub fn RSSPage(logged_in: ReadSignal<bool>, user: ReadSignal<Option<Profile>>) -
                                             <div class="sm:flex sm:items-end sm:justify-end">
                                                 <A
                                                     href={entry.link}
-                                                    class="block bg-nf-color px-5 py-3 text-center text-xs font-bold uppercase text-nf-dark transition hover:bg-nf-dark hover:text-nf-white"
+                                                    attr:class="block bg-nf-color px-5 py-3 text-center text-xs font-bold uppercase text-nf-dark transition hover:bg-nf-dark hover:text-nf-white"
                                                 >
                                                     Read Blog
                                                 </A>

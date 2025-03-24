@@ -1,5 +1,5 @@
 use frontend::app::App;
-use leptos::*;
+use leptos::{mount::mount_to_body, *};
 
 fn main() {
     // set up logging

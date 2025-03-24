@@ -2,9 +2,9 @@ use crate::{
     components::{blog_card::BlogCard, header::Header},
     types::{Post, Profile},
 };
-use leptos::*;
+use leptos::prelude::*;
 use leptos_meta::*;
-use rand::seq::SliceRandom;
+use rand::seq::IndexedRandom;
 
 #[component]
 pub fn HomePage(
@@ -454,5 +454,5 @@ fn get_random_icon() -> icondata::Icon {
         icondata::IoWineOutline,
         icondata::IoWomanOutline,
     ];
-    icons.choose(&mut rand::thread_rng()).unwrap()
+    icons.choose(&mut rand::rng()).unwrap()
 }

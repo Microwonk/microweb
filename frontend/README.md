@@ -1,3 +1,3 @@
 # COMMANDS
 - ```npx tailwindcss -i input.css -o ./public/styles.css --watch```
-- ```trunk serve```
+- ```RUSTFLAGS='--cfg getrandom_backend="wasm_js"' trunk serve```

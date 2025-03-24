@@ -1,6 +1,6 @@
-use leptos::*;
+use leptos::{prelude::*, task::spawn_local};
 use leptos_meta::*;
-use leptos_router::{use_navigate, NavigateOptions};
+use leptos_router::{hooks::use_navigate, NavigateOptions};
 use regex::Regex;
 
 use crate::{types::Profile, util::Api};
@@ -10,10 +10,10 @@ pub fn LoginPage(
     set_logged_in: WriteSignal<bool>,
     set_user: WriteSignal<Option<Profile>>,
 ) -> impl IntoView {
-    let (email, set_email) = create_signal("".to_string());
-    let (password, set_password) = create_signal("".to_string());
-    let (email_error, set_email_error) = create_signal(None::<String>);
-    let (password_error, set_password_error) = create_signal(None::<String>);
+    let (email, set_email) = signal("".to_string());
+    let (password, set_password) = signal("".to_string());
+    let (email_error, set_email_error) = signal(None::<String>);
+    let (password_error, set_password_error) = signal(None::<String>);
 
     view! {
         <Title text="Login"/>
@@ -32,7 +32,7 @@ pub fn LoginPage(
 
                         <div class="relative">
                             <input
-                                prop:type="email"
+                                type="email"
                                 class="rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm"
                                 style="width: 85%;"
                                 on:input=move |ev| {
@@ -72,7 +72,7 @@ pub fn LoginPage(
 
                         <div class="relative">
                             <input
-                                prop:type="password"
+                                type="password"
                                 class="rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm"
                                 style="width: 85%;"
                                 on:input=move |ev| {

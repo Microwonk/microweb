@@ -1,5 +1,5 @@
 use chrono::NaiveDateTime;
-use leptos::*;
+use leptos::prelude::*;
 
 #[component]
 pub fn BlogCard(
@@ -21,7 +21,7 @@ pub fn BlogCard(
                 class="p-4 !pt-0 transition-opacity text-black group-hover:absolute group-hover:opacity-0 sm:p-6 lg:p-8"
                 >
                     <p class="top-0 left-0 pb-2 text-sm text-gray-600">
-                        <time pubdate datetime={date.format("%Y-%m-%d").to_string()}>
+                        <time prop:pubdate datetime={date.format("%Y-%m-%d").to_string()}>
                             {date.format("%b. %d, %Y").to_string()}
                         </time>
                     </p>
@@ -46,7 +46,7 @@ pub fn BlogCard(
                 class="absolute p-4 opacity-0 transition-opacity group-hover:relative group-hover:opacity-100 sm:p-6 lg:p-8"
                 >
                     <p class="top-0 left-0 text-sm text-gray-600">
-                        <time pubdate datetime={date.format("%Y-%m-%d").to_string()}>
+                        <time prop:pubdate datetime={date.format("%Y-%m-%d").to_string()}>
                             {date.format("%b. %d, %Y").to_string()}
                         </time>
                     </p>

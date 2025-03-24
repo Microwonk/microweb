@@ -1,7 +1,10 @@
 use iter_tools::Itertools;
-use leptos::*;
+use leptos::{prelude::*, task::spawn_local};
 use leptos_meta::*;
-use leptos_router::*;
+use leptos_router::{
+    components::{Outlet, ParentRoute, Route, Router, Routes},
+    *,
+};
 
 use crate::{
     components::ReRouter,
@@ -18,11 +21,11 @@ use crate::{
 
 #[component]
 pub fn App() -> impl IntoView {
-    let (is_admin, set_is_admin) = create_signal(false);
-    let (logged_in, set_logged_in) = create_signal(false);
-    let (loaded, set_loaded) = create_signal(false);
-    let (blog_posts, set_blog_posts) = create_signal(Vec::new());
-    let (user, set_user) = create_signal(None::<Profile>);
+    let (is_admin, set_is_admin) = signal(false);
+    let (logged_in, set_logged_in) = signal(false);
+    let (loaded, set_loaded) = signal(false);
+    let (blog_posts, set_blog_posts) = signal(Vec::new());
+    let (user, set_user) = signal(None::<Profile>);
 
     // Initialize state and check if logged in
     spawn_local(async move {
@@ -52,40 +55,36 @@ pub fn App() -> impl IntoView {
     provide_meta_context();
 
     view! {
-        <Html lang="en" class="smooth-scroll"/>
+        <Html attr:lang="en" attr:class="smooth-scroll"/>
 
         <Router>
-            <Routes>
-                <Route path="/" view=move || view! {
+            <Routes fallback=Page404>
+                <ParentRoute path=path!("") view=move || view! {
                     <Show when=move || loaded.get() fallback=LoadingPage>
                         <Outlet/>
                     </Show>
                 }>
-                    // Public routes
-                    <Route path="/" view=move || view! { <HomePage user logged_in blog_posts/> }/>
-                    <Route path="/register" view=move || view! { <RegisterPage set_user set_logged_in/> }/>
-                    <Route path="/login" view=move || view! { <LoginPage set_user set_logged_in/> }/>
-                    <Route path="/logout" view=move || view! { <LogOut set_user set_logged_in/> }/>
-                    <Route path="/posts/:slug" view=move || view! { <BlogPostPage user logged_in is_admin blog_posts/> }/>
-                    <Route path="/feed" view=move || view! { <RSSPage logged_in user/> }/>
-                    <Route path="/*any" view=Page404/>
+                    <Route path=path!("/") view=move || view! { <HomePage user logged_in blog_posts/> }/>
+                    <Route path=path!("register") view=move || view! { <RegisterPage set_user set_logged_in/> }/>
+                    <Route path=path!("login") view=move || view! { <LoginPage set_user set_logged_in/> }/>
+                    <Route path=path!("logout") view=move || view! { <LogOut set_user set_logged_in/> }/>
+                    <Route path=path!("posts/:slug") view=move || view! { <BlogPostPage user logged_in is_admin blog_posts/> }/>
+                    <Route path=path!("feed") view=move || view! { <RSSPage logged_in user/> }/>
 
-
-                    // Admin routes
-                    <Route path="/admin" view=move || {
+                    <ParentRoute path=path!("admin") view=move || {
                         view! {
-                            <Show when=move || is_admin.get() fallback=|| view! {
-                                <ReRouter route="/"/>
-                            }>
-                                <Outlet/>
-                            </Show>
+                            <Suspense>
+                                <Show when=move || !is_admin.get()>
+                                    <ReRouter route="/admin"/>
+                                </Show>
+                            </Suspense>
+                            <Outlet/>
                         }
                     }>
-                        <Route path="/" view=move || view! { <AdminPage blog_posts/>} />
-                        <Route path="?tab" view=move || view! { <AdminPage blog_posts/>} />
-                        <Route path="/posts/:slug" view=move || view! { <EditBlogPostPage blog_posts/> }/>
-                        </Route>
-                </Route>
+                        <Route path=path!("") view=move || view! { <AdminPage blog_posts/> } />
+                        <Route path=path!("posts/:slug") view=move || view! { <EditBlogPostPage blog_posts/> } />
+                    </ParentRoute> // auth
+                </ParentRoute>
             </Routes>
         </Router>
     }

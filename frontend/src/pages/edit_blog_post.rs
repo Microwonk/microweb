@@ -1,9 +1,9 @@
 use std::{cell::RefCell, rc::Rc};
 
 use gloo_timers::callback::Timeout;
-use leptos::*;
+use leptos::{prelude::*, task::spawn_local};
 use leptos_meta::*;
-use leptos_router::use_params_map;
+use leptos_router::hooks::use_params_map;
 
 use crate::{
     pages::{blog_post::BlogPost, loading::LoadingPage},
@@ -13,23 +13,23 @@ use crate::{
 
 #[component]
 pub fn EditBlogPostPage(blog_posts: ReadSignal<Vec<Post>>) -> impl IntoView {
-    let (blog_post, set_blog_post) = create_signal(None::<Post>);
-    let (markdown_content, set_markdown_content) = create_signal(String::new());
-    let (debounced_content, set_debounced_content) = create_signal(String::new());
-    let (title, set_title) = create_signal(String::new());
-    let (description, set_description) = create_signal(String::new());
+    let (blog_post, set_blog_post) = signal(None::<Post>);
+    let (markdown_content, set_markdown_content) = signal(String::new());
+    let (debounced_content, set_debounced_content) = signal(String::new());
+    let (title, set_title) = signal(String::new());
+    let (description, set_description) = signal(String::new());
 
     let params = use_params_map();
-    let slug = move || params.with(|params| params.get("slug").cloned().unwrap());
+    let slug = move || params.with(|params| params.get("slug").clone().unwrap());
 
     let debounce_timer: Rc<RefCell<Option<Timeout>>> = Rc::new(RefCell::new(None));
 
     // filter slug to find blog post
-    create_effect(move |_| {
+    Effect::new(move |_| {
         set_blog_post(blog_posts.get().iter().find(|&b| b.slug == slug()).cloned());
     });
 
-    create_effect(move |_| {
+    Effect::new(move |_| {
         if let Some(post) = blog_post.get() {
             set_markdown_content(post.markdown_content.clone());
             set_title(post.title.clone());
@@ -37,7 +37,7 @@ pub fn EditBlogPostPage(blog_posts: ReadSignal<Vec<Post>>) -> impl IntoView {
         }
     });
 
-    create_effect(move |_| {
+    Effect::new(move |_| {
         let current_content = markdown_content.get().clone();
         let debounce_timer_clone = Rc::clone(&debounce_timer);
 

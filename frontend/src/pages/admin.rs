@@ -5,30 +5,29 @@ use crate::{
     util::Api,
 };
 use chrono::Utc;
-use html::Div;
-use leptos::*;
+use leptos::Params;
+use leptos::{html::Div, prelude::*, task::spawn_local};
 use leptos_meta::*;
-use leptos_router::*;
-use leptos_use::{
-    use_drop_zone_with_options, UseDropZoneEvent, UseDropZoneOptions, UseDropZoneReturn,
-};
+use leptos_router::hooks::{use_navigate, use_query};
+use leptos_router::params::Params;
+use leptos_use::{use_drop_zone_with_options, UseDropZoneOptions, UseDropZoneReturn};
 
 #[derive(Params, PartialEq)]
 struct TabQuery {
-    tab: String,
+    tab: Option<String>,
 }
 
 #[component]
 pub fn AdminPage(blog_posts: ReadSignal<Vec<Post>>) -> impl IntoView {
     let query = use_query::<TabQuery>();
 
-    let (current_tab, set_current_tab) = create_signal(String::new());
-    let (users, set_users) = create_signal(Vec::new());
-    let (logs, set_logs) = create_signal(Vec::new());
-    let (media, set_media) = create_signal(Vec::new());
+    let (current_tab, set_current_tab) = signal(String::new());
+    let (users, set_users) = signal(Vec::new());
+    let (logs, set_logs) = signal(Vec::new());
+    let (media, set_media) = signal(Vec::new());
 
-    create_effect(move |_| {
-        if let Some(t) = query.with(|q| q.as_ref().map(|t| t.tab.clone()).ok()) {
+    Effect::new(move |_| {
+        if let Some(Some(t)) = query.with(|q| q.as_ref().map(|t| t.tab.clone()).ok()) {
             set_current_tab(t);
         } else {
             use_navigate()("/admin?tab=logs", Default::default());
@@ -45,11 +44,11 @@ pub fn AdminPage(blog_posts: ReadSignal<Vec<Post>>) -> impl IntoView {
                 <div class="md:col-span-4 lg:col-span-5">
                     <div class="p-6">
                         {move || match current_tab.get().as_str() {
-                            "users" => view! { <UserSection users set_users/>},
-                            "media" => view! { <MediaSection media set_media blog_posts/>},
-                            "blogs" => view! { <BlogSection blog_posts/>},
-                            "logs" => view! { <LogSection logs set_logs/> },
-                            _ => view! { <LoadingPage/> }
+                            "users" => view! { <UserSection users set_users/>}.into_any(),
+                            "media" => view! { <MediaSection media set_media blog_posts/>}.into_any(),
+                            "blogs" => view! { <BlogSection blog_posts/>}.into_any(),
+                            "logs" => view! { <LogSection logs set_logs/> }.into_any(),
+                            _ => view! { <LoadingPage/> }.into_any()
                         }}
                     </div>
                 </div>
@@ -95,7 +94,7 @@ pub fn LogSection(
 }
 
 #[component]
-pub fn LogRow(#[prop(into)] log: MaybeSignal<LogEntry>) -> impl IntoView {
+pub fn LogRow(#[prop(into)] log: Signal<LogEntry>) -> impl IntoView {
     let log = log.get();
     let color = match log.context.as_str() {
         "info" => "bg-green-300",
@@ -120,9 +119,9 @@ pub fn UserSection(
     users: ReadSignal<Vec<User>>,
     set_users: WriteSignal<Vec<User>>,
 ) -> impl IntoView {
-    let edit_row = create_rw_signal(None::<i32>);
-    let username = create_rw_signal("".to_string());
-    let email = create_rw_signal("".to_string());
+    let edit_row = RwSignal::new(None::<i32>);
+    let username = RwSignal::new("".to_string());
+    let email = RwSignal::new("".to_string());
     spawn_local(async move {
         set_users(Api::all_users().await.unwrap_or_default());
     });
@@ -164,7 +163,7 @@ pub fn UserSection(
 
 #[component]
 pub fn UserRow(
-    #[prop(into)] user: MaybeSignal<User>,
+    #[prop(into)] user: Signal<User>,
     #[prop(into)] edit_row: RwSignal<Option<i32>>,
 ) -> impl IntoView {
     let user = user.get();
@@ -206,7 +205,7 @@ pub fn UserRow(
 
 #[component]
 pub fn UserEditRow(
-    #[prop(into)] user: MaybeSignal<User>,
+    #[prop(into)] user: Signal<User>,
     #[prop(into)] username: RwSignal<String>,
     #[prop(into)] email: RwSignal<String>,
 ) -> impl IntoView {
@@ -279,17 +278,12 @@ pub fn MediaSection(
         set_media(Api::all_media().await.unwrap_or_default());
     });
 
-    let (post_id, set_post_id) = create_signal(0);
-    let (get_files, set_files) = create_signal(Vec::new());
+    let (post_id, set_post_id) = signal(0);
 
     let drop_zone_el = NodeRef::<Div>::new();
 
-    let on_drop = move |event: UseDropZoneEvent| {
-        set_files(event.files);
-    };
-
     let UseDropZoneReturn { files, .. } =
-        use_drop_zone_with_options(drop_zone_el, UseDropZoneOptions::default().on_drop(on_drop));
+        use_drop_zone_with_options(drop_zone_el, UseDropZoneOptions::default());
 
     view! {
         <div class="overflow-x-auto">
@@ -404,7 +398,7 @@ pub fn MediaSection(
                                 if blog_posts.get().iter().all(|p| p.id != id) {
                                     return;
                                 }
-                                let files = get_files.get();
+                                let files = files.get().into_iter().map(|f| f.take()).collect();
                                 spawn_local(async move {
                                     match Api::upload(id, files).await {
                                         Ok(_results) => {
@@ -428,8 +422,8 @@ pub fn MediaSection(
 
 #[component]
 pub fn BlogSection(blog_posts: ReadSignal<Vec<Post>>) -> impl IntoView {
-    let (max_id, set_max_id) = create_signal(0);
-    create_effect(move |_| {
+    let (max_id, set_max_id) = signal(0);
+    Effect::new(move |_| {
         set_max_id(
             blog_posts
                 .get()

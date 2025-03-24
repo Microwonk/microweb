@@ -1,9 +1,9 @@
-use leptos::*;
-use leptos_router::use_navigate;
+use leptos::prelude::*;
+use leptos_router::hooks::use_navigate;
 
 #[component]
 pub fn SideMenu() -> impl IntoView {
-    let (tabs, set_tabs) = create_signal(Vec::new());
+    let (tabs, set_tabs) = signal(Vec::new());
 
     set_tabs(
         ["Logs", "Blogs", "Media", "Users"]
