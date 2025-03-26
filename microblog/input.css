@@ -1,0 +1,195 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+
+  @font-face {
+    font-family: 'Iosevka Custom';
+    font-display: swap;
+    font-weight: 100 900;
+    font-style: normal;
+    src:
+      url('fonts/IosevkaCustom-Regular.ttf') format('truetype')
+      url('fonts/IosevkaCustom-Bold.ttf') format('truetype')
+      url('fonts/IosevkaCustom-Italic.ttf') format('truetype');
+  }
+  
+  @font-face {
+    font-family: 'FiraSans';
+    font-display: swap;
+    font-weight: 100 900;
+    font-style: normal;
+    src: url("fonts/Firava.woff2");
+  }
+
+  @font-face {
+    font-family: "rosmatika";
+    src: url("fonts/RosmatikaRegular-BWA45.ttf") format("truetype");
+  }
+
+    html {
+      font-family: "FiraSans", Averta, system-ui, sans-serif;
+    }
+    html,
+    body {
+      @apply bg-nf-white;
+      background-image: url("/assets/paperb.png");
+      background-blend-mode: multiply;
+    }
+    a {
+      @apply no-underline;
+    }
+}
+
+.markdown {
+  @apply w-full text-lg break-words;
+}
+
+.markdown p {
+  @apply my-6;
+}
+
+.markdown h1 {
+  @apply text-5xl font-bold mb-6;
+}
+
+.markdown h1 code {
+  @apply text-5xl font-medium;
+}
+
+.markdown h2 {
+  @apply text-4xl font-bold mb-4 mt-8;
+}
+
+.markdown h2 code {
+  @apply text-4xl font-medium;
+}
+
+.markdown h3 {
+  @apply text-3xl font-bold mb-4 mt-6;
+}
+
+.markdown h3 code {
+  @apply text-2xl;
+}
+
+.markdown h4 {
+  @apply font-bold;
+}
+
+.markdown pre {
+  @apply my-2 bg-zinc-800 p-3 w-full rounded border border-zinc-600 text-lg leading-tight whitespace-pre-wrap;
+}
+
+.markdown code {
+  @apply text-lg font-mono normal-nums bg-zinc-800 rounded border border-zinc-600 px-1.5 py-0.5 mx-0.5 whitespace-nowrap;
+}
+
+.markdown blockquote {
+  @apply bg-zinc-700/30 my-6 p-2 pl-4 border-zinc-400 border-l-4 border rounded-r-2xl;
+}
+
+.markdown ol,
+.markdown ul {
+  @apply pl-6 my-1;
+}
+
+.markdown ol {
+  @apply list-decimal;
+}
+
+.markdown ul {
+  @apply list-disc;
+}
+
+.markdown hr {
+  @apply my-6 border-t-2 border-neutral-400/50;
+}
+
+.markdown a {
+  @apply underline hover:no-underline;
+}
+
+.markdown .footnote-definition {
+  @apply flex flex-row items-center text-base;
+}
+
+.markdown .footnote-definition p {
+  @apply my-0;
+}
+
+/* EXPERIENCE ANIMATIONS */
+
+.experience {
+  @apply relative;
+  @apply overflow-hidden;
+  transform: translateZ(0);
+  transition: transform 0.3s;
+}
+
+.experience:hover,
+.experience:focus,
+.experience:active {
+  transition: transform 0.6s cubic-bezier(0.34, 5.56, 0.64, 1);
+}
+
+.experience-cta-ripple {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  overflow: hidden;
+  transform: translateZ(0);
+}
+
+.experience-cta-ripple span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: translateY(101%);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0, 1);
+}
+
+.experience-cta:hover .experience-cta-ripple span,
+.experience-cta:focus .experience-cta-ripple span,
+.experience-cta:active .experience-cta-ripple span {
+  transform: translateY(0);
+  transition-duration: 0.5s, 0.9s;
+}
+
+.experience-cta-title {
+  position: relative;
+  display: block;
+  padding: 0 0.16em 0 0;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.experience-cta-title span {
+  display: flex;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.experience-cta:hover .experience-cta-title span,
+.experience-cta:focus .experience-cta-title span,
+.experience-cta:active .experience-cta-title span {
+  transform: translateY(-110%);
+}
+
+.experience-cta-title span:after {
+  content: attr(data-text);
+  display: block;
+  width: 100%;
+  position: absolute;
+  top: 110%;
+  left: 0;
+}
+
+.blog-card {
+  background-image: url("/assets/paper.png");
+  background-blend-mode: multiply;
+}

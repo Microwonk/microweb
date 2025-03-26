@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# TODO: for SEO
+# Sitemap: https://yourdomain.com/sitemap.xml
