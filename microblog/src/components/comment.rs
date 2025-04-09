@@ -73,25 +73,15 @@ pub fn CommentComponent(
 
 #[component]
 pub fn CommentSection(
-    #[prop(into)] user: ReadSignal<Option<Profile>>,
-    #[prop(into)] is_admin: ReadSignal<bool>,
-    #[prop(into)] comments: ReadSignal<Option<Vec<Comment>>>,
-    #[prop(into)] blog_post: ReadSignal<Option<Post>>,
+    #[prop(into)] comments: Vec<Comment>,
+    #[prop(into)] blog_post: Post,
 ) -> impl IntoView {
     let (content, set_content) = signal("".to_string());
-    view! {
-        <div class="bg-nf-dark p-4 pb-12">
-            // heading for the commentsection
-            <div id="comment_section" class="flex justify-between items-center mb-6">
-                <h2 class="text-lg lg:text-2xl font-bold text-nf-white">{move || format!("Comments ({})", comments.get().unwrap_or_default().len())}</h2>
-            </div>
+    let user = use_context::<Option<Profile>>().unwrap_or_default();
 
-            // post new comment or login/signup
-            <Show when=move || user.get().is_some() fallback=move || view! {
-                <p class="text-lg lg:text-2xl text-center font-bold text-nf-white p-12">
-                    You need an Account to post a comment. <a href="/login" class="underline text-nf-color">Login</a> or <a class="underline text-nf-color" href="/register">Register</a> a new Account!
-                </p>
-            }>
+    let header = {
+        if user.clone().is_some() {
+            view! {
                 // textarea for new comment
                 <div class="mb-6 min-w-full px-48">
                     <div class="py-2 px-4 m-4 bg-nf-white rounded-lg">
@@ -123,19 +113,30 @@ pub fn CommentSection(
                         Post comment
                     </button>
                 </div>
-            </Show>
+            }.into_any()
+        } else {
+            view! {
+                <p class="text-lg lg:text-2xl text-center font-bold text-nf-white p-12">
+                    You need an Account to post a comment. <a href="/login" class="underline text-nf-color">Login</a> or <a class="underline text-nf-color" href="/register">Register</a> a new Account!
+                </p>
+            }.into_any()
+        }
+    };
 
-            // actual comments
-            <Show when=move || comments.get().is_some_and(|comments| !comments.is_empty()) fallback=move || view! {
+    let comment_views = |c: Vec<Comment>, u: Option<Profile>| {
+        if c.is_empty() {
+            view! {
                 <h2 class="text-lg lg:text-2xl text-center font-bold text-nf-white mb-6">No Comments yet . . .</h2>
-            }>
+            }.into_any()
+        } else {
+            view! {
                 <ul class="grid gap-4">
                     <For
-                        each=move || comments.get().unwrap_or_default()
+                        each=move || c.clone()
                         key=|c| c.id
                         children=move |comment: Comment| {
                             let (delete_btn, set_delete_btn) = signal(false);
-                            set_delete_btn(is_admin.get() || user.get().is_some_and(|u| u.id == comment.author_id.unwrap_or_default()));
+                            set_delete_btn(u.clone().is_some_and(|u| u.id == comment.author_id.unwrap_or_default()  || u.is_admin));
                             view! {
                                 <li class="px-48 min-w-full">
                                     <CommentComponent comment delete_btn/>
@@ -144,7 +145,22 @@ pub fn CommentSection(
                         }
                     />
                 </ul>
-            </Show>
+            }.into_any()
+        }
+    };
+
+    view! {
+        <div class="bg-nf-dark p-4 pb-12">
+            // heading for the commentsection
+            <div id="comment_section" class="flex justify-between items-center mb-6">
+                <h2 class="text-lg lg:text-2xl font-bold text-nf-white">{format!("Comments ({})", comments.len())}</h2>
+            </div>
+
+            // post new comment or login/signup
+            {header}
+
+            // actual comments
+            {comment_views(comments.clone(), user.clone())}
         </div>
     }
 }

@@ -2,7 +2,7 @@ use crate::{
     components::{blog_card::BlogCard, header::Header},
     models::{Post, Profile},
 };
-use leptos::prelude::*;
+use leptos::{context::Provider, prelude::*};
 use leptos_meta::*;
 use rand::seq::IndexedRandom;
 
@@ -36,14 +36,17 @@ pub async fn get_posts() -> Result<Vec<Post>, ServerFnError> {
 }
 
 #[component]
-pub fn HomePage(logged_in: ReadSignal<bool>, user: ReadSignal<Option<Profile>>) -> impl IntoView {
+pub fn HomePage() -> impl IntoView {
     let blog_posts = Resource::new(|| (), |_| async { get_posts().await });
+    let user = use_context::<Option<Profile>>().unwrap_or_default();
     view! {
         <Title text="Nicolas' Blog"/>
 
-        <Header user logged_in/>
+        <Provider value=user>
+            <Header/>
+        </Provider>
         <div class="mx-auto max-w-screen-xl px-4 pb-8 lg:pb-12 pt-8 lg:pt-12">
-            <Suspense fallback=move || view! { <p>"Loading Article"</p> }>
+            <Suspense fallback=move || view! { <p>"Loading . . ."</p> }>
                 <ErrorBoundary fallback=|_| {
                     view! { <p class="error-messages text-xs-center">"Something went wrong, please try again later."</p>}
                 }>

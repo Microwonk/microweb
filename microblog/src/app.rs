@@ -1,5 +1,5 @@
 use iter_tools::Itertools;
-use leptos::prelude::*;
+use leptos::{context::Provider, prelude::*};
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
 use leptos_router::{
     components::{Outlet, ParentRoute, Route, Router, Routes},
@@ -42,41 +42,54 @@ pub fn App() -> impl IntoView {
     let (blog_posts, set_blog_posts) = signal(Vec::new());
     let (user, set_user) = signal(None::<Profile>);
 
+    let user = Resource::new(|| (), |_| async { Some(Profile::default()) });
+
     provide_meta_context();
 
     view! {
 
         <Stylesheet id="leptos" href="/pkg/microblog.css"/>
 
-        <Router>
-            <Routes fallback=Page404>
-                <ParentRoute path=path!("") view=move || view! {
-                    <Show when=move || loaded.get() fallback=LoadingPage>
-                        <Outlet/>
-                    </Show>
-                }>
-                    <Route path=path!("") view=move || view! { <HomePage user logged_in/> }/>
-                    <Route path=path!("register") view=move || view! { <RegisterPage set_user set_logged_in/> }/>
-                    <Route path=path!("login") view=move || view! { <LoginPage set_user set_logged_in/> }/>
-                    <Route path=path!("logout") view=move || view! { <LogOut set_user set_logged_in logged_in/> }/>
-                    <Route path=path!("posts/:slug") view=move || view! { <BlogPostPage user logged_in is_admin blog_posts/> }/>
-                    // <Route path=path!("feed") view=move || view! { <RSSPage logged_in user/> }/>
+        <Suspense fallback=move || view! { <p>"Loading . . ."</p> }>
+            <ErrorBoundary fallback=|_| {
+                view! { <p class="error-messages text-xs-center">"Something went wrong, please try again later."</p>}
+            }>
+                {move || user.get().map(|user| {
+                    view! {
+                        <Provider value=user>
+                            <Router>
+                                <Routes fallback=Page404>
+                                    <ParentRoute path=path!("") view=move || view! {
+                                        <Show when=move || loaded.get() fallback=LoadingPage>
+                                            <Outlet/>
+                                        </Show>
+                                    }>
+                                        <Route path=path!("") view=HomePage/>
+                                        <Route path=path!("register") view=move || view! { <RegisterPage set_user set_logged_in/> }/>
+                                        <Route path=path!("login") view=move || view! { <LoginPage set_user set_logged_in/> }/>
+                                        <Route path=path!("logout") view=move || view! { <LogOut set_user set_logged_in logged_in/> }/>
+                                        <Route path=path!("posts/:slug") view=BlogPostPage/>
+                                        // <Route path=path!("feed") view=move || view! { <RSSPage logged_in user/> }/>
 
-                    <ParentRoute path=path!("admin") view=move || {
-                        view! {
-                            <Suspense>
-                                <Show when=move || !is_admin.get()>
-                                    <ReRouter route="/"/>
-                                </Show>
-                            </Suspense>
-                            <Outlet/>
-                        }
-                    }>
-                        <Route path=path!("") view=move || view! { <AdminPage blog_posts/> } />
-                        <Route path=path!("posts/:slug") view=move || view! { <EditBlogPostPage blog_posts/> } />
-                    </ParentRoute> // auth
-                </ParentRoute>
-            </Routes>
-        </Router>
+                                        <ParentRoute path=path!("admin") view=move || {
+                                            view! {
+                                                <Suspense>
+                                                    <Show when=move || !is_admin.get()>
+                                                        <ReRouter route="/"/>
+                                                    </Show>
+                                                </Suspense>
+                                                <Outlet/>
+                                            }
+                                        }>
+                                            <Route path=path!("") view=move || view! { <AdminPage blog_posts/> } />
+                                            <Route path=path!("posts/:slug") view=move || view! { <EditBlogPostPage blog_posts/> } />
+                                        </ParentRoute> // auth
+                                    </ParentRoute>
+                                </Routes>
+                            </Router>
+                        </Provider>
+                }})}
+            </ErrorBoundary>
+        </Suspense>
     }
 }

@@ -19,6 +19,7 @@ pub struct Profile {
     pub id: i32,
     pub name: String,
     pub email: String,
+    pub is_admin: bool,
 }
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize, PartialEq)]

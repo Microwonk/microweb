@@ -10,5 +10,6 @@
             "connectString": "postgres://blog:password@localhost:5432/blog",
             "name": "local"
         }
-    ]
+    ],
+    "rust-analyzer.rustfmt.overrideCommand": ["rustfmt"],
 }

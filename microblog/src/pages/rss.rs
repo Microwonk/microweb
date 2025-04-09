@@ -56,7 +56,7 @@ pub fn RSSPage(logged_in: ReadSignal<bool>, user: ReadSignal<Option<Profile>>) -
 
     view! {
         <Title text="RSS Feed"/>
-        <Header logged_in user/>
+        // <Header logged_in user/>
         <div class="py-12 px-0 mx-auto lg:w-[96rem]">
             <h1 class="text-4xl font-bold md:tracking-tight md:text-5xl">RSS Feed Viewer</h1>
             <div class="flex gap-4 my-4">

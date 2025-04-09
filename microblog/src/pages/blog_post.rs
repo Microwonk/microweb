@@ -1,6 +1,6 @@
 use flate2::write::DeflateEncoder;
 use flate2::Compression;
-use leptos::prelude::*;
+use leptos::{context::Provider, either::Either, prelude::*};
 use leptos_meta::Title;
 use leptos_router::hooks::use_params_map;
 use pulldown_cmark::*;
@@ -10,83 +10,133 @@ use syntect::{highlighting::ThemeSet, html::highlighted_html_for_string, parsing
 
 use crate::{
     components::{comment::CommentSection, header::Header, links::Links},
-    models::{Post, Profile},
+    models::{Comment, Post, Profile},
     pages::loading::LoadingPage,
     THEME_STR,
 };
 
-#[component]
-pub fn BlogPostPage(
-    logged_in: ReadSignal<bool>,
-    is_admin: ReadSignal<bool>,
-    blog_posts: ReadSignal<Vec<Post>>,
-    user: ReadSignal<Option<Profile>>,
-) -> impl IntoView {
-    let (blog_post, set_blog_post) = signal(None::<Post>);
-    let (comments, set_comments) = signal(None::<Vec<_>>);
+#[server(GetPostAction, "/api", "GetJson")]
+#[tracing::instrument]
+pub async fn get_post(slug: String) -> Result<Post, ServerFnError> {
+    sqlx::query_as::<_, Post>(
+        r#"SELECT 
+            posts.id,
+            users.name AS author_name,
+            posts.author AS author,
+            posts.description,
+            posts.title,
+            posts.slug,
+            posts.markdown_content,
+            posts.released,
+            posts.release_date,
+            posts.created_at,
+            posts.updated_at
+        FROM posts
+        JOIN users ON posts.author = users.id
+        WHERE released = true
+        AND posts.slug = $1"#,
+    )
+    .bind(slug)
+    .fetch_one(crate::database::db())
+    .await
+    .map_err(|e| {
+        let err = format!("Error while getting posts: {e:?}");
+        tracing::error!("{err}");
+        ServerFnError::new("Could not retrieve posts, try again later")
+    })
+}
 
+#[server(GetCommentsAction, "/api", "GetJson")]
+#[tracing::instrument]
+pub async fn get_comments(post_id: i32) -> Result<Vec<Comment>, ServerFnError> {
+    sqlx::query_as::<_, Comment>(
+        r#"
+        SELECT 
+            comments.id,
+            users.name AS author_name,
+            comments.author AS author_id,
+            comments.content,
+            comments.replying_to,
+            comments.created_at
+        FROM comments
+        JOIN posts ON comments.post = posts.id
+        LEFT JOIN users ON comments.author = users.id
+        WHERE comments.post = $1
+        ORDER BY comments.created_at DESC
+        "#,
+    )
+    .bind(post_id)
+    .fetch_all(crate::database::db())
+    .await
+    .map_err(|e| {
+        let err = format!("Error while getting posts: {e:?}");
+        tracing::error!("{err}");
+        ServerFnError::new("Could not retrieve posts, try again later")
+    })
+}
+
+#[component]
+pub fn BlogPostPage() -> impl IntoView {
     let params = use_params_map();
     let slug = move || params.with_untracked(|params| params.get("slug").clone().unwrap());
+    let user = use_context::<Option<Profile>>().unwrap_or_default();
 
-    Effect::new(move |_| {
-        // filter slug to find blog post
-        set_blog_post(
-            blog_posts
-                .get()
-                .iter()
-                // either slug or id
-                .find(|&b| b.slug == slug() || b.id == slug().parse::<i32>().unwrap_or(-1))
-                .cloned(),
-        );
-        // TODO
-        // spawn_local(async move {
-        //     set_comments(
-        //         Api::get_comments(blog_post.get_untracked().unwrap().id)
-        //             .await
-        //             .ok(),
-        //     );
-        // });
-    });
+    let res: Resource<Result<(Post, Vec<Comment>), ServerFnError>> =
+        Resource::new(slug, |slug| async {
+            let post = get_post(slug).await?;
+            let comments = get_comments(post.id).await?;
+            Ok((post, comments))
+        });
 
     view! {
-        <Title text=move || blog_post.get().map_or("No Title Found".into(), |p| p.title)/>
-        <Header user logged_in/>
-        <article class="py-12 md:px-0 md:mx-auto md:w-[48rem]">
-            <Show when=move || blog_post.get().is_some() fallback=LoadingPage>
-                <BlogPostHeader blog_post num_comments=comments.get().unwrap_or_default().len()/>
-                <BlogPost content=blog_post.get().unwrap().markdown_content />
-                <Links/>
-            </Show>
-        </article>
-        <CommentSection is_admin user comments blog_post/>
+        <Suspense fallback=move || view! { <p>"Loading . . ."</p> }>
+            <ErrorBoundary fallback=|_| {
+                view! { <p class="error-messages text-xs-center">"Something went wrong, please try again later."</p>}
+            }>
+                <Provider value=user>
+                    <Header/>
+                    {move || {
+                        res.get().map(move |r| {
+                            r.map(move |(blog_post, comments)| {
+                                view! {
+                                    <Title text=blog_post.title.clone()/>
+
+
+                                    <article class="py-12 md:px-0 md:mx-auto md:w-[48rem]">
+                                        <BlogPostHeader blog_post=blog_post.clone() num_comments=comments.len()/>
+                                        <BlogPost content=blog_post.markdown_content.clone() />
+                                        <Links/>
+                                    </article>
+
+                                    <CommentSection comments blog_post/>
+                                }
+                            })
+                        })
+                    }}
+                </Provider>
+            </ErrorBoundary>
+        </Suspense>
     }
 }
 
 #[component]
 pub fn BlogPostHeader(
-    #[prop(into)] blog_post: ReadSignal<Option<Post>>,
+    #[prop(into)] blog_post: Post,
     #[prop(into)] num_comments: usize,
 ) -> impl IntoView {
-    let read_time = blog_post
-        .get()
-        .map(|post| calculate_read_time(&post.markdown_content));
+    let read_time = calculate_read_time(&blog_post.markdown_content);
 
     view! {
         <div class="space-y-6 mb-12">
-            <h1 class="text-4xl font-bold md:tracking-tight md:text-5xl">{move || blog_post.get().unwrap().title}</h1>
+            <h1 class="text-4xl font-bold md:tracking-tight md:text-5xl">{blog_post.title}</h1>
             <div class="flex flex-col items-start justify-between w-full md:flex-row md:items-center dark:text-gray-600">
                 <div class="flex items-center md:space-x-2">
                     <p class="text-sm">{
-                        move ||
-                            if let Some(post) = blog_post.get() {
-                                format!("{} • {}", post.author_name, post.release_date.unwrap_or(post.updated_at.unwrap_or(post.created_at)).format("%b. %d, %Y"))
-                            } else {
-                                "".into()
-                            }
+                        move || format!("{} • {}", blog_post.author_name, blog_post.release_date.unwrap_or(blog_post.updated_at.unwrap_or(blog_post.created_at)).format("%b. %d, %Y"))
                         }
                     </p>
                 </div>
-                <a href="#comment_section" class="flex-shrink-0 mt-3 text-sm md:mt-0 hover:underline">{format!("{} min read • {} comments", read_time.unwrap_or(10), num_comments)}</a>
+                <a href="#comment_section" class="flex-shrink-0 mt-3 text-sm md:mt-0 hover:underline">{format!("{} min read • {} comments", read_time, num_comments)}</a>
             </div>
         </div>
     }

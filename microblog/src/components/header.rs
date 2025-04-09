@@ -3,7 +3,74 @@ use leptos::prelude::*;
 use crate::models::Profile;
 
 #[component]
-pub fn Header(logged_in: ReadSignal<bool>, user: ReadSignal<Option<Profile>>) -> impl IntoView {
+pub fn Header() -> impl IntoView {
+    let user = use_context::<Option<Profile>>().unwrap_or_default();
+    let header = {
+        if let Some(user) = user {
+            view! {
+                <a
+                    class="group relative inline-block text-sm sm:text-lg font-medium text-black focus:outline-none focus:ring active:text-nf-color"
+                    href="/logout"
+                >
+                    <span class="absolute inset-0 border border-current"></span>
+                    <span
+                    class="block border border-current bg-nf-black px-12 py-3 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:backdrop-blur"
+                    >
+                    logout
+                    </span>
+                </a>
+
+                <div class="group relative inline-block w-1/6">
+                    <div class="experience experience-cta">
+                        <span class="experience-cta-border"></span>
+                        <span class="experience-cta-ripple">
+                            <span></span>
+                        </span>
+                        <span class="experience-cta-title">
+                            <span
+                                data-text=user.email.clone()
+                                class="justify-between flex-row w-full"
+                            >
+                                {user.email.clone()}
+                            </span>
+                        </span>
+                    </div>
+                </div>
+                // <a class="text-black text-sm sm:text-lg px-5 py-2.5">
+                //     {move || {
+                //         user.get().unwrap_or_default().name
+                //     }}
+                // </a>
+            }.into_any()
+        } else {
+            view! {
+                <a
+                    class="group relative inline-block text-sm sm:text-lg font-medium text-black focus:outline-none focus:ring active:text-nf-color"
+                    href="/login"
+                >
+                    <span class="absolute inset-0 border border-current"></span>
+                    <span
+                    class="block border border-current bg-nf-black px-12 py-3 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:backdrop-blur"
+                    >
+                    login
+                    </span>
+                </a>
+
+                <a
+                    class="group relative inline-block text-sm sm:text-lg font-medium text-black focus:outline-none focus:ring active:text-nf-color"
+                    href="/register"
+                >
+                    <span class="absolute inset-0 border border-current"></span>
+                    <span
+                    class="block border border-current bg-nf-black px-12 py-3 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:backdrop-blur"
+                    >
+                    register
+                    </span>
+                </a>
+            }.into_any()
+        }
+    };
+
     view! {
         <header
             id="header"
@@ -48,67 +115,7 @@ pub fn Header(logged_in: ReadSignal<bool>, user: ReadSignal<Option<Profile>>) ->
                         >
                             feed
                         </a>
-                        <Show when=move || !logged_in.get() fallback=move || view!{
-                            <a
-                                class="group relative inline-block text-sm sm:text-lg font-medium text-black focus:outline-none focus:ring active:text-nf-color"
-                                href="/logout"
-                            >
-                                <span class="absolute inset-0 border border-current"></span>
-                                <span
-                                class="block border border-current bg-nf-black px-12 py-3 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:backdrop-blur"
-                                >
-                                logout
-                                </span>
-                            </a>
-
-                            <div class="group relative inline-block w-1/6">
-                                <div class="experience experience-cta">
-                                    <span class="experience-cta-border"></span>
-                                    <span class="experience-cta-ripple">
-                                        <span></span>
-                                    </span>
-                                    <span class="experience-cta-title">
-                                        <span
-                                            data-text=move || user.get().unwrap_or_default().email
-                                            class="justify-between flex-row w-full"
-                                        >
-                                            {move || {
-                                                user.get().unwrap_or_default().name
-                                            }}
-                                        </span>
-                                    </span>
-                                </div>
-                            </div>
-                            // <a class="text-black text-sm sm:text-lg px-5 py-2.5">
-                            //     {move || {
-                            //         user.get().unwrap_or_default().name
-                            //     }}
-                            // </a>
-                        }>
-                            <a
-                                class="group relative inline-block text-sm sm:text-lg font-medium text-black focus:outline-none focus:ring active:text-nf-color"
-                                href="/login"
-                            >
-                                <span class="absolute inset-0 border border-current"></span>
-                                <span
-                                class="block border border-current bg-nf-black px-12 py-3 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:backdrop-blur"
-                                >
-                                login
-                                </span>
-                            </a>
-
-                            <a
-                                class="group relative inline-block text-sm sm:text-lg font-medium text-black focus:outline-none focus:ring active:text-nf-color"
-                                href="/register"
-                            >
-                                <span class="absolute inset-0 border border-current"></span>
-                                <span
-                                class="block border border-current bg-nf-black px-12 py-3 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:backdrop-blur"
-                                >
-                                register
-                                </span>
-                            </a>
-                        </Show>
+                        {header}
                     </li>
                 </ul>
             </nav>
