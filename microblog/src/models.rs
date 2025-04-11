@@ -48,7 +48,7 @@ pub struct Post {
     pub updated_at: Option<chrono::NaiveDateTime>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct User {
     pub id: i32,
@@ -57,6 +57,20 @@ pub struct User {
     pub admin: bool,
     pub passwordhash: String,
     pub created_at: chrono::NaiveDateTime,
+}
+
+#[cfg(feature = "ssr")]
+impl User {
+    /// clones self and makes a UserProfile instance
+    pub fn profile(&self) -> Profile {
+        let cloned = self.clone();
+        Profile {
+            id: cloned.id,
+            name: cloned.name,
+            email: cloned.email,
+            is_admin: cloned.admin,
+        }
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

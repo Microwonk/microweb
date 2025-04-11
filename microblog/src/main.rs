@@ -1,11 +1,16 @@
+#![recursion_limit = "256"]
+
 #[cfg(feature = "ssr")]
 #[tokio::main]
 async fn main() {
-    use axum::Router;
+    use axum::{middleware, Router};
     use leptos::logging::log;
     use leptos::prelude::*;
     use leptos_axum::{generate_route_list, LeptosRoutes};
-    use microblog::app::*;
+    use microblog::{app::*, auth};
+
+    // TODO
+    // https://felix-knorr.net/posts/2024-10-13-replacing-nginx-with-axum.html
 
     dotenvy::dotenv().ok();
 
@@ -43,6 +48,7 @@ async fn main() {
                     tower_http::trace::DefaultOnFailure::new().level(tracing::Level::ERROR),
                 ),
         )
+        .layer(middleware::from_fn(auth::auth_guard))
         .with_state(leptos_options);
 
     // run our app with hyper

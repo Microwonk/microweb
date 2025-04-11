@@ -1,23 +1,69 @@
-use leptos::prelude::*;
+use leptos::{prelude::*, task::spawn_local};
 use leptos_meta::*;
-use leptos_router::{hooks::use_navigate, NavigateOptions};
+use reactive_stores::Store;
 use regex::Regex;
 
-use crate::models::Profile;
+use crate::{
+    app::{GlobalState, GlobalStateStoreFields},
+    models::{LoginRequest, User},
+};
+
+#[server(LoginAction, "/api")]
+#[tracing::instrument]
+pub async fn login(login: LoginRequest) -> Result<(), ServerFnError> {
+    use crate::{
+        auth::{encode_jwt, verify_password},
+        database,
+    };
+    use axum::http::{header, HeaderValue};
+    use leptos_axum::{redirect, ResponseOptions};
+
+    let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE email = $1")
+        .bind(login.email.as_str())
+        .fetch_one(database::db())
+        .await;
+
+    let matches = if let Ok(ref u) = user {
+        verify_password(&login.password, &u.passwordhash)
+    } else {
+        false
+    };
+
+    let u = user.unwrap_or_default();
+
+    if !matches {
+        return Err(ServerFnError::new("Password incorrect.".to_string()));
+    }
+
+    let token =
+        encode_jwt(u.email.clone()).map_err(|_| ServerFnError::new("Error encoding jwt."))?;
+
+    let response = expect_context::<ResponseOptions>();
+
+    response.append_header(
+        header::SET_COOKIE,
+        HeaderValue::from_str(&format!(
+            "auth_token={}; Path=/; SameSite=Strict; Secure;",
+            token
+        ))?,
+    );
+
+    redirect("/");
+
+    Ok(())
+}
 
 #[component]
-pub fn LoginPage(
-    set_logged_in: WriteSignal<bool>,
-    set_user: WriteSignal<Option<Profile>>,
-) -> impl IntoView {
-    let navigate = use_navigate();
+pub fn LoginPage() -> impl IntoView {
     let (email, set_email) = signal("".to_string());
     let (password, set_password) = signal("".to_string());
     let (email_error, set_email_error) = signal(None::<String>);
     let (password_error, set_password_error) = signal(None::<String>);
 
+    let state = expect_context::<Store<GlobalState>>();
+
     view! {
-        <Title text="Login"/>
+        <Title text="Login" />
         <div class="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 lg:px-8">
             <div class="mx-auto max-w-lg">
                 <h1 class="text-center text-2xl font-bold text-black sm:text-3xl">Sign in</h1>
@@ -29,7 +75,9 @@ pub fn LoginPage(
                 <div class="mb-0 mt-6 space-y-4 rounded-lg p-4 shadow-lg sm:p-6 lg:p-8">
 
                     <div>
-                        <label for="email" class="sr-only">Email</label>
+                        <label for="email" class="sr-only">
+                            Email
+                        </label>
 
                         <div class="relative">
                             <input
@@ -39,7 +87,7 @@ pub fn LoginPage(
                                 on:input=move |ev| {
                                     let value = event_target_value(&ev);
                                     set_email(value);
-                                    set_email_error(None); // Reset error on input
+                                    set_email_error(None);
                                 }
                                 prop:value=email
                                 placeholder="Enter email"
@@ -63,13 +111,19 @@ pub fn LoginPage(
                             </span>
                         </div>
                         // Display email error message
-                        { move || email_error.get().map(|error| view! {
-                            <p class="text-red-500 text-sm mt-2">{error}</p>
-                        }) }
+                        {move || {
+                            email_error
+                                .get()
+                                .map(|error| {
+                                    view! { <p class="text-red-500 text-sm mt-2">{error}</p> }
+                                })
+                        }}
                     </div>
 
                     <div>
-                        <label for="password" class="sr-only">Password</label>
+                        <label for="password" class="sr-only">
+                            Password
+                        </label>
 
                         <div class="relative">
                             <input
@@ -79,7 +133,7 @@ pub fn LoginPage(
                                 on:input=move |ev| {
                                     let value = event_target_value(&ev);
                                     set_password(value);
-                                    set_password_error(None); // Reset error on input
+                                    set_password_error(None);
                                 }
                                 prop:value=password
                                 placeholder="Enter password"
@@ -109,58 +163,55 @@ pub fn LoginPage(
                             </span>
                         </div>
                         // Display password error message
-                        { move || password_error.get().map(|error| view! {
-                            <p class="text-red-500 text-sm mt-2">{error}</p>
-                        }) }
+                        {move || {
+                            password_error
+                                .get()
+                                .map(|error| {
+                                    view! { <p class="text-red-500 text-sm mt-2">{error}</p> }
+                                })
+                        }}
                     </div>
 
                     <button
                         class="block w-full rounded-lg bg-black px-5 py-3 text-sm font-medium text-white"
                         on:click=move |_| {
-                            let navigate = navigate.clone();
                             let email_value = email.get();
                             let password_value = password.get();
-
                             let mut valid = true;
-
                             if !Regex::new(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
-                                    .unwrap()
-                                    .is_match(email_value.as_str())
+                                .unwrap()
+                                .is_match(email_value.as_str())
                             {
-                                set_email_error(Some("Please enter a valid email address.".to_string()));
+                                set_email_error(
+                                    Some("Please enter a valid email address.".to_string()),
+                                );
                                 valid = false;
                             }
-
                             if password_value.len() < 8 {
-                                set_password_error(Some("Password must be at least 8 characters long.".to_string()));
+                                set_password_error(
+                                    Some("Password must be at least 8 characters long.".to_string()),
+                                );
                                 valid = false;
                             }
-
-                            // TODO
-                            // spawn_local(async move {
-                            //     if valid {
-                            //         match Api::login(email_value, password_value).await {
-                            //             Ok(_) => {
-                            //                 set_logged_in(true);
-                            //                 set_user(Api::get_profile().await.ok());
-                            //                 navigate("/", NavigateOptions::default());
-                            //             },
-                            //             Err(_) => {
-                            //                 set_email_error(None);
-                            //                 set_password_error(Some("Wrong password or E-Mail.".to_string()));
-                            //             }
-                            //         }
-                            //     }
-                            // });
-
+                            if valid {
+                                spawn_local(async move {
+                                    if login(LoginRequest {
+                                        email: email_value,
+                                        password: password_value,
+                                    }).await.is_ok() {
+                                        state.logged_in().set(true);
+                                    }
+                                });
+                            }
                         }
                     >
                         Sign in
                     </button>
 
                     <p class="text-center text-sm text-gray-500">
-                        No account?
-                        <a class="underline text-black" href="/register">Sign up</a>
+                        No account? <a class="underline text-black" href="/register">
+                            Sign up
+                        </a>
                     </p>
                 </div>
             </div>

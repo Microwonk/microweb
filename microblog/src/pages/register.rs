@@ -1,22 +1,76 @@
-use leptos::prelude::*;
+use leptos::{prelude::*, task::spawn_local};
 use leptos_meta::*;
-use leptos_router::{hooks::use_navigate, NavigateOptions};
+use reactive_stores::Store;
 use regex::Regex;
 
-use crate::models::Profile;
+use crate::{
+    app::{GlobalState, GlobalStateStoreFields},
+    models::{RegisterRequest, User},
+};
+
+#[server(RegisterAction, "/api")]
+#[tracing::instrument]
+pub async fn register(register: RegisterRequest) -> Result<(), ServerFnError> {
+    use crate::auth::encode_jwt;
+    use axum::http::{header, HeaderValue};
+    use bcrypt::{hash, DEFAULT_COST};
+    use leptos_axum::{redirect, ResponseOptions};
+
+    let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE email = $1")
+        .bind(register.email.as_str())
+        .fetch_one(crate::database::db())
+        .await;
+
+    if user.is_ok() {
+        return Err(ServerFnError::new("User already exists."));
+    }
+
+    let user = sqlx::query_as::<_, User>(
+        r#"
+        INSERT INTO users (name, email, admin, passwordhash)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id, name, email, admin, passwordhash, created_at
+        "#,
+    )
+    .bind(register.name)
+    .bind(register.email)
+    .bind(false)
+    .bind(
+        hash(register.password.as_str(), DEFAULT_COST)
+            .map_err(|_| ServerFnError::new("Error creating User."))?,
+    )
+    .fetch_one(crate::database::db())
+    .await
+    .map_err(|_| ServerFnError::new("Error authenticating User."))?;
+
+    let token =
+        encode_jwt(user.email.clone()).map_err(|_| ServerFnError::new("Error encoding jwt."))?;
+
+    let response = expect_context::<ResponseOptions>();
+
+    response.append_header(
+        header::SET_COOKIE,
+        HeaderValue::from_str(&format!(
+            "auth_token={}; Path=/; SameSite=Strict; Secure;",
+            token
+        ))?,
+    );
+
+    redirect("/");
+
+    Ok(())
+}
 
 #[component]
-pub fn RegisterPage(
-    set_logged_in: WriteSignal<bool>,
-    set_user: WriteSignal<Option<Profile>>,
-) -> impl IntoView {
-    let navigate = use_navigate();
+pub fn RegisterPage() -> impl IntoView {
     let (email, set_email) = signal("".to_string());
     let (password, set_password) = signal("".to_string());
     let (username, set_username) = signal("".to_string());
     let (email_error, set_email_error) = signal(None::<String>);
     let (password_error, set_password_error) = signal(None::<String>);
     let (username_error, set_username_error) = signal(None::<String>);
+
+    let state = expect_context::<Store<GlobalState>>();
 
     view! {
         <Title text="Register"/>
@@ -159,7 +213,6 @@ pub fn RegisterPage(
                 <button
                     class="block w-full rounded-lg bg-black px-5 py-3 text-sm font-medium text-white"
                     on:click=move |_| {
-                        let navigate = navigate.clone();
                         let username_value = username.get();
                         let email_value = email.get();
                         let password_value = password.get();
@@ -183,22 +236,17 @@ pub fn RegisterPage(
                             set_username_error(Some("Please enter a Username.".to_string()));
                         }
 
-                        // TODO
-                        // spawn_local(async move {
-                        //     if valid {
-                        //         match Api::register(email_value, password_value, username_value).await {
-                        //             Ok(_) => {
-                        //                 set_logged_in(true);
-                        //                 set_user(Api::get_profile().await.ok());
-                        //                 navigate("/", NavigateOptions::default());
-                        //             },
-                        //             Err(_) => {
-                        //                 set_email_error(None);
-                        //                 set_password_error(Some("An error occurred, try again.".to_string()));
-                        //             }
-                        //         }
-                        //     }
-                        // });
+                        if valid {
+                            spawn_local(async move {
+                                if register(RegisterRequest {
+                                    email: email_value,
+                                    password: password_value,
+                                    name: username_value,
+                                }).await.is_ok() {
+                                    state.logged_in().set(true);
+                                }
+                            });
+                        }
                     }
                 >
                     Sign up

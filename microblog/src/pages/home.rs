@@ -39,37 +39,52 @@ pub async fn get_posts() -> Result<Vec<Post>, ServerFnError> {
 pub fn HomePage() -> impl IntoView {
     let blog_posts = Resource::new(|| (), |_| async { get_posts().await });
     let user = use_context::<Option<Profile>>().unwrap_or_default();
+
     view! {
-        <Title text="Nicolas' Blog"/>
+        <Title text="Nicolas' Blog" />
 
         <Provider value=user>
-            <Header/>
+            <Header />
         </Provider>
         <div class="mx-auto max-w-screen-xl px-4 pb-8 lg:pb-12 pt-8 lg:pt-12">
             <Suspense fallback=move || view! { <p>"Loading . . ."</p> }>
                 <ErrorBoundary fallback=|_| {
-                    view! { <p class="error-messages text-xs-center">"Something went wrong, please try again later."</p>}
+                    view! {
+                        <p class="error-messages text-xs-center">
+                            "Something went wrong, please try again later."
+                        </p>
+                    }
                 }>
                     <ul class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 list-none">
                         {move || {
-                            blog_posts.get().map(move |bp| {
-                                bp.map(move |posts| {
-                                    view! {
-                                        <For
-                                            each=move || posts.clone()
-                                            key=|b| b.id
-                                            children=move |post: Post| {
-                                                let icon = get_random_icon();
-                                                view! {
-                                                    <li>
-                                                        <BlogCard title={post.title} description={post.description} link={post.slug} date={post.release_date.unwrap_or(post.updated_at.unwrap_or(post.created_at))} icon/>
-                                                    </li>
+                            blog_posts
+                                .get()
+                                .map(move |bp| {
+                                    bp.map(move |posts| {
+                                        view! {
+                                            <For
+                                                each=move || posts.clone()
+                                                key=|b| b.id
+                                                children=move |post: Post| {
+                                                    let icon = get_random_icon();
+                                                    view! {
+                                                        <li>
+                                                            <BlogCard
+                                                                title=post.title
+                                                                description=post.description
+                                                                link=post.slug
+                                                                date=post
+                                                                    .release_date
+                                                                    .unwrap_or(post.updated_at.unwrap_or(post.created_at))
+                                                                icon
+                                                            />
+                                                        </li>
+                                                    }
                                                 }
-                                            }
-                                        />
-                                    }
+                                            />
+                                        }
+                                    })
                                 })
-                            })
                         }}
                     </ul>
                 </ErrorBoundary>

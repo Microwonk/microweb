@@ -1,73 +1,60 @@
-use leptos::prelude::*;
+use leptos::{prelude::*, task::spawn_local};
+use leptos_router::components::A;
+use reactive_stores::Store;
 
-use crate::models::Profile;
+use crate::{
+    app::{GlobalState, GlobalStateStoreFields},
+    models::Profile,
+};
 
 #[component]
 pub fn Header() -> impl IntoView {
-    let user = use_context::<Option<Profile>>().unwrap_or_default();
+    let user = RwSignal::new(use_context::<Option<Profile>>().unwrap_or_default());
     let header = {
-        if let Some(user) = user {
-            view! {
-                <a
-                    class="group relative inline-block text-sm sm:text-lg font-medium text-black focus:outline-none focus:ring active:text-nf-color"
-                    href="/logout"
-                >
-                    <span class="absolute inset-0 border border-current"></span>
-                    <span
-                    class="block border border-current bg-nf-black px-12 py-3 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:backdrop-blur"
-                    >
-                    logout
-                    </span>
-                </a>
+        move || {
+            if let Some(u) = user.get() {
+                view! {
+                    <LogoutButton user />
 
-                <div class="group relative inline-block w-1/6">
-                    <div class="experience experience-cta">
-                        <span class="experience-cta-border"></span>
-                        <span class="experience-cta-ripple">
-                            <span></span>
-                        </span>
-                        <span class="experience-cta-title">
-                            <span
-                                data-text=user.email.clone()
-                                class="justify-between flex-row w-full"
-                            >
-                                {user.email.clone()}
+                    <div class="group relative inline-block w-1/6">
+                        <div class="experience experience-cta">
+                            <span class="experience-cta-border"></span>
+                            <span class="experience-cta-ripple">
+                                <span></span>
                             </span>
-                        </span>
+                            <span class="experience-cta-title">
+                                <span
+                                    data-text=u.email.clone()
+                                    class="justify-between flex-row w-full"
+                                >
+                                    {u.email.clone()}
+                                </span>
+                            </span>
+                        </div>
                     </div>
-                </div>
-                // <a class="text-black text-sm sm:text-lg px-5 py-2.5">
-                //     {move || {
-                //         user.get().unwrap_or_default().name
-                //     }}
-                // </a>
-            }.into_any()
-        } else {
-            view! {
-                <a
-                    class="group relative inline-block text-sm sm:text-lg font-medium text-black focus:outline-none focus:ring active:text-nf-color"
-                    href="/login"
-                >
-                    <span class="absolute inset-0 border border-current"></span>
-                    <span
-                    class="block border border-current bg-nf-black px-12 py-3 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:backdrop-blur"
-                    >
-                    login
-                    </span>
-                </a>
+                }
+                .into_any()
+            } else {
+                view! {
+                    <div class="group relative inline-block text-sm sm:text-lg font-medium text-black focus:outline-none focus:ring active:text-nf-color">
+                        <A href="/login">
+                            <span class="absolute inset-0 border border-current"></span>
+                            <span class="block border border-current bg-nf-black px-12 py-3 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:backdrop-blur">
+                                login
+                            </span>
+                        </A>
+                    </div>
 
-                <a
-                    class="group relative inline-block text-sm sm:text-lg font-medium text-black focus:outline-none focus:ring active:text-nf-color"
-                    href="/register"
-                >
-                    <span class="absolute inset-0 border border-current"></span>
-                    <span
-                    class="block border border-current bg-nf-black px-12 py-3 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:backdrop-blur"
-                    >
-                    register
-                    </span>
-                </a>
-            }.into_any()
+                    <div class="group relative inline-block text-sm sm:text-lg font-medium text-black focus:outline-none focus:ring active:text-nf-color">
+                        <A href="/register">
+                            <span class="absolute inset-0 border border-current"></span>
+                            <span class="block border border-current bg-nf-black px-12 py-3 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:backdrop-blur">
+                                register
+                            </span>
+                        </A>
+                    </div>
+                }.into_any()
+            }
         }
     };
 
@@ -96,9 +83,7 @@ pub fn Header() -> impl IntoView {
             >
                 <ul class="gap-4 flex-row flex justify-between">
                     <li class="font-rosmatika hidden sm:block text-nf-dark text-md md:text-lg flex uppercase hover:text-nf-color transition">
-                        <a href="/">
-                            Blog
-                        </a>
+                        <a href="/">Blog</a>
                     </li>
 
                     <li class="font-montserrat flex gap-4 md:gap-8 items-center w-full md:justify-end justify-center">
@@ -120,5 +105,51 @@ pub fn Header() -> impl IntoView {
                 </ul>
             </nav>
         </header>
+    }
+}
+
+#[server(LogoutAction, "/api")]
+#[tracing::instrument]
+pub async fn logout() -> Result<(), ServerFnError> {
+    use axum::http::{header, HeaderValue};
+    use leptos_axum::ResponseOptions;
+
+    let response = expect_context::<ResponseOptions>();
+
+    response.append_header(
+        header::SET_COOKIE,
+        HeaderValue::from_str(
+            "auth_token=deleted; Path=/; SameSite=Strict; Secure; expires=Thu, 01 Jan 1970 00:00:00 GMT;",
+        )?,
+    );
+
+    Ok(())
+}
+
+#[component]
+fn LogoutButton(user: RwSignal<Option<Profile>>) -> impl IntoView {
+    let state = expect_context::<Store<GlobalState>>();
+
+    let on_click = {
+        move |_| {
+            spawn_local(async move {
+                if logout().await.is_ok() {
+                    user.set(None);
+                    state.logged_in().set(false);
+                };
+            });
+        }
+    };
+
+    view! {
+        <button
+            class="group relative inline-block text-sm sm:text-lg font-medium text-black focus:outline-none focus:ring active:text-nf-color"
+            on:click=on_click
+        >
+            <span class="pointer-events-none absolute inset-0 border border-current"></span>
+            <span class="pointer-events-none block border border-current bg-nf-black px-12 py-3 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:backdrop-blur">
+                "logout"
+            </span>
+        </button>
     }
 }

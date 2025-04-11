@@ -11,5 +11,4 @@
             "name": "local"
         }
     ],
-    "rust-analyzer.rustfmt.overrideCommand": ["rustfmt"],
 }

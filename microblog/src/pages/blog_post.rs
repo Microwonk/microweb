@@ -1,6 +1,6 @@
 use flate2::write::DeflateEncoder;
 use flate2::Compression;
-use leptos::{context::Provider, either::Either, prelude::*};
+use leptos::{context::Provider, prelude::*};
 use leptos_meta::Title;
 use leptos_router::hooks::use_params_map;
 use pulldown_cmark::*;
@@ -89,29 +89,36 @@ pub fn BlogPostPage() -> impl IntoView {
         });
 
     view! {
-        <Suspense fallback=move || view! { <p>"Loading . . ."</p> }>
+        <Suspense fallback=LoadingPage>
             <ErrorBoundary fallback=|_| {
-                view! { <p class="error-messages text-xs-center">"Something went wrong, please try again later."</p>}
+                view! {
+                    <p class="error-messages text-xs-center">
+                        "Something went wrong, please try again later."
+                    </p>
+                }
             }>
                 <Provider value=user>
-                    <Header/>
+                    <Header />
                     {move || {
-                        res.get().map(move |r| {
-                            r.map(move |(blog_post, comments)| {
-                                view! {
-                                    <Title text=blog_post.title.clone()/>
+                        res.get()
+                            .map(move |r| {
+                                r.map(move |(blog_post, comments)| {
+                                    view! {
+                                        <Title text=blog_post.title.clone() />
 
+                                        <article class="py-12 md:px-0 md:mx-auto md:w-[48rem]">
+                                            <BlogPostHeader
+                                                blog_post=blog_post.clone()
+                                                num_comments=comments.len()
+                                            />
+                                            <BlogPost content=blog_post.markdown_content.clone() />
+                                            <Links />
+                                        </article>
 
-                                    <article class="py-12 md:px-0 md:mx-auto md:w-[48rem]">
-                                        <BlogPostHeader blog_post=blog_post.clone() num_comments=comments.len()/>
-                                        <BlogPost content=blog_post.markdown_content.clone() />
-                                        <Links/>
-                                    </article>
-
-                                    <CommentSection comments blog_post/>
-                                }
+                                        <CommentSection comments blog_post_id=blog_post.id />
+                                    }
+                                })
                             })
-                        })
                     }}
                 </Provider>
             </ErrorBoundary>
@@ -131,12 +138,25 @@ pub fn BlogPostHeader(
             <h1 class="text-4xl font-bold md:tracking-tight md:text-5xl">{blog_post.title}</h1>
             <div class="flex flex-col items-start justify-between w-full md:flex-row md:items-center dark:text-gray-600">
                 <div class="flex items-center md:space-x-2">
-                    <p class="text-sm">{
-                        move || format!("{} • {}", blog_post.author_name, blog_post.release_date.unwrap_or(blog_post.updated_at.unwrap_or(blog_post.created_at)).format("%b. %d, %Y"))
-                        }
+                    <p class="text-sm">
+                        {move || {
+                            format!(
+                                "{} • {}",
+                                blog_post.author_name,
+                                blog_post
+                                    .release_date
+                                    .unwrap_or(blog_post.updated_at.unwrap_or(blog_post.created_at))
+                                    .format("%b. %d, %Y"),
+                            )
+                        }}
                     </p>
                 </div>
-                <a href="#comment_section" class="flex-shrink-0 mt-3 text-sm md:mt-0 hover:underline">{format!("{} min read • {} comments", read_time, num_comments)}</a>
+                <a
+                    href="#comment_section"
+                    class="flex-shrink-0 mt-3 text-sm md:mt-0 hover:underline"
+                >
+                    {format!("{} min read • {} comments", read_time, num_comments)}
+                </a>
             </div>
         </div>
     }
@@ -162,9 +182,7 @@ pub fn calculate_read_time(markdown_content: &str) -> usize {
 
 #[component]
 pub fn BlogPost(#[prop(into)] content: String) -> impl IntoView {
-    view! {
-        <div class="markdown" inner_html=markdown_to_html(content.as_str())></div>
-    }
+    view! { <div class="markdown" inner_html=markdown_to_html(content.as_str())></div> }
 }
 
 fn markdown_to_html(markdown: &str) -> String {
