@@ -1,6 +1,6 @@
 use flate2::write::DeflateEncoder;
 use flate2::Compression;
-use leptos::{context::Provider, prelude::*};
+use leptos::prelude::*;
 use leptos_meta::Title;
 use leptos_router::hooks::use_params_map;
 use pulldown_cmark::*;
@@ -10,12 +10,12 @@ use syntect::{highlighting::ThemeSet, html::highlighted_html_for_string, parsing
 
 use crate::{
     components::{comment::CommentSection, header::Header, links::Links},
-    models::{Comment, Post, Profile},
+    models::{Comment, Post},
     pages::loading::LoadingPage,
     THEME_STR,
 };
 
-#[server(GetPostAction, "/api", "GetJson")]
+#[server(GetPostAction, "/api", "GetJson", endpoint = "post")]
 #[tracing::instrument]
 pub async fn get_post(slug: String) -> Result<Post, ServerFnError> {
     sqlx::query_as::<_, Post>(
@@ -46,7 +46,7 @@ pub async fn get_post(slug: String) -> Result<Post, ServerFnError> {
     })
 }
 
-#[server(GetCommentsAction, "/api", "GetJson")]
+#[server(GetCommentsAction, "/api", "GetJson", endpoint = "comments")]
 #[tracing::instrument]
 pub async fn get_comments(post_id: i32) -> Result<Vec<Comment>, ServerFnError> {
     sqlx::query_as::<_, Comment>(
@@ -79,7 +79,6 @@ pub async fn get_comments(post_id: i32) -> Result<Vec<Comment>, ServerFnError> {
 pub fn BlogPostPage() -> impl IntoView {
     let params = use_params_map();
     let slug = move || params.with_untracked(|params| params.get("slug").clone().unwrap());
-    let user = use_context::<Option<Profile>>().unwrap_or_default();
 
     let res: Resource<Result<(Post, Vec<Comment>), ServerFnError>> =
         Resource::new(slug, |slug| async {
@@ -97,30 +96,28 @@ pub fn BlogPostPage() -> impl IntoView {
                     </p>
                 }
             }>
-                <Provider value=user>
-                    <Header />
-                    {move || {
-                        res.get()
-                            .map(move |r| {
-                                r.map(move |(blog_post, comments)| {
-                                    view! {
-                                        <Title text=blog_post.title.clone() />
+                <Header />
+                {move || {
+                    res.get()
+                        .map(move |r| {
+                            r.map(move |(blog_post, comments)| {
+                                view! {
+                                    <Title text=blog_post.title.clone() />
 
-                                        <article class="py-12 md:px-0 md:mx-auto md:w-[48rem]">
-                                            <BlogPostHeader
-                                                blog_post=blog_post.clone()
-                                                num_comments=comments.len()
-                                            />
-                                            <BlogPost content=blog_post.markdown_content.clone() />
-                                            <Links />
-                                        </article>
+                                    <article class="py-12 md:px-0 md:mx-auto md:w-[48rem]">
+                                        <BlogPostHeader
+                                            blog_post=blog_post.clone()
+                                            num_comments=comments.len()
+                                        />
+                                        <BlogPost content=blog_post.markdown_content.clone() />
+                                        <Links />
+                                    </article>
 
-                                        <CommentSection comments blog_post_id=blog_post.id />
-                                    }
-                                })
+                                    <CommentSection comments blog_post_id=blog_post.id />
+                                }
                             })
-                    }}
-                </Provider>
+                        })
+                }}
             </ErrorBoundary>
         </Suspense>
     }
@@ -141,12 +138,25 @@ pub fn BlogPostHeader(
                     <p class="text-sm">
                         {move || {
                             format!(
-                                "{} • {}",
+                                "{} • {}{}",
                                 blog_post.author_name,
                                 blog_post
                                     .release_date
                                     .unwrap_or(blog_post.updated_at.unwrap_or(blog_post.created_at))
                                     .format("%b. %d, %Y"),
+                                blog_post
+                                    .updated_at
+                                    .and_then(|d| {
+                                        if blog_post.release_date.unwrap_or_default() < d {
+                                            Some(d)
+                                        } else {
+                                            None
+                                        }
+                                    })
+                                    .map_or(
+                                        "".into(),
+                                        |d| format!(" • Last Updated: {}", d.format("%b. %d, %Y")),
+                                    ),
                             )
                         }}
                     </p>

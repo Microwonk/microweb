@@ -2,19 +2,27 @@ use leptos::{prelude::*, task::spawn_local};
 use leptos_router::components::A;
 use reactive_stores::Store;
 
-use crate::{
-    app::{GlobalState, GlobalStateStoreFields},
-    models::Profile,
-};
+use crate::app::{GlobalState, GlobalStateStoreFields};
 
 #[component]
 pub fn Header() -> impl IntoView {
-    let user = RwSignal::new(use_context::<Option<Profile>>().unwrap_or_default());
+    let store = expect_context::<Store<GlobalState>>();
     let header = {
         move || {
-            if let Some(u) = user.get() {
+            if let Some(u) = store.user().get() {
                 view! {
-                    <LogoutButton user />
+                    <Show when=move || store.user().get().is_some_and(|u| u.is_admin)>
+                        <A href="/admin">
+                            <div class="group relative inline-block text-sm sm:text-lg font-medium text-black focus:outline-none focus:ring active:text-nf-color">
+                                <span class="pointer-events-none absolute inset-0 border border-current"></span>
+                                <span class="pointer-events-none block border border-current bg-nf-black px-12 py-3 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:backdrop-blur">
+                                    "admin"
+                                </span>
+                            </div>
+                        </A>
+                    </Show>
+
+                    <LogoutButton />
 
                     <div class="group relative inline-block w-1/6">
                         <div class="experience experience-cta">
@@ -71,7 +79,7 @@ pub fn Header() -> impl IntoView {
                 <ul class="gap-4 flex-row flex items-center justify-between">
                     <li class="text-nf-white font-rosmatika text-md md:text-lg flex uppercase gap-1">
                         <a href="/">
-                            <span>"Nicolas'"</span>
+                            <span>"Microwonks"</span>
                             <span class="block sm:hidden font-rosmatika">Blog</span>
                         </a>
                     </li>
@@ -83,23 +91,20 @@ pub fn Header() -> impl IntoView {
             >
                 <ul class="gap-4 flex-row flex justify-between">
                     <li class="font-rosmatika hidden sm:block text-nf-dark text-md md:text-lg flex uppercase hover:text-nf-color transition">
-                        <a href="/">Blog</a>
+                        <A href="/">Blog</A>
                     </li>
 
                     <li class="font-montserrat flex gap-4 md:gap-8 items-center w-full md:justify-end justify-center">
-                        <a
-                            href="https://www.nicolas-frey.com"
-                            class="text-sm sm:text-lg text-nf-dark flex items-center gap-1 hover:animate-pulse hover:text-nf-color"
-                            target="_blank"
-                        >
-                            about
-                        </a>
-                        <a
-                            href="/feed"
-                            class="font-montserrat text-sm sm:text-lg text-nf-dark flex items-center gap-1 hover:animate-pulse hover:text-nf-color "
-                        >
-                            feed
-                        </a>
+                        <A href="https://www.nicolas-frey.com">
+                            <span class="text-sm sm:text-lg text-nf-dark flex items-center gap-1 hover:animate-pulse hover:text-nf-color">
+                                about
+                            </span>
+                        </A>
+                        <A href="/feed">
+                            <span class="font-montserrat text-sm sm:text-lg text-nf-dark flex items-center gap-1 hover:animate-pulse hover:text-nf-color">
+                                feed
+                            </span>
+                        </A>
                         {header}
                     </li>
                 </ul>
@@ -108,7 +113,7 @@ pub fn Header() -> impl IntoView {
     }
 }
 
-#[server(LogoutAction, "/api")]
+#[server(LogoutAction, "/api", endpoint = "logout")]
 #[tracing::instrument]
 pub async fn logout() -> Result<(), ServerFnError> {
     use axum::http::{header, HeaderValue};
@@ -127,15 +132,15 @@ pub async fn logout() -> Result<(), ServerFnError> {
 }
 
 #[component]
-fn LogoutButton(user: RwSignal<Option<Profile>>) -> impl IntoView {
-    let state = expect_context::<Store<GlobalState>>();
+fn LogoutButton() -> impl IntoView {
+    let store = expect_context::<Store<GlobalState>>();
 
     let on_click = {
         move |_| {
             spawn_local(async move {
                 if logout().await.is_ok() {
-                    user.set(None);
-                    state.logged_in().set(false);
+                    store.user().set(None);
+                    store.logged_in().set(false);
                 };
             });
         }

@@ -22,16 +22,6 @@ pub struct Profile {
     pub is_admin: bool,
 }
 
-#[derive(Clone, Default, Debug, Serialize, Deserialize, PartialEq)]
-pub struct LoginResponse {
-    pub token: String,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct IsAdminResponse {
-    pub admin: bool,
-}
-
 #[derive(Default, Clone, Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct Post {
@@ -115,23 +105,7 @@ pub struct NewComment {
     pub content: String,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
-pub struct UserUpdate {
-    pub name: String,
-    pub email: String,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
-pub struct LogEntry {
-    pub id: i32,
-    pub message: String,
-    pub context: String,
-    pub log_time: chrono::NaiveDateTime,
-}
-
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct RssFeed {
     pub title: String,
     pub description: String,
@@ -153,7 +127,7 @@ impl From<Channel> for RssFeed {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct RssEntry {
     pub title: String,
     pub link: String,
@@ -173,5 +147,49 @@ impl From<Item> for RssEntry {
             author: i.author.unwrap_or_default(),
             guid: i.guid.unwrap_or_default().value,
         }
+    }
+}
+
+#[cfg(feature = "ssr")]
+impl From<Post> for RssEntry {
+    fn from(post: Post) -> Self {
+        use chrono::{TimeZone, Utc};
+
+        let full_url = format!("https://blog.nicolas-frey.com/posts/{}", post.slug);
+        let perm_url = format!("https://blog.nicolas-frey.com/posts/{}", post.slug);
+        Self {
+            title: post.title,
+            link: full_url,
+            description: post.description,
+            pub_date: Utc
+                .from_utc_datetime(
+                    &post
+                        .release_date
+                        .unwrap_or(post.updated_at.unwrap_or(post.created_at)),
+                )
+                .to_rfc2822(),
+            author: post.author_name,
+            guid: perm_url,
+        }
+    }
+}
+
+#[cfg(feature = "ssr")]
+impl RssEntry {
+    // Converts an RSSEntry to a String containing the rss item tags
+    pub fn to_item(&self) -> String {
+        format!(
+            r#"
+        <item>
+            <title><![CDATA[{}]]></title>
+            <description><![CDATA[{}]]></description>
+            <pubDate>{}</pubDate>
+            <link>{}</link>
+            <guid isPermaLink="true">{}</guid>
+            <author>{}</author>
+        </item>
+      "#,
+            self.title, self.description, self.pub_date, self.link, self.guid, self.author
+        )
     }
 }

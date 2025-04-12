@@ -1,8 +1,12 @@
 use leptos::{prelude::*, task::spawn_local};
+use reactive_stores::Store;
 
-use crate::models::{Comment, NewComment, Profile, User};
+use crate::{
+    app::{GlobalState, GlobalStateStoreFields},
+    models::*,
+};
 
-#[server(CommentAction, "/api")]
+#[server(CommentAction, "/api", endpoint = "comment")]
 #[tracing::instrument]
 pub async fn comment(comment: NewComment, post_id: i32) -> Result<Vec<Comment>, ServerFnError> {
     use axum::extract::Extension;
@@ -60,9 +64,9 @@ pub async fn comment(comment: NewComment, post_id: i32) -> Result<Vec<Comment>, 
     })
 }
 
-#[server(DeleteCommentAction, "/api")]
+#[server(DeleteCommentAction, "/api", endpoint = "delete_comment")]
 #[tracing::instrument]
-pub async fn delete_comment(comment: Comment) -> Result<(), ServerFnError> {
+pub async fn delete_comment(comment: Comment) -> Result<u64, ServerFnError> {
     use axum::extract::Extension;
     use leptos_axum::extract;
 
@@ -85,9 +89,8 @@ pub async fn delete_comment(comment: Comment) -> Result<(), ServerFnError> {
             let err = format!("Error while deleting comment: {e:?}");
             tracing::error!("{err}");
             ServerFnError::new("Could not delete comment.")
-        })?;
-
-    Ok(())
+        })
+        .map(|r| r.rows_affected())
 }
 
 #[component]
@@ -177,17 +180,9 @@ pub fn CommentSection(
     #[prop(into)] blog_post_id: Signal<i32>,
 ) -> impl IntoView {
     let (new_comment, set_new_comment) = signal(Default::default());
-    let user = RwSignal::new(use_context::<Option<Profile>>().unwrap_or_default());
+    let store = expect_context::<Store<GlobalState>>();
 
     let comments = RwSignal::new(comments);
-
-    // let header = {
-
-    // };
-
-    // let comment_views = |c: RwSignal<Vec<Comment>>, u: Option<Profile>| {
-
-    // };
 
     view! {
         <div class="bg-nf-dark p-4 pb-12">
@@ -200,7 +195,7 @@ pub fn CommentSection(
 
             // post new comment or login/signup
             {move || {
-                if user.get().is_some() {
+                if store.user().get().is_some() {
                     view! {
                         // textarea for new comment
                         <div class="mb-6 min-w-full px-48">
@@ -271,7 +266,8 @@ pub fn CommentSection(
                                 each=move || comments.get()
                                 key=|c| c.id
                                 children=move |comment: Comment| {
-                                    let delete_btn = user
+                                    let delete_btn = store
+                                        .user()
                                         .get()
                                         .is_some_and(|u| {
                                             u.id == comment.author_id.unwrap_or_default() || u.is_admin

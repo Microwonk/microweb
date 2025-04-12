@@ -5,10 +5,10 @@ use regex::Regex;
 
 use crate::{
     app::{GlobalState, GlobalStateStoreFields},
-    models::{LoginRequest, User},
+    models::*,
 };
 
-#[server(LoginAction, "/api")]
+#[server(LoginAction, "/api", endpoint = "login")]
 #[tracing::instrument]
 pub async fn login(login: LoginRequest) -> Result<(), ServerFnError> {
     use crate::{
@@ -32,7 +32,7 @@ pub async fn login(login: LoginRequest) -> Result<(), ServerFnError> {
     let u = user.unwrap_or_default();
 
     if !matches {
-        return Err(ServerFnError::new("Password incorrect.".to_string()));
+        return Err(ServerFnError::new("Wrong email/password.".to_string()));
     }
 
     let token =
@@ -60,7 +60,7 @@ pub fn LoginPage() -> impl IntoView {
     let (email_error, set_email_error) = signal(None::<String>);
     let (password_error, set_password_error) = signal(None::<String>);
 
-    let state = expect_context::<Store<GlobalState>>();
+    let store = expect_context::<Store<GlobalState>>();
 
     view! {
         <Title text="Login" />
@@ -195,11 +195,24 @@ pub fn LoginPage() -> impl IntoView {
                             }
                             if valid {
                                 spawn_local(async move {
-                                    if login(LoginRequest {
-                                        email: email_value,
-                                        password: password_value,
-                                    }).await.is_ok() {
-                                        state.logged_in().set(true);
+                                    if let Err(e) = login(LoginRequest {
+                                            email: email_value,
+                                            password: password_value,
+                                        })
+                                        .await
+                                    {
+                                        set_password_error(
+                                            Some(
+                                                e
+                                                    .to_string()
+                                                    .split(": ")
+                                                    .last()
+                                                    .unwrap_or_default()
+                                                    .to_owned(),
+                                            ),
+                                        );
+                                    } else {
+                                        store.logged_in().set(true);
                                     }
                                 });
                             }

@@ -1,6 +1,6 @@
 {
     "rust-analyzer.cargo.features": [
-        "default"
+        "hydrate"
     ],
     "sqltools.connections": [
         {

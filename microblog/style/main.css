@@ -823,18 +823,6 @@ video {
 }
 
 @font-face {
-  font-family: 'FiraSans';
-
-  font-display: swap;
-
-  font-weight: 100 900;
-
-  font-style: normal;
-
-  src: url("fonts/Firava.woff2");
-}
-
-@font-face {
   font-family: "rosmatika";
 
   src: url("fonts/RosmatikaRegular-BWA45.ttf") format("truetype");
