@@ -1,0 +1,14 @@
+{
+    "rust-analyzer.cargo.features": [
+        "default"
+    ],
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "driver": "PostgreSQL",
+            "connectString": "postgres://blog:password@localhost:5432/blog",
+            "name": "local"
+        }
+    ],
+}

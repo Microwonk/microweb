@@ -1,1 +1,0 @@
-ALTER TABLE posts RENAME COLUMN released_date TO release_date;
