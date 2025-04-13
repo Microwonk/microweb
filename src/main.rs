@@ -1,15 +1,14 @@
-#![recursion_limit = "256"]
-
 #[cfg(feature = "ssr")]
 #[tokio::main]
 async fn main() {
-    use axum::{middleware, Router};
-    use leptos::prelude::*;
-    use leptos_axum::{generate_route_list, LeptosRoutes};
-    use microblog::{app::*, auth};
-
-    // TODO
-    // https://felix-knorr.net/posts/2024-10-13-replacing-nginx-with-axum.html
+    use axum::{
+        body::Body,
+        http::Request,
+        response::{IntoResponse, Redirect},
+        Router,
+    };
+    use microblog::blog::router::BlogRouter;
+    use tower::{service_fn, ServiceExt};
 
     dotenvy::dotenv().ok();
 
@@ -17,42 +16,38 @@ async fn main() {
         .with_level(true)
         .with_max_level(tracing::Level::INFO)
         .init();
-    // Init the pool into static
-    microblog::database::init_db()
-        .await
-        .expect("problem during initialization of the database");
 
-    let conf = get_configuration(None).unwrap();
-    let addr = conf.leptos_options.site_addr;
-    let leptos_options = conf.leptos_options;
-    // Generate the list of routes in your Leptos App
-    let routes = generate_route_list(App);
+    let blog_app = Router::blog_router().await;
 
-    let app = Router::new()
-        .leptos_routes(&leptos_options, routes, {
-            let leptos_options = leptos_options.clone();
-            move || shell(leptos_options.clone())
-        })
-        .fallback(leptos_axum::file_and_error_handler(shell))
-        .layer(
-            tower_http::trace::TraceLayer::new_for_http()
-                .make_span_with(
-                    tower_http::trace::DefaultMakeSpan::new().level(tracing::Level::INFO),
-                )
-                .on_request(tower_http::trace::DefaultOnRequest::new().level(tracing::Level::INFO))
-                .on_response(
-                    tower_http::trace::DefaultOnResponse::new().level(tracing::Level::INFO),
-                )
-                .on_failure(
-                    tower_http::trace::DefaultOnFailure::new().level(tracing::Level::ERROR),
-                ),
-        )
-        .layer(middleware::from_fn(auth::auth_guard))
-        .with_state(leptos_options);
+    let domain = std::env::var("DOMAIN").expect("Env var DOMAIN must be set.");
+    let port = std::env::var("PORT").expect("Env var PORT must be set.");
+    let addr = format!("{}:{}", domain.clone(), port);
 
-    // run our app with hyper
-    // `axum::Server` is a re-export of `hyper::Server`
-    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
+    let app = Router::new().fallback_service(service_fn(move |req: Request<Body>| {
+        let blog_app = blog_app.clone();
+        let domain = domain.clone();
+        async move {
+            let host = req
+                .headers()
+                .get("host")
+                .and_then(|h| h.to_str().ok())
+                .unwrap_or("");
+
+            if host.starts_with("blog.") {
+                blog_app.clone().oneshot(req).await
+            } else if host.starts_with("www.") {
+                println!("www!");
+                todo!()
+                // www_app.clone().oneshot(req).await
+            } else {
+                // TODO
+                Ok(Redirect::permanent(&format!("http://www.{}", domain.clone())).into_response())
+            }
+        }
+    }));
+
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+
     axum::serve(listener, app.into_make_service())
         .await
         .unwrap();

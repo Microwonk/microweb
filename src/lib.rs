@@ -1,18 +1,11 @@
-pub mod app;
-#[cfg(feature = "ssr")]
-pub mod auth;
-pub mod components;
-#[cfg(feature = "ssr")]
-pub mod database;
-pub mod models;
-pub mod pages;
+#![recursion_limit = "256"]
 
-pub const THEME_STR: &str = include_str!("peel-light.tmTheme");
+pub mod blog;
 
 #[cfg(feature = "hydrate")]
 #[wasm_bindgen::prelude::wasm_bindgen]
 pub fn hydrate() {
-    use crate::app::*;
+    use crate::blog::app::*;
 
     tracing_wasm::set_as_global_default();
     console_error_panic_hook::set_once();

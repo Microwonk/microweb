@@ -3,7 +3,7 @@ use leptos_meta::*;
 use reactive_stores::Store;
 use regex::Regex;
 
-use crate::{
+use crate::blog::{
     app::{GlobalState, GlobalStateStoreFields},
     models::*,
 };
@@ -11,14 +11,14 @@ use crate::{
 #[server(RegisterAction, "/api", endpoint = "register")]
 #[tracing::instrument]
 pub async fn register(register: RegisterRequest) -> Result<(), ServerFnError> {
-    use crate::auth::encode_jwt;
+    use crate::blog::auth::encode_jwt;
     use axum::http::{header, HeaderValue};
     use bcrypt::{hash, DEFAULT_COST};
     use leptos_axum::{redirect, ResponseOptions};
 
     let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE email = $1")
         .bind(register.email.as_str())
-        .fetch_one(crate::database::db())
+        .fetch_one(crate::blog::database::db())
         .await;
 
     if user.is_ok() {
@@ -39,7 +39,7 @@ pub async fn register(register: RegisterRequest) -> Result<(), ServerFnError> {
         hash(register.password.as_str(), DEFAULT_COST)
             .map_err(|_| ServerFnError::new("Error creating User."))?,
     )
-    .fetch_one(crate::database::db())
+    .fetch_one(crate::blog::database::db())
     .await
     .map_err(|_| ServerFnError::new("Error authenticating User."))?;
 
@@ -51,7 +51,7 @@ pub async fn register(register: RegisterRequest) -> Result<(), ServerFnError> {
     response.append_header(
         header::SET_COOKIE,
         HeaderValue::from_str(&format!(
-            "auth_token={}; Path=/; SameSite=Strict; Secure;",
+            "auth_token={}; Path=/; SameSite=Lax; Secure;",
             token
         ))?,
     );

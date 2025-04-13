@@ -1,7 +1,7 @@
 use leptos::{prelude::*, task::spawn_local};
 use reactive_stores::Store;
 
-use crate::{
+use crate::blog::{
     app::{GlobalState, GlobalStateStoreFields},
     models::*,
 };
@@ -30,7 +30,7 @@ pub async fn comment(comment: NewComment, post_id: i32) -> Result<Vec<Comment>, 
     .bind(post_id)
     .bind(ammonia::clean(&comment.content))
     .bind(None::<i32>)
-    .execute(crate::database::db())
+    .execute(crate::blog::database::db())
     .await
     .map_err(|e| {
         let err = format!("Error while creating comment: {e:?}");
@@ -55,7 +55,7 @@ pub async fn comment(comment: NewComment, post_id: i32) -> Result<Vec<Comment>, 
     "#,
     )
     .bind(post_id)
-    .fetch_all(crate::database::db())
+    .fetch_all(crate::blog::database::db())
     .await
     .map_err(|e| {
         let err = format!("Error while creating comment: {e:?}");
@@ -83,7 +83,7 @@ pub async fn delete_comment(comment: Comment) -> Result<u64, ServerFnError> {
 
     sqlx::query("DELETE FROM comments WHERE id = $1")
         .bind(comment.id)
-        .execute(crate::database::db())
+        .execute(crate::blog::database::db())
         .await
         .map_err(|e| {
             let err = format!("Error while deleting comment: {e:?}");

@@ -2,7 +2,7 @@ use leptos::{prelude::*, task::spawn_local};
 use leptos_router::components::A;
 use reactive_stores::Store;
 
-use crate::app::{GlobalState, GlobalStateStoreFields};
+use crate::blog::app::{GlobalState, GlobalStateStoreFields};
 
 #[component]
 pub fn Header() -> impl IntoView {
@@ -124,7 +124,7 @@ pub async fn logout() -> Result<(), ServerFnError> {
     response.append_header(
         header::SET_COOKIE,
         HeaderValue::from_str(
-            "auth_token=deleted; Path=/; SameSite=Strict; Secure; expires=Thu, 01 Jan 1970 00:00:00 GMT;",
+            "auth_token=deleted; Path=/; SameSite=Lax; Secure; expires=Thu, 01 Jan 1970 00:00:00 GMT;",
         )?,
     );
 

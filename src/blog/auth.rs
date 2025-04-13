@@ -5,9 +5,11 @@ use chrono::{Duration, Utc};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, TokenData, Validation};
 use serde::{Deserialize, Serialize};
 
-use crate::{database, models::User};
+use crate::blog::{database, models::User};
 
+#[tracing::instrument]
 pub async fn auth_guard(mut req: Request, next: Next) -> Result<Response, StatusCode> {
+    // return Ok(next.run(req).await);
     let Some(token) = req.headers().typed_get::<Cookie>() else {
         return Ok(next.run(req).await);
     };
@@ -33,7 +35,7 @@ pub async fn auth_guard(mut req: Request, next: Next) -> Result<Response, Status
     Ok(next.run(req).await)
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Claims {
     pub exp: usize,
     pub iat: usize,

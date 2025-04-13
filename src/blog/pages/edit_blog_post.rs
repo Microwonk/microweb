@@ -3,7 +3,7 @@ use leptos_meta::*;
 use leptos_router::hooks::use_params_map;
 use leptos_use::use_debounce_fn;
 
-use crate::{
+use crate::blog::{
     models::*,
     pages::{blog_post::BlogPost, loading::LoadingPage},
 };
@@ -36,7 +36,7 @@ pub async fn get_post(slug: String) -> Result<Post, ServerFnError> {
         AND posts.slug = $1"#,
     )
     .bind(slug)
-    .fetch_one(crate::database::db())
+    .fetch_one(crate::blog::database::db())
     .await
     .map_err(|e| {
         let err = format!("Error while getting posts: {e:?}");
@@ -63,7 +63,7 @@ pub async fn update_post(post: NewPost, post_id: i32) -> Result<u64, ServerFnErr
     .bind(post.markdown_content)
     .bind(Utc::now())
     .bind(post_id)
-    .execute(crate::database::db())
+    .execute(crate::blog::database::db())
     .await
     .map_err(|e| {
         let err = format!("Error while getting posts: {e:?}");

@@ -1,4 +1,4 @@
-use crate::{components::ReRouter, models::Profile};
+use crate::blog::{components::ReRouter, models::Profile};
 use leptos::prelude::*;
 
 #[component]
@@ -15,7 +15,7 @@ pub fn LogOut(
 
     view! {
         <Show when=move || !logged_in.get()>
-            <ReRouter route="/"/>
+            <ReRouter route="/" />
         </Show>
     }
 }

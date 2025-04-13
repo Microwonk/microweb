@@ -1,4 +1,4 @@
-use crate::{
+use crate::blog::{
     components::{blog_card::BlogCard, header::Header},
     models::Post,
     pages::loading::LoadingPage,
@@ -27,7 +27,7 @@ pub async fn get_posts() -> Result<Vec<Post>, ServerFnError> {
         JOIN users ON posts.author = users.id
         WHERE released = true ORDER BY release_date DESC"#,
     )
-    .fetch_all(crate::database::db())
+    .fetch_all(crate::blog::database::db())
     .await
     .map_err(|e| {
         let err = format!("Error while getting posts: {e:?}");

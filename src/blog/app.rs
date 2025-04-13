@@ -1,12 +1,12 @@
 use leptos::prelude::*;
-use leptos_meta::{provide_meta_context, MetaTags, Stylesheet};
+use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
 use leptos_router::{
     components::{Outlet, ParentRoute, Redirect, Route, Router, Routes},
     path,
 };
 use reactive_stores::Store;
 
-use crate::{
+use crate::blog::{
     models::*,
     pages::{
         admin::AdminPage, blog_post::BlogPostPage, edit_blog_post::EditBlogPostPage,
@@ -67,6 +67,8 @@ pub fn App() -> impl IntoView {
 
     view! {
         <Stylesheet id="leptos" href="/pkg/microblog.css" />
+
+        <Title text="Microwonks Blog" />
 
         <Suspense fallback=LoadingPage>
             <ErrorBoundary fallback=|_| {

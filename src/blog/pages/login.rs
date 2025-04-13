@@ -3,7 +3,7 @@ use leptos_meta::*;
 use reactive_stores::Store;
 use regex::Regex;
 
-use crate::{
+use crate::blog::{
     app::{GlobalState, GlobalStateStoreFields},
     models::*,
 };
@@ -11,7 +11,7 @@ use crate::{
 #[server(LoginAction, "/api", endpoint = "login")]
 #[tracing::instrument]
 pub async fn login(login: LoginRequest) -> Result<(), ServerFnError> {
-    use crate::{
+    use crate::blog::{
         auth::{encode_jwt, verify_password},
         database,
     };
@@ -43,7 +43,7 @@ pub async fn login(login: LoginRequest) -> Result<(), ServerFnError> {
     response.append_header(
         header::SET_COOKIE,
         HeaderValue::from_str(&format!(
-            "auth_token={}; Path=/; SameSite=Strict; Secure;",
+            "auth_token={}; Path=/; SameSite=Lax; Secure;",
             token
         ))?,
     );
