@@ -288,8 +288,6 @@ pub fn AdminPage() -> impl IntoView {
 
         if let Some(Some(t)) = query.with(|q| q.as_ref().map(|t| t.tab.clone()).ok()) {
             set_current_tab(t);
-        } else {
-            use_navigate()("/admin?tab=blogs", Default::default());
         }
 
         set_blog_posts(posts_res.get().unwrap_or(Vec::new()));
