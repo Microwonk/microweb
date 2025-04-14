@@ -37,8 +37,8 @@ pub mod router {
 pub mod utils {
     pub fn map_y_to_value(y: f64, y_visible_coord: f64) -> f64 {
         let start_y = y_visible_coord;
-        let end_y = y_visible_coord + 500.0;
-        let start_value = 120.0;
+        let end_y = y_visible_coord + 300.0;
+        let start_value = 100.0;
         let end_value = 0.0;
 
         if y < start_y {

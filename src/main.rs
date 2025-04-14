@@ -7,7 +7,7 @@ async fn main() {
         response::{IntoResponse, Redirect},
         Router,
     };
-    use microblog::{blog::router::BlogRouter, www::router::WWWRouter};
+    use microblog::{blog::router::BlogRouter, www::router::WWWRouter, DOMAIN};
     use tower::{service_fn, ServiceExt};
 
     dotenvy::dotenv().ok();
@@ -20,14 +20,9 @@ async fn main() {
     let blog_app = Router::blog_router().await;
     let www_app = Router::www_router().await;
 
-    let domain = std::env::var("DOMAIN").expect("Env var DOMAIN must be set.");
-    let port = std::env::var("PORT").expect("Env var PORT must be set.");
-    let addr = format!("{}:{}", domain.clone(), port);
-
     let app = Router::new().fallback_service(service_fn(move |req: Request<Body>| {
         let blog_app = blog_app.clone();
         let www_app = www_app.clone();
-        let domain = domain.clone();
         async move {
             let host = req
                 .headers()
@@ -41,12 +36,14 @@ async fn main() {
                 www_app.clone().oneshot(req).await
             } else {
                 // TODO
-                Ok(Redirect::permanent(&format!("http://www.{}", domain.clone())).into_response())
+                Ok(Redirect::permanent(&format!("http://www.{}", *DOMAIN)).into_response())
             }
         }
     }));
 
-    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+    let listener = tokio::net::TcpListener::bind("localhost:3000")
+        .await
+        .unwrap();
 
     axum::serve(listener, app.into_make_service())
         .await

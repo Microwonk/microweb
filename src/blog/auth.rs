@@ -1,4 +1,9 @@
-use axum::{extract::Request, http::StatusCode, middleware::Next, response::Response};
+use axum::{
+    extract::Request,
+    http::{header, HeaderValue, StatusCode},
+    middleware::Next,
+    response::Response,
+};
 use axum_extra::headers::{Cookie, HeaderMapExt};
 use bcrypt::verify;
 use chrono::{Duration, Utc};
@@ -7,9 +12,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::blog::{database, models::User};
 
+pub const EXPIRATION_DAYS: i64 = 30;
+
 #[tracing::instrument]
 pub async fn auth_guard(mut req: Request, next: Next) -> Result<Response, StatusCode> {
-    // return Ok(next.run(req).await);
     let Some(token) = req.headers().typed_get::<Cookie>() else {
         return Ok(next.run(req).await);
     };
@@ -20,9 +26,21 @@ pub async fn auth_guard(mut req: Request, next: Next) -> Result<Response, Status
 
     let token = token.to_owned();
 
-    let claim = decode_jwt(token)
-        .map_err(|_| StatusCode::UNAUTHORIZED)?
-        .claims;
+    let Ok(claim) = decode_jwt(token) else {
+        let mut response = next.run(req).await;
+
+        response.headers_mut().append(
+            header::SET_COOKIE,
+            HeaderValue::from_str(
+                "auth_token=deleted; Path=/; SameSite=Lax; Secure; Expires=Thu, 01 Jan 1970 00:00:00 GMT;",
+            )
+            .unwrap(),
+        );
+
+        return Ok(response);
+    };
+
+    let claim = claim.claims;
 
     let identity = sqlx::query_as::<_, User>("SELECT * FROM users WHERE email = $1")
         .bind(claim.email)
@@ -44,7 +62,7 @@ pub struct Claims {
 
 pub fn encode_jwt(email: String) -> Result<String, StatusCode> {
     let now = Utc::now();
-    let expire = Duration::days(1);
+    let expire = Duration::days(EXPIRATION_DAYS);
 
     let claim = Claims {
         iat: now.timestamp() as usize,

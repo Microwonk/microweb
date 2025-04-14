@@ -18,12 +18,12 @@ use crate::blog::{
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
         <!DOCTYPE html>
-        <html lang="en">
+        <html class="blog" lang="en">
             <head>
                 <meta charset="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
                 <AutoReload options=options.clone() />
-                <HydrationScripts options islands=true/>
+                <HydrationScripts options />
                 <MetaTags />
             </head>
             <body>
@@ -68,7 +68,7 @@ pub fn App() -> impl IntoView {
     view! {
         <Stylesheet id="leptos" href="/pkg/microblog.css" />
 
-        <Title text="Microwonks Blog" />
+        <Title text="Microwonk's Blog" />
 
         <Suspense fallback=LoadingPage>
             <ErrorBoundary fallback=|_| {

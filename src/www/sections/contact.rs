@@ -20,15 +20,6 @@ pub fn Contact() -> impl IntoView {
                             Me
                         </span>
                     </div>
-                    <div class="animated-title">
-                        <a
-                            href="/resources/public-key.asc"
-                            download
-                            class="sm:text-xs md:text-sm hover:text-nf-color m-5 animated-title-element text-nf-white font-regular uppercase transition"
-                        >
-                            (click me for pgp key)
-                        </a>
-                    </div>
                 </h2>
 
                 <Button

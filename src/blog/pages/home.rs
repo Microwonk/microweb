@@ -41,7 +41,7 @@ pub fn HomePage() -> impl IntoView {
     let blog_posts = Resource::new(|| (), |_| async { get_posts().await });
 
     view! {
-        <Title text="Microwonks Blog" />
+        <Title text="Microwonk's Blog" />
 
         <Header />
         <div class="mx-auto max-w-screen-xl px-4 pb-8 lg:pb-12 pt-8 lg:pt-12">

@@ -16,7 +16,7 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
                 <meta charset="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
                 <AutoReload options=options.clone() />
-                <HydrationScripts options islands=true/>
+                <HydrationScripts options />
                 <MetaTags />
             </head>
             <body>
@@ -31,8 +31,27 @@ pub fn App() -> impl IntoView {
     provide_meta_context();
 
     view! {
+        <Stylesheet id="leptos" href="/pkg/microblog.css" />
+
         <Title text="Nicolas Frey" />
-        <Meta attr:lang="en" attr:data-theme="light" />
+        <Meta attr:lang="en" />
+
+        <defs>
+            <svg width="0" height="0">
+                <filter id="rough-paper">
+                    <feTurbulence
+                        type="fractalNoise"
+                        baseFrequency="0.04"
+                        result="noise"
+                        numOctaves="5"
+                    />
+
+                    <feDiffuseLighting in="noise" lighting-color="#dad6ca" surfaceScale="2">
+                        <feDistantLight azimuth="90" elevation="60" />
+                    </feDiffuseLighting>
+                </filter>
+            </svg>
+        </defs>
 
         <Router>
             <FlatRoutes fallback=NotFound>

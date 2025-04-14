@@ -7,6 +7,10 @@ use crate::blog::app::{GlobalState, GlobalStateStoreFields};
 #[component]
 pub fn Header() -> impl IntoView {
     let store = expect_context::<Store<GlobalState>>();
+    let dom = Resource::new(
+        || (),
+        async |_| format!("http://www.{}", crate::domain().await.unwrap()),
+    );
     let header = {
         move || {
             if let Some(u) = store.user().get() {
@@ -25,12 +29,12 @@ pub fn Header() -> impl IntoView {
                     <LogoutButton />
 
                     <div class="group relative inline-block w-1/6">
-                        <div class="experience experience-cta">
-                            <span class="experience-cta-border"></span>
-                            <span class="experience-cta-ripple">
+                        <div class="email email-cta">
+                            <span class="email-cta-border"></span>
+                            <span class="email-cta-ripple">
                                 <span></span>
                             </span>
-                            <span class="experience-cta-title">
+                            <span class="email-cta-title">
                                 <span
                                     data-text=u.email.clone()
                                     class="justify-between flex-row w-full"
@@ -77,29 +81,31 @@ pub fn Header() -> impl IntoView {
                 aria-label="Global"
             >
                 <ul class="gap-4 flex-row flex items-center justify-between">
-                    <li class="text-nf-white font-rosmatika text-md md:text-lg flex uppercase gap-1">
+                    <li class="text-nf-white text-md md:text-lg flex uppercase gap-1">
                         <a href="/">
-                            <span>"Microwonks"</span>
-                            <span class="block sm:hidden font-rosmatika">Blog</span>
+                            <span>"Microwonk's"</span>
+                            <span class="block sm:hidden">Blog</span>
                         </a>
                     </li>
                 </ul>
             </nav>
             <nav
-                class="w-full py-2 md:py-3 bg-transparent border-b-nf-white/[0.35] border-b-2 px-3 md:px-5"
+                class="w-full py-1 bg-transparent border-b-nf-white/[0.35] border-b-2 px-3 md:px-5"
                 aria-label="Global"
             >
                 <ul class="gap-4 flex-row flex justify-between">
-                    <li class="font-rosmatika hidden sm:block text-nf-dark text-md md:text-lg flex uppercase hover:text-nf-color transition">
+                    <li class="hidden font-bold sm:block text-nf-dark mt-3 text-md md:text-lg flex uppercase hover:text-nf-color transition">
                         <A href="/">Blog</A>
                     </li>
 
                     <li class="font-montserrat flex gap-4 md:gap-8 items-center w-full md:justify-end justify-center">
-                        <A href="https://www.nicolas-frey.com">
-                            <span class="text-sm sm:text-lg text-nf-dark flex items-center gap-1 hover:animate-pulse hover:text-nf-color">
-                                about
-                            </span>
-                        </A>
+                        <Suspense>
+                            <A href=move || dom.get().unwrap_or_default()>
+                                <span class="text-sm sm:text-lg text-nf-dark flex items-center gap-1 hover:animate-pulse hover:text-nf-color">
+                                    about
+                                </span>
+                            </A>
+                        </Suspense>
                         <A href="/feed">
                             <span class="font-montserrat text-sm sm:text-lg text-nf-dark flex items-center gap-1 hover:animate-pulse hover:text-nf-color">
                                 feed

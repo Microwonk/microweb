@@ -92,10 +92,6 @@ pub fn SocialsImages() -> impl IntoView {
             "discord".to_string(),
             "https://discordapp.com/users/444924590913749002".to_string(),
         ),
-        (
-            "pgp_key".to_string(),
-            "/resources/public-key.asc".to_string(),
-        ),
     ]);
 
     view! {

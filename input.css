@@ -2,58 +2,688 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-
-  @font-face {
-    font-family: 'Iosevka Custom';
-    font-display: swap;
-    font-weight: 100 900;
-    font-style: normal;
-    src:
-      url('fonts/IosevkaCustom-Regular.ttf') format('truetype')
-      url('fonts/IosevkaCustom-Bold.ttf') format('truetype')
-      url('fonts/IosevkaCustom-Italic.ttf') format('truetype');
-  }
-
-  @font-face {
-    font-family: "jersey";
-    src: url("fonts/Jersey10-Regular.ttf") format("truetype");
-  }
-  
-  @font-face {
-    font-family: "kamikaze";
-    src: url("fonts/kamikaze.ttf") format("truetype");
-  }
-  
-  @font-face {
-    font-family: "rosmatika";
-    src: url("fonts/RosmatikaRegular-BWA45.ttf") format("truetype");
-  }
-  
-  @font-face {
-    font-family: "montserrat";
-    font-weight: 700;
-    src: url("fonts/Montserrat-Bolet.ttf") format("truetype");
-  }
-  
-  @font-face {
-    font-family: "montserrat";
-    font-weight: 400;
-    src: url("fonts/Montserrat-Regular.ttf") format("truetype");
-  }
-
-    html {
-      font-family: "FiraSans", Averta, system-ui, sans-serif;
-    }
-    body {
-      @apply bg-nf-white;
-      background-image: url("/assets/paperb.png");
-      background-blend-mode: multiply;
-    }
-    a {
-      @apply no-underline;
-    }
+@font-face {
+  font-family: 'Iosevka Custom';
+  font-display: swap;
+  font-weight: 100 900;
+  font-style: normal;
+  src:
+    url('/fonts/IosevkaCustom-Regular.ttf') format('truetype')
+    url('/fonts/IosevkaCustom-Bold.ttf') format('truetype')
+    url('/fonts/IosevkaCustom-Italic.ttf') format('truetype');
 }
+
+@font-face {
+  font-family: "jersey";
+  src: url("/fonts/Jersey10-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "kamikaze";
+  src: url("/fonts/kamikaze.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "montserrat";
+  font-weight: 700;
+  src: url("/fonts/Montserrat-Bolet.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "montserrat";
+  font-weight: 400;
+  src: url("/fonts/Montserrat-Regular.ttf") format("truetype");
+}
+
+@layer base {
+  .blog body {
+    font-family: "FiraSans", Averta, system-ui, sans-serif;
+    @apply bg-nf-white;
+    background-image: url("/assets/paperb.png");
+    background-blend-mode: multiply;
+  }
+  .blog a {
+    @apply no-underline;
+  }
+
+  .www body {
+    font-family: "montserrat", Averta, system-ui, sans-serif;
+    @apply bg-nf-dark;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-nf-color;
+}
+
+.textured-text {
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: url(#rough-paper);
+}
+
+/* ANIMATION */
+.usecase-in {
+  transform: translateY(40);
+}
+
+.usecase-out {
+  transform: translateY(0);
+}
+
+.explore-in {
+  width: 200;
+}
+
+.explore-out {
+  width: auto;
+}
+
+/* Title animation */
+@keyframes slideTitleUp {
+  0% {
+    transform: translate(0px, 120%);
+  }
+  100% {
+    transform: translate(0px, 0%);
+  }
+}
+
+@keyframes removeOverflow {
+  0% {
+    overflow: hidden;
+  }
+  100% {
+    overflow: visible;
+  }
+}
+
+.animated-title {
+  position: relative;
+  display: inline-block;
+  margin: -0.15em;
+  padding: 0.15em;
+  vertical-align: top;
+  overflow: hidden;
+  animation-name: removeOverflow;
+  animation-duration: 1s;
+  animation-delay: 1s;
+  animation-fill-mode: forwards;
+}
+
+.animated-title-element {
+  position: relative;
+  display: inline-block;
+  transform: translate(0px, 120%);
+  will-change: auto;
+  animation-name: slideTitleUp;
+  animation-duration: 1.2s;
+  animation-delay: 0.05s;
+  animation-timing-function: cubic-bezier(0.34, 0.34, 0, 0.97);
+  animation-fill-mode: forwards;
+}
+
+.animated-title:nth-of-type(1) .animated-title-element {
+  animation-delay: 0.15s;
+}
+
+.animated-title:nth-of-type(2) .animated-title-element {
+  animation-delay: 0.3s;
+}
+
+.animated-title:nth-of-type(3) .animated-title-element {
+  animation-delay: 0.45s;
+}
+
+.animated-title:nth-of-type(4) .animated-title-element {
+  animation-delay: 0.6s;
+}
+
+.animated-title:nth-of-type(5) .animated-title-element {
+  animation-delay: 0.7s;
+}
+
+.animated-title:nth-of-type(6) .animated-title-element {
+  animation-delay: 0.75s;
+}
+
+/* Cards Animation */
+@keyframes slideDown {
+  0% {
+    transform: translate(0px, 20%);
+  }
+  100% {
+    transform: translate(0px, 0%);
+  }
+}
+
+/* .features a {
+  transform: translate(0px, 20%);
+  will-change: auto;
+  animation-name: slideDown;
+  animation-duration: 1.2s;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+} */
+
+.features a {
+  will-change: transform;
+  transform: translateZ(0);
+  transition: transform 0.3s;
+}
+
+.features a:hover {
+  transform: scaleX(1.008);
+  transition: transform 0.6s cubic-bezier(0.34, 5.56, 0.64, 1);
+}
+
+.features a:nth-of-type(1) {
+  animation-delay: 0.15s;
+}
+
+.features a:nth-of-type(2) {
+  animation-delay: 0.15s;
+}
+
+.features a:nth-of-type(3) {
+  animation-delay: 0.45s;
+}
+
+.features a:nth-of-type(5) {
+  animation-delay: 0.45s;
+}
+
+.features a:nth-of-type(4) {
+  animation-delay: 0.3s;
+}
+
+.features a:nth-of-type(6) {
+  animation-delay: 0.3s;
+}
+
+/* ANIMATED BUTTON */
+
+.button {
+  @apply relative;
+  @apply overflow-hidden;
+  @apply bg-nf-dark ring-nf-white w-full rounded-full px-4 py-8 text-lg font-normal shadow-sm outline-none ring-1 ring-inset md:py-12 md:text-3xl lg:col-span-2 lg:row-span-1 lg:py-16;
+
+  transform: translateZ(0);
+  transition: transform 0.3s;
+}
+
+.button:hover {
+  transform: scaleX(1.02);
+  transition: transform 0.6s cubic-bezier(0.34, 5.56, 0.64, 1);
+}
+
+.button-cta-border {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 1px;
+  z-index: 3;
+  border: 1px solid;
+  @apply border-nf-white;
+  border-radius: 1000px;
+}
+
+.button-cta-ripple {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  overflow: hidden;
+  transform: translateZ(0);
+  border-radius: inherit;
+}
+
+.button-cta-ripple span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: translateY(101%);
+  @apply bg-nf-white;
+  border-radius: 50% 50% 0 0;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0, 1),
+    border-radius 0.5s cubic-bezier(0.4, 0, 0, 1);
+}
+
+.button-cta:hover .button-cta-ripple span {
+  border-radius: 0;
+  transform: translateY(0);
+  transition-duration: 0.5s, 0.9s;
+}
+
+.button-cta-title {
+  position: relative;
+  display: block;
+  padding: 0 0.16em 0 0;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.button-cta-title span {
+  display: block;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  @apply text-nf-white;
+}
+
+.button-cta:hover .button-cta-title span {
+  transform: translateY(-110%);
+}
+
+.button-cta-title span:after {
+  content: attr(data-text);
+  display: block;
+  width: 100%;
+  position: absolute;
+  top: 110%;
+  left: 0;
+  @apply text-nf-dark;
+}
+
+.inverse.button {
+  @apply bg-nf-white;
+}
+
+.inverse .button-cta-border {
+  @apply border-nf-dark;
+}
+
+.inverse .button-cta-ripple span {
+  @apply bg-nf-dark;
+}
+
+.inverse .button-cta-title span {
+  @apply text-nf-dark;
+}
+
+.inverse .button-cta-title span:after {
+  @apply text-nf-white;
+}
+
+/* Animation Fade In */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  opacity: 0;
+  animation: fadeIn 1s ease-out forwards 0.2s;
+}
+
+/* Animation FadeYTrans Case */
+@keyframes fadeYTrans {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-y-trans {
+  will-change: transform;
+  opacity: 0;
+  transform: translateY(40px);
+  animation: fadeYTrans 1.4s cubic-bezier(0.34, 0.34, 0, 0.97) forwards 0.15s;
+}
+
+.iframe {
+  width: 100vw;
+  max-width: 100%;
+  max-height: 11in;
+  aspect-ratio: 8.5/11;
+}
+
+/* ANIMATION SCROLL ICON */
+@keyframes scroll {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  25% {
+    opacity: 1;
+  }
+  75% {
+    transform: translateY(0.75em);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+}
+
+.scroll-icon__dot {
+  display: block;
+  position: absolute;
+  left: 50%;
+  @apply bg-nf-white;
+  height: 0.5em;
+  width: 0.5em;
+  top: 0.6em;
+  margin-left: -0.25em;
+  border-radius: 50%;
+  transform-origin: top center;
+  backface-visibility: hidden;
+  animation: scroll 2s ease-out infinite;
+}
+
+.scroll-icon {
+  display: block;
+  position: relative;
+  height: 3em;
+  width: 1.5em;
+  border: 2px solid;
+  @apply border-nf-white;
+  border-radius: 1em;
+}
+
+.scroll-icon.hero {
+  @apply border-nf-color;
+  opacity: 0.5;
+}
+
+.hero .scroll-icon__dot {
+  @apply bg-nf-color;
+}
+
+.link {
+  position: relative;
+  will-change: transform;
+  transform: translateZ(0);
+  transition: transform 0.3s;
+}
+
+.link:hover {
+  transform: scaleX(1.02);
+  transition: transform 0.6s cubic-bezier(0.34, 5.56, 0.64, 1);
+  font-weight: 500;
+}
+
+.close {
+  position: relative;
+  will-change: transform;
+  transform: translateZ(0);
+  transition: transform 0.3s;
+}
+
+.close:hover {
+  transform: scaleX(1.04) scaleY(1.02);
+  transition: transform 0.6s cubic-bezier(0.34, 5.56, 0.64, 1);
+  font-weight: 500;
+}
+
+/* ANIMATED PILL */
+
+.pill {
+  @apply relative;
+  @apply overflow-hidden;
+  @apply bg-nf-dark font-medium rounded-full px-6 py-2 shadow-sm outline-none ring-nf-white ring-1 ring-inset;
+
+  transform: translateZ(0);
+  transition: transform 0.3s;
+}
+
+.pill-cta-border {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 1px;
+  z-index: 3;
+  border: 1px solid;
+  @apply border-nf-white;
+  border-radius: 1000px;
+}
+
+.pill-cta-ripple {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  overflow: hidden;
+  transform: translateZ(0);
+  border-radius: inherit;
+}
+
+.pill-cta-ripple span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: translateY(101%);
+  @apply bg-nf-white;
+  border-radius: 50% 50% 0 0;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0, 1),
+    border-radius 0.5s cubic-bezier(0.4, 0, 0, 1);
+}
+
+.pill-cta:hover .pill-cta-ripple span {
+  border-radius: 0;
+  transform: translateY(0);
+  transition-duration: 0.5s, 0.9s;
+}
+
+.pill-cta-title {
+  position: relative;
+  display: block;
+  padding: 0 0.16em 0 0;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.pill-cta-title span {
+  display: block;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  @apply text-nf-white;
+}
+
+.pill-cta:hover .pill-cta-title span {
+  transform: translateY(-110%);
+}
+
+.pill-cta-title span:after {
+  content: attr(data-text);
+  display: block;
+  width: 100%;
+  position: absolute;
+  top: 110%;
+  left: 0;
+  @apply text-nf-dark;
+}
+
+.inverse.pill {
+  @apply bg-nf-white;
+}
+
+.inverse .pill-cta-border {
+  @apply border-nf-dark;
+}
+
+.inverse .pill-cta-ripple span {
+  @apply bg-nf-dark;
+}
+
+.inverse .pill-cta-title span {
+  @apply text-nf-dark;
+}
+
+.inverse .pill-cta-title span:after {
+  @apply text-nf-white;
+}
+
+/* ANIMATED EXPERIENCE */
+
+.experience {
+  @apply relative;
+  @apply overflow-hidden;
+  @apply bg-transparent w-full text-lg lg:text-2xl leading-largep font-[400] shadow-sm py-4 lg:py-7 px-2;
+  transform: translateZ(0);
+  transition: transform 0.3s;
+}
+
+.experience:hover,
+.experience:focus,
+.experience:active {
+  transition: transform 0.6s cubic-bezier(0.34, 5.56, 0.64, 1);
+}
+
+.experience-cta-border {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 1px;
+  z-index: 3;
+  border-bottom: 1px solid;
+  @apply border-nf-white;
+}
+
+.experience-cta-ripple {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  overflow: hidden;
+  transform: translateZ(0);
+}
+
+.experience-cta-ripple span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: translateY(101%);
+  @apply bg-nf-white;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0, 1);
+}
+
+.experience-cta:hover .experience-cta-ripple span,
+.experience-cta:focus .experience-cta-ripple span,
+.experience-cta:active .experience-cta-ripple span {
+  transform: translateY(0);
+  transition-duration: 0.5s, 0.9s;
+}
+
+.experience-cta-title {
+  position: relative;
+  display: block;
+  padding: 0 0.16em 0 0;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.experience-cta-title span {
+  display: flex;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  @apply text-nf-white;
+}
+
+.experience-cta:hover .experience-cta-title span,
+.experience-cta:focus .experience-cta-title span,
+.experience-cta:active .experience-cta-title span {
+  transform: translateY(-110%);
+}
+
+.experience-cta-title span:after {
+  content: attr(data-text);
+  display: block;
+  width: 100%;
+  position: absolute;
+  top: 110%;
+  left: 0;
+  @apply text-nf-dark;
+}
+
+/* GTKM ANIMATION */
+.gtkm {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  text-decoration: none;
+  @apply text-nf-dark;
+  transition: 0.3s ease;
+}
+
+.gtkm:hover {
+  @apply text-nf-white;
+  @apply tracking-widest;
+}
+
+/* Create a pseudo-element for background animation */
+.gtkm::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  @apply bg-nf-color;
+  transition: left 0.5s cubic-bezier(0.4, 0, 0, 1); /* Smooth left to right transition */
+  z-index: -1; /* Place the background below the text */
+}
+
+/* Hover effect for background animation */
+.gtkm:hover::before {
+  left: 0; /* Move the background from left to right */
+}
+
+/* ANIMATED FLIP DOWN/UP */
+
+@keyframes flipUp {
+  0% {
+    transform: rotateX(-90deg);
+    opacity: 0;
+  }
+  100% {
+    transform: rotateX(0deg);
+    opacity: 1;
+  }
+}
+
+.animated-flip-up {
+  will-change: auto;
+  animation-name: flipUp;
+  animation-duration: 1s;
+  animation-timing-function: cubic-bezier(0.34, 0.34, 0, 0.97);
+  animation-fill-mode: forwards;
+}
+
+/* BLOG */
 
 .markdown {
   @apply w-full text-lg break-words;
@@ -132,22 +762,22 @@
   @apply my-0;
 }
 
-/* EXPERIENCE ANIMATIONS */
+/* EMAIL ANIMATIONS */
 
-.experience {
+.email {
   @apply relative;
   @apply overflow-hidden;
   transform: translateZ(0);
   transition: transform 0.3s;
 }
 
-.experience:hover,
-.experience:focus,
-.experience:active {
+.email:hover,
+.email:focus,
+.email:active {
   transition: transform 0.6s cubic-bezier(0.34, 5.56, 0.64, 1);
 }
 
-.experience-cta-ripple {
+.email-cta-ripple {
   display: block;
   position: absolute;
   top: 0;
@@ -159,7 +789,7 @@
   transform: translateZ(0);
 }
 
-.experience-cta-ripple span {
+.email-cta-ripple span {
   display: block;
   width: 100%;
   height: 100%;
@@ -167,14 +797,14 @@
   transition: transform 0.5s cubic-bezier(0.4, 0, 0, 1);
 }
 
-.experience-cta:hover .experience-cta-ripple span,
-.experience-cta:focus .experience-cta-ripple span,
-.experience-cta:active .experience-cta-ripple span {
+.email-cta:hover .email-cta-ripple span,
+.email-cta:focus .email-cta-ripple span,
+.email-cta:active .email-cta-ripple span {
   transform: translateY(0);
   transition-duration: 0.5s, 0.9s;
 }
 
-.experience-cta-title {
+.email-cta-title {
   position: relative;
   display: block;
   padding: 0 0.16em 0 0;
@@ -182,18 +812,18 @@
   z-index: 2;
 }
 
-.experience-cta-title span {
+.email-cta-title span {
   display: flex;
   transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.experience-cta:hover .experience-cta-title span,
-.experience-cta:focus .experience-cta-title span,
-.experience-cta:active .experience-cta-title span {
+.email-cta:hover .email-cta-title span,
+.email-cta:focus .email-cta-title span,
+.email-cta:active .email-cta-title span {
   transform: translateY(-110%);
 }
 
-.experience-cta-title span:after {
+.email-cta-title span:after {
   content: attr(data-text);
   display: block;
   width: 100%;

@@ -34,15 +34,15 @@ pub fn Hero() -> impl IntoView {
 
     view! {
         <Layout id="home".to_string() aria_label="Hero" class_name="".to_string()>
-            <h1 class="text-center w-full font-kamikaze">
+            <h1 class="text-center w-full">
                 <div class="animated-title">
-                    <span class="text-6xl sm:text-8xl lg:text-9xl xl:text-10xl text-nf-white animated-title-element uppercase leading-smallheading sm:leading-mediumheading xl:leading-heading tracking-smallheading  sm:tracking-heading">
+                    <span class="text-6xl font-kamikaze sm:text-8xl lg:text-9xl xl:text-10xl text-nf-white animated-title-element uppercase leading-smallheading sm:leading-mediumheading xl:leading-heading tracking-smallheading  sm:tracking-heading">
                         "Making"
                     </span>
                 </div>
                 <br />
                 <div class="animated-title text-center">
-                    <span class="text-5xl sm:text-8xl lg:text-9xl xl:text-10xl text-nf-color animated-title-element break-all uppercase leading-smallheading sm:leading-mediumheading  xl:leading-heading tracking-smallheading sm:tracking-heading">
+                    <span class="text-5xl font-kamikaze sm:text-8xl lg:text-9xl xl:text-10xl text-nf-color animated-title-element break-all uppercase leading-smallheading sm:leading-mediumheading  xl:leading-heading tracking-smallheading sm:tracking-heading">
                         "Software"
                     </span>
                     {move || {
@@ -56,20 +56,11 @@ pub fn Hero() -> impl IntoView {
                 <br />
 
                 <div class="animated-title">
-                    <span class="text-6xl sm:text-8xl lg:text-9xl xl:text-10xl text-nf-white animated-title-element uppercase leading-smallheading sm:leading-mediumheading xl:leading-heading tracking-smallheading sm:tracking-heading relative">
+                    <span class="text-6xl font-kamikaze sm:text-8xl lg:text-9xl xl:text-10xl text-nf-white animated-title-element uppercase leading-smallheading sm:leading-mediumheading xl:leading-heading tracking-smallheading sm:tracking-heading relative">
                         "That Lasts"
                     </span>
                 </div>
                 <br />
-                <div class="animated-title">
-                    <a
-                        class="font-montserrat text-sms sm:text-sm lg:text-sm font-bold xl:text-base text-nf-white animated-title-element uppercase relative"
-                        href="https://microwonk.itch.io/"
-                        target="_blank"
-                    >
-                        "(And Games)🔗"
-                    </a>
-                </div>
             </h1>
             <div class="absolute hidden md:block left-5 -bottom-20">
                 <span class="scroll-icon hero">

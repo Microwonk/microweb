@@ -40,11 +40,14 @@ pub async fn login(login: LoginRequest) -> Result<(), ServerFnError> {
 
     let response = expect_context::<ResponseOptions>();
 
+    let expires = (chrono::Utc::now() + chrono::Duration::days(crate::blog::auth::EXPIRATION_DAYS))
+        .format("%a, %d %b %Y %H:%M:%S GMT");
+
     response.append_header(
         header::SET_COOKIE,
         HeaderValue::from_str(&format!(
-            "auth_token={}; Path=/; SameSite=Lax; Secure;",
-            token
+            "auth_token={}; Path=/; SameSite=Lax; Secure; Expires={};",
+            token, expires
         ))?,
     );
 

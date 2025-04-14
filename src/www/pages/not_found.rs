@@ -8,9 +8,6 @@ pub fn NotFound() -> impl IntoView {
     view! {
         <Title text="Nicolas Frey - Page Not Found" />
         <Header />
-        <div class="absolute backdrop-blur z-0 top-0 h-screen w-full bg-nf-dark bg-dot-nf-orange/[0.35] flex items-center justify-center">
-            <div class="absolute pointer-events-none inset-0 flex items-center justify-center bg-nf-dark [mask-image:radial-gradient(ellipse_at_center,transparent_20%,#0e0306)]"></div>
-        </div>
         <main class="grid gap-28 lg:gap-64 mt-10 md:mt-28">
             <h2 class="font-montserrat text-[520px] text-nf-orange/[.75] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-medium">
                 404
