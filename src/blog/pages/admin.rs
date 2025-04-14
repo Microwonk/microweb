@@ -531,7 +531,7 @@ pub fn MediaSection(
                                 .find(|&p| p.id == media.post_id)
                                 .cloned();
                             let path = format!(
-                                "https://microblog.shuttleapp.rs/upload/{}",
+                                "https://microweb.shuttleapp.rs/upload/{}",
                                 media.id,
                             );
                             view! {

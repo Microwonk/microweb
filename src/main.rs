@@ -1,14 +1,9 @@
 #[cfg(feature = "ssr")]
 #[tokio::main]
 async fn main() {
-    use axum::{
-        body::Body,
-        http::Request,
-        response::{IntoResponse, Redirect},
-        Router,
-    };
-    use microblog::{blog::router::BlogRouter, www::router::WWWRouter, DOMAIN};
-    use tower::{service_fn, ServiceExt};
+    use axum::Router;
+    use microweb::apps::Apps;
+    use tower::service_fn;
 
     dotenvy::dotenv().ok();
 
@@ -17,29 +12,7 @@ async fn main() {
         .with_max_level(tracing::Level::INFO)
         .init();
 
-    let blog_app = Router::blog_router().await;
-    let www_app = Router::www_router().await;
-
-    let app = Router::new().fallback_service(service_fn(move |req: Request<Body>| {
-        let blog_app = blog_app.clone();
-        let www_app = www_app.clone();
-        async move {
-            let host = req
-                .headers()
-                .get("host")
-                .and_then(|h| h.to_str().ok())
-                .unwrap_or("");
-
-            if host.starts_with("blog.") {
-                blog_app.clone().oneshot(req).await
-            } else if host.starts_with("www.") {
-                www_app.clone().oneshot(req).await
-            } else {
-                // TODO
-                Ok(Redirect::permanent(&format!("http://www.{}", *DOMAIN)).into_response())
-            }
-        }
-    }));
+    let app = Router::new().fallback_service(service_fn(Apps::fallback_service));
 
     let listener = tokio::net::TcpListener::bind("localhost:3000")
         .await
