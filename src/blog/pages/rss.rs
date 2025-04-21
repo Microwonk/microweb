@@ -63,7 +63,7 @@ pub fn generate_rss(title: &str, description: &str, link: &str, posts: &[Post]) 
                 <link>{link}</link>
                 <language>en-us</language>
                 <ttl>60</ttl>
-                <atom:link href="https://blog.nicolas-frey/api/rss.xml" rel="self" type="application/rss+xml" />
+                <atom:link href="https://blog.nicolas-frey.com/api/rss.xml" rel="self" type="application/rss+xml" />
                 {}
             </channel>
         </rss>   
@@ -100,7 +100,7 @@ pub fn RSSPage() -> impl IntoView {
         let _ = window()
             .navigator()
             .clipboard()
-            .write_text(format!("{}/api/rss.xml", "https://blog.nicolas-frey").as_str());
+            .write_text(format!("{}/api/rss.xml", "https://blog.nicolas-frey.com").as_str());
         set_copied(true);
         start(0);
     };
@@ -125,7 +125,7 @@ pub fn RSSPage() -> impl IntoView {
                         if copied.get() {
                             "Copied!".into()
                         } else {
-                            format!("{}/api/rss.xml", "blog.nicolas-frey")
+                            format!("{}/api/rss.xml", "blog.nicolas-frey.com")
                         }
                     }}
                     <svg

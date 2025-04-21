@@ -37,7 +37,7 @@ RUN apt-get update -y \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy the server binary to the /app directory
-COPY --from=builder /app/target/release/microweb /app/
+COPY --from=builder /app/target/release/microweb /app/microweb
 
 # /target/site contains our JS/WASM/CSS, etc.
 COPY --from=builder /app/target/site /app/site
@@ -47,8 +47,11 @@ COPY --from=builder /app/Cargo.toml /app/
 
 # Set any required env variables and
 ENV RUST_LOG="info"
+ENV LEPTOS_OUTPUT_NAME="microweb"
 ENV LEPTOS_SITE_ADDR="0.0.0.0:3000"
 ENV LEPTOS_SITE_ROOT="site"
+ENV LEPTOS_SITE_PKG_ROOT="pkg"
+
 EXPOSE 3000
 
 # Run the server
