@@ -6,19 +6,16 @@ use leptos_router::{
 };
 use reactive_stores::Store;
 
-use crate::blog::{
-    models::*,
-    pages::{
-        admin::AdminPage, blog_post::BlogPostPage, edit_blog_post::EditBlogPostPage,
-        home::HomePage, loading::LoadingPage, login::LoginPage, p404::Page404,
-        register::RegisterPage, rss::RSSPage,
-    },
+use crate::blog::pages::{
+    admin::AdminPage, blog_post::BlogPostPage, edit_blog_post::EditBlogPostPage, home::HomePage,
+    loading::LoadingPage, p404::Page404, rss::RSSPage,
 };
+use crate::models::*;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
         <!DOCTYPE html>
-        <html class="blog" lang="en">
+        <html lang="en">
             <head>
                 <meta charset="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -87,8 +84,6 @@ pub fn App() -> impl IntoView {
                                     <Router>
                                         <Routes fallback=Page404>
                                             <Route path=path!("") view=HomePage />
-                                            <Route path=path!("register") view=RegisterPage />
-                                            <Route path=path!("login") view=LoginPage />
                                             <Route path=path!("posts/:slug") view=BlogPostPage />
                                             <Route path=path!("feed") view=RSSPage />
 

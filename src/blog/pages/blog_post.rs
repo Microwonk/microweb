@@ -10,10 +10,10 @@ use syntect::{highlighting::ThemeSet, html::highlighted_html_for_string, parsing
 
 use crate::blog::{
     components::{comment::CommentSection, header::Header, links::Links},
-    models::{Comment, Post},
     pages::loading::LoadingPage,
     THEME_STR,
 };
+use crate::models::*;
 
 #[server(GetPostAction, "/api", "GetJson", endpoint = "post")]
 #[tracing::instrument]
@@ -37,7 +37,7 @@ pub async fn get_post(slug: String) -> Result<Post, ServerFnError> {
         AND posts.slug = $1"#,
     )
     .bind(slug)
-    .fetch_one(crate::blog::database::db())
+    .fetch_one(crate::database::db())
     .await
     .map_err(|e| {
         let err = format!("Error while getting posts: {e:?}");
@@ -66,7 +66,7 @@ pub async fn get_comments(post_id: i32) -> Result<Vec<Comment>, ServerFnError> {
         "#,
     )
     .bind(post_id)
-    .fetch_all(crate::blog::database::db())
+    .fetch_all(crate::database::db())
     .await
     .map_err(|e| {
         let err = format!("Error while getting posts: {e:?}");

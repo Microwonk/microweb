@@ -1,24 +1,21 @@
 use leptos::{prelude::*, task::spawn_local};
 use leptos_meta::*;
-use reactive_stores::Store;
+use leptos_router::hooks::use_query;
 use regex::Regex;
 
-use crate::blog::{
-    app::{GlobalState, GlobalStateStoreFields},
-    models::*,
-};
+use crate::{auth::ReturnUrlQuery, models::*};
 
 #[server(RegisterAction, "/api", endpoint = "register")]
 #[tracing::instrument]
-pub async fn register(register: RegisterRequest) -> Result<(), ServerFnError> {
-    use crate::blog::auth::encode_jwt;
+pub async fn register(register: RegisterRequest, return_url: String) -> Result<(), ServerFnError> {
+    use crate::auth::encode_jwt;
     use axum::http::{header, HeaderValue};
     use bcrypt::{hash, DEFAULT_COST};
     use leptos_axum::{redirect, ResponseOptions};
 
     let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE email = $1")
         .bind(register.email.as_str())
-        .fetch_one(crate::blog::database::db())
+        .fetch_one(crate::database::db())
         .await;
 
     if user.is_ok() {
@@ -39,7 +36,7 @@ pub async fn register(register: RegisterRequest) -> Result<(), ServerFnError> {
         hash(register.password.as_str(), DEFAULT_COST)
             .map_err(|_| ServerFnError::new("Error creating User."))?,
     )
-    .fetch_one(crate::blog::database::db())
+    .fetch_one(crate::database::db())
     .await
     .map_err(|_| ServerFnError::new("Error authenticating User."))?;
 
@@ -48,18 +45,20 @@ pub async fn register(register: RegisterRequest) -> Result<(), ServerFnError> {
 
     let response = expect_context::<ResponseOptions>();
 
-    let expires = (chrono::Utc::now() + chrono::Duration::days(crate::blog::auth::EXPIRATION_DAYS))
+    let expires = (chrono::Utc::now() + chrono::Duration::days(crate::auth::EXPIRATION_DAYS))
         .format("%a, %d %b %Y %H:%M:%S GMT");
 
     response.append_header(
         header::SET_COOKIE,
         HeaderValue::from_str(&format!(
-            "auth_token={}; Path=/; SameSite=Lax; Secure; Expires={};",
-            token, expires
+            "auth_token={}; Domain={}; Path=/; SameSite=Lax; Secure; Expires={};",
+            token,
+            *crate::DOMAIN,
+            expires
         ))?,
     );
 
-    redirect("/");
+    redirect(&return_url);
 
     Ok(())
 }
@@ -73,7 +72,7 @@ pub fn RegisterPage() -> impl IntoView {
     let (password_error, set_password_error) = signal(None::<String>);
     let (username_error, set_username_error) = signal(None::<String>);
 
-    let store = expect_context::<Store<GlobalState>>();
+    let query = use_query::<ReturnUrlQuery>();
 
     view! {
         <Title text="Register" />
@@ -260,11 +259,20 @@ pub fn RegisterPage() -> impl IntoView {
                             }
                             if valid {
                                 spawn_local(async move {
-                                    if let Err(e) = register(RegisterRequest {
-                                            email: email_value,
-                                            password: password_value,
-                                            name: username_value,
-                                        })
+                                    if let Err(e) = register(
+                                            RegisterRequest {
+                                                email: email_value,
+                                                password: password_value,
+                                                name: username_value,
+                                            },
+                                            query
+                                                .with(|q| {
+                                                    q.as_ref()
+                                                        .map(|r| r.return_url.clone())
+                                                        .ok()
+                                                        .unwrap_or("/profile".into())
+                                                }),
+                                        )
                                         .await
                                     {
                                         set_password_error(
@@ -277,8 +285,6 @@ pub fn RegisterPage() -> impl IntoView {
                                                     .to_owned(),
                                             ),
                                         );
-                                    } else {
-                                        store.logged_in().set(true);
                                     }
                                 });
                             }

@@ -8,7 +8,8 @@ use leptos_use::{use_timeout_fn, UseTimeoutFnReturn};
 use rss::Channel;
 use syntect::{highlighting::ThemeSet, html::highlighted_html_for_string, parsing::SyntaxSet};
 
-use crate::blog::{components::header::Header, models::*, pages::loading::LoadingPage, THEME_STR};
+use crate::blog::{components::header::Header, pages::loading::LoadingPage, THEME_STR};
+use crate::models::*;
 
 #[server(Rss, "/api", "GetJson", endpoint = "rss.xml")]
 #[tracing::instrument]
@@ -34,7 +35,7 @@ pub async fn rss() -> Result<String, ServerFnError> {
         JOIN users ON posts.author = users.id
         WHERE released = true ORDER BY release_date DESC"#,
         )
-        .fetch_all(crate::blog::database::db())
+        .fetch_all(crate::database::db())
         .await
         .map_err(|e| {
             let err = format!("Error while getting posts: {e:?}");

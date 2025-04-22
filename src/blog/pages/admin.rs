@@ -1,9 +1,9 @@
 use crate::blog::{
     app::{GlobalState, GlobalStateStoreFields},
     components::{header::Header, side_menu::SideMenu},
-    models::{Media, Post, User},
     pages::loading::LoadingPage,
 };
+use crate::models::*;
 use chrono::Utc;
 use leptos::{html::Div, prelude::*};
 use leptos::{task::spawn_local, Params};
@@ -45,7 +45,7 @@ pub async fn get_posts() -> Result<Vec<Post>, ServerFnError> {
         JOIN users ON posts.author = users.id
         ORDER BY release_date DESC"#,
     )
-    .fetch_all(crate::blog::database::db())
+    .fetch_all(crate::database::db())
     .await
     .map_err(|e| {
         let err = format!("Error while getting posts: {e:?}");
@@ -65,7 +65,7 @@ pub async fn get_users() -> Result<Vec<User>, ServerFnError> {
     };
 
     sqlx::query_as::<_, User>(r#"SELECT * FROM users ORDER BY created_at DESC"#)
-        .fetch_all(crate::blog::database::db())
+        .fetch_all(crate::database::db())
         .await
         .map_err(|e| {
             let err = format!("Error while getting users: {e:?}");
@@ -86,7 +86,7 @@ pub async fn delete_user(user_id: i32) -> Result<u64, ServerFnError> {
 
     sqlx::query("DELETE FROM users WHERE id = $1")
         .bind(user_id)
-        .execute(crate::blog::database::db())
+        .execute(crate::database::db())
         .await
         .map_err(|e| {
             let err = format!("Error while deleting user: {e:?}");
@@ -116,7 +116,7 @@ pub async fn update_user(name: String, email: String, id: i32) -> Result<u64, Se
     .bind(name)
     .bind(email)
     .bind(id)
-    .execute(crate::blog::database::db())
+    .execute(crate::database::db())
     .await
     .map_err(|e| {
         let err = format!("Error while getting users: {e:?}");
@@ -138,7 +138,7 @@ pub async fn delete_post(post_id: i32) -> Result<u64, ServerFnError> {
 
     sqlx::query("DELETE FROM posts WHERE id = $1")
         .bind(post_id)
-        .execute(crate::blog::database::db())
+        .execute(crate::database::db())
         .await
         .map_err(|e| {
             let err = format!("Error while deleting post: {e:?}");
@@ -168,7 +168,7 @@ pub async fn release_post(release: bool, post_id: i32) -> Result<u64, ServerFnEr
     .bind(release)
     .bind(if release { Some(Utc::now()) } else { None })
     .bind(post_id)
-    .execute(crate::blog::database::db())
+    .execute(crate::database::db())
     .await
     .map_err(|e| {
         let err = format!("Error while releasing post: {e:?}");
@@ -221,7 +221,7 @@ pub async fn create_post() -> Result<u64, ServerFnError> {
     .bind(post.description)
     .bind(post.title.replace(" ", "_").to_ascii_lowercase())
     .bind(post.markdown_content)
-    .execute(crate::blog::database::db())
+    .execute(crate::database::db())
     .await
     .map_err(|e| {
         let err = format!("Error while releasing post: {e:?}");
@@ -244,7 +244,7 @@ pub async fn get_media() -> Result<Vec<Media>, ServerFnError> {
     sqlx::query_as::<_, Media>(
         "SELECT id, post_id, name, media_type, created_at FROM media ORDER BY created_at DESC",
     )
-    .fetch_all(crate::blog::database::db())
+    .fetch_all(crate::database::db())
     .await
     .map_err(|e| {
         let err = format!("Error while getting users: {e:?}");

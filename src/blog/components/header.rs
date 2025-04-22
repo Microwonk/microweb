@@ -130,7 +130,7 @@ pub async fn logout() -> Result<(), ServerFnError> {
     response.append_header(
         header::SET_COOKIE,
         HeaderValue::from_str(
-            "auth_token=deleted; Path=/; SameSite=Lax; Secure; expires=Thu, 01 Jan 1970 00:00:00 GMT;",
+            &format!("auth_token=deleted; Domain={}; Path=/; SameSite=Lax; Secure; expires=Thu, 01 Jan 1970 00:00:00 GMT;", *crate::DOMAIN),
         )?,
     );
 

@@ -4,7 +4,11 @@
 use leptos::{prelude::ServerFnError, server};
 
 pub mod apps;
+pub mod auth;
 pub mod blog;
+#[cfg(feature = "ssr")]
+pub mod database;
+pub mod models;
 pub mod www;
 
 #[cfg(feature = "ssr")]

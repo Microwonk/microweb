@@ -5,6 +5,7 @@ use strum::{EnumIter, IntoEnumIterator};
 pub enum Apps {
     Blog,
     Www,
+    Auth,
 }
 
 impl Apps {
@@ -13,6 +14,7 @@ impl Apps {
         match self {
             Apps::Blog => host.starts_with("blog."),
             Apps::Www => host.starts_with("www."),
+            Apps::Auth => host.starts_with("auth."),
         }
     }
 
@@ -20,6 +22,7 @@ impl Apps {
         match self {
             Apps::Blog => Box::new(|| crate::blog::app::App().into_any()),
             Apps::Www => Box::new(|| crate::www::app::App().into_any()),
+            Apps::Auth => Box::new(|| crate::auth::app::App().into_any()),
         }
     }
 
@@ -42,18 +45,13 @@ impl Apps {
         use tokio::sync::OnceCell;
         match self {
             Apps::Blog => {
+                use crate::blog::app::*;
                 use leptos_axum::{generate_route_list, LeptosRoutes};
-                use {crate::blog::app::*, crate::blog::auth};
 
                 static BLOG_ROUTER: OnceCell<axum::Router> = OnceCell::const_new();
 
                 BLOG_ROUTER
                     .get_or_init(|| async {
-                        // One-time DB init
-                        crate::blog::database::init_db()
-                            .await
-                            .expect("problem during initialization of the database");
-
                         let conf = get_configuration(None).unwrap();
                         let leptos_options = conf.leptos_options;
                         let routes = generate_route_list(App);
@@ -64,32 +62,12 @@ impl Apps {
                                 move || shell(leptos_options.clone())
                             })
                             .fallback(leptos_axum::file_and_error_handler(shell))
-                            .layer(axum::middleware::from_fn(auth::auth_guard))
-                            .layer(
-                                tower_http::trace::TraceLayer::new_for_http()
-                                    .make_span_with(
-                                        tower_http::trace::DefaultMakeSpan::new()
-                                            .level(tracing::Level::INFO),
-                                    )
-                                    .on_request(
-                                        tower_http::trace::DefaultOnRequest::new()
-                                            .level(tracing::Level::INFO),
-                                    )
-                                    .on_response(
-                                        tower_http::trace::DefaultOnResponse::new()
-                                            .level(tracing::Level::INFO),
-                                    )
-                                    .on_failure(
-                                        tower_http::trace::DefaultOnFailure::new()
-                                            .level(tracing::Level::ERROR),
-                                    ),
-                            )
+                            // .layer(axum::middleware::from_fn(auth::auth_guard))
                             .with_state(leptos_options)
                     })
                     .await
                     .clone()
             }
-
             Apps::Www => {
                 use crate::www::app::*;
                 use leptos_axum::{generate_route_list, LeptosRoutes};
@@ -97,6 +75,29 @@ impl Apps {
                 static WWW_ROUTER: OnceCell<axum::Router> = OnceCell::const_new();
 
                 WWW_ROUTER
+                    .get_or_init(|| async {
+                        let conf = get_configuration(None).unwrap();
+                        let leptos_options = conf.leptos_options;
+                        let routes = generate_route_list(App);
+
+                        axum::Router::new()
+                            .leptos_routes(&leptos_options, routes, {
+                                let leptos_options = leptos_options.clone();
+                                move || shell(leptos_options.clone())
+                            })
+                            .fallback(leptos_axum::file_and_error_handler(shell))
+                            .with_state(leptos_options)
+                    })
+                    .await
+                    .clone()
+            }
+            Apps::Auth => {
+                use crate::auth::app::*;
+                use leptos_axum::{generate_route_list, LeptosRoutes};
+
+                static AUTH_ROUTER: OnceCell<axum::Router> = OnceCell::const_new();
+
+                AUTH_ROUTER
                     .get_or_init(|| async {
                         let conf = get_configuration(None).unwrap();
                         let leptos_options = conf.leptos_options;

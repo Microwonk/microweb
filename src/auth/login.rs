@@ -1,17 +1,14 @@
 use leptos::{prelude::*, task::spawn_local};
 use leptos_meta::*;
-use reactive_stores::Store;
+use leptos_router::hooks::use_query;
 use regex::Regex;
 
-use crate::blog::{
-    app::{GlobalState, GlobalStateStoreFields},
-    models::*,
-};
+use crate::{auth::ReturnUrlQuery, models::*};
 
 #[server(LoginAction, "/api", endpoint = "login")]
 #[tracing::instrument]
-pub async fn login(login: LoginRequest) -> Result<(), ServerFnError> {
-    use crate::blog::{
+pub async fn login(login: LoginRequest, return_url: String) -> Result<(), ServerFnError> {
+    use crate::{
         auth::{encode_jwt, verify_password},
         database,
     };
@@ -40,18 +37,20 @@ pub async fn login(login: LoginRequest) -> Result<(), ServerFnError> {
 
     let response = expect_context::<ResponseOptions>();
 
-    let expires = (chrono::Utc::now() + chrono::Duration::days(crate::blog::auth::EXPIRATION_DAYS))
+    let expires = (chrono::Utc::now() + chrono::Duration::days(crate::auth::EXPIRATION_DAYS))
         .format("%a, %d %b %Y %H:%M:%S GMT");
 
     response.append_header(
         header::SET_COOKIE,
         HeaderValue::from_str(&format!(
-            "auth_token={}; Path=/; SameSite=Lax; Secure; Expires={};",
-            token, expires
+            "auth_token={}; Domain={}; Path=/; SameSite=Lax; Secure; Expires={};",
+            token,
+            *crate::DOMAIN,
+            expires
         ))?,
     );
 
-    redirect("/");
+    redirect(&return_url);
 
     Ok(())
 }
@@ -63,7 +62,7 @@ pub fn LoginPage() -> impl IntoView {
     let (email_error, set_email_error) = signal(None::<String>);
     let (password_error, set_password_error) = signal(None::<String>);
 
-    let store = expect_context::<Store<GlobalState>>();
+    let query = use_query::<ReturnUrlQuery>();
 
     view! {
         <Title text="Login" />
@@ -198,10 +197,19 @@ pub fn LoginPage() -> impl IntoView {
                             }
                             if valid {
                                 spawn_local(async move {
-                                    if let Err(e) = login(LoginRequest {
-                                            email: email_value,
-                                            password: password_value,
-                                        })
+                                    if let Err(e) = login(
+                                            LoginRequest {
+                                                email: email_value,
+                                                password: password_value,
+                                            },
+                                            query
+                                                .with(|q| {
+                                                    q.as_ref()
+                                                        .map(|r| r.return_url.clone())
+                                                        .ok()
+                                                        .unwrap_or("/profile".into())
+                                                }),
+                                        )
                                         .await
                                     {
                                         set_password_error(
@@ -214,8 +222,6 @@ pub fn LoginPage() -> impl IntoView {
                                                     .to_owned(),
                                             ),
                                         );
-                                    } else {
-                                        store.logged_in().set(true);
                                     }
                                 });
                             }
