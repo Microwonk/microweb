@@ -7,10 +7,9 @@ use crate::blog::app::{GlobalState, GlobalStateStoreFields};
 #[component]
 pub fn Header() -> impl IntoView {
     let store = expect_context::<Store<GlobalState>>();
-    let dom = Resource::new(
-        || (),
-        async |_| format!("http://www.{}", crate::domain().await.unwrap()),
-    );
+
+    let dom = Resource::new(|| (), async |_| crate::domain().await.unwrap_or_default());
+
     let header = {
         move || {
             if let Some(u) = store.user().get() {
@@ -49,7 +48,13 @@ pub fn Header() -> impl IntoView {
             } else {
                 view! {
                     <div class="group relative inline-block text-sm sm:text-lg font-medium text-black focus:outline-none focus:ring active:text-nf-color">
-                        <A href="/login">
+                        <A href=move || {
+                            format!(
+                                "http://auth.{}/login?return_url={}",
+                                dom.get().unwrap_or_default(),
+                                leptos::prelude::window().location().hostname().unwrap_or_default(),
+                            )
+                        }>
                             <span class="absolute inset-0 border border-current"></span>
                             <span class="block border border-current bg-nf-black px-12 py-3 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:backdrop-blur">
                                 login
@@ -58,7 +63,13 @@ pub fn Header() -> impl IntoView {
                     </div>
 
                     <div class="group relative inline-block text-sm sm:text-lg font-medium text-black focus:outline-none focus:ring active:text-nf-color">
-                        <A href="/register">
+                        <A href=move || {
+                            format!(
+                                "http://auth.{}/register?return_url={}",
+                                dom.get().unwrap_or_default(),
+                                leptos::prelude::window().location().hostname().unwrap_or_default(),
+                            )
+                        }>
                             <span class="absolute inset-0 border border-current"></span>
                             <span class="block border border-current bg-nf-black px-12 py-3 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:backdrop-blur">
                                 register
@@ -100,7 +111,7 @@ pub fn Header() -> impl IntoView {
 
                     <li class="font-montserrat flex gap-4 md:gap-8 items-center w-full md:justify-end justify-center">
                         <Suspense>
-                            <A href=move || dom.get().unwrap_or_default()>
+                            <A href=move || format!("http://www.{}", dom.get().unwrap_or_default())>
                                 <span class="text-sm sm:text-lg text-nf-dark flex items-center gap-1 hover:animate-pulse hover:text-nf-color">
                                     about
                                 </span>
