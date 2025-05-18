@@ -4,11 +4,11 @@ use chrono::{DateTime, Datelike};
 use leptos::{html::Button, prelude::*};
 use leptos_meta::*;
 use leptos_router::components::A;
-use leptos_use::{use_timeout_fn, UseTimeoutFnReturn};
+use leptos_use::{UseTimeoutFnReturn, use_timeout_fn};
 use rss::Channel;
 use syntect::{highlighting::ThemeSet, html::highlighted_html_for_string, parsing::SyntaxSet};
 
-use crate::blog::{components::header::Header, pages::loading::LoadingPage, THEME_STR};
+use crate::blog::{THEME_STR, components::header::Header, pages::loading::LoadingPage};
 use crate::models::*;
 
 #[server(Rss, "/api", "GetJson", endpoint = "rss.xml")]
@@ -65,11 +65,10 @@ pub fn generate_rss(title: &str, description: &str, link: &str, posts: &[Post]) 
                 <language>en-us</language>
                 <ttl>60</ttl>
                 <atom:link href="https://blog.nicolas-frey.com/api/rss.xml" rel="self" type="application/rss+xml" />
-                {}
+                {rss_entries}
             </channel>
         </rss>   
      "#,
-        rss_entries
     )
 }
 

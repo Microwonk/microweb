@@ -16,19 +16,40 @@ pub struct ReturnUrlQuery {
 mod ssr {
     use axum::{
         extract::Request,
-        http::{header, HeaderValue, StatusCode},
+        http::{HeaderValue, StatusCode, header},
         middleware::Next,
         response::Response,
     };
     use axum_extra::headers::{Cookie, HeaderMapExt};
     use bcrypt::verify;
     use chrono::{Duration, Utc};
-    use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, TokenData, Validation};
+    use jsonwebtoken::{DecodingKey, EncodingKey, Header, TokenData, Validation, decode, encode};
+    use leptos_axum::ResponseOptions;
     use serde::{Deserialize, Serialize};
 
     use crate::models::User;
 
     pub const EXPIRATION_DAYS: i64 = 30;
+
+    pub fn set_auth_cookie(response: ResponseOptions, value: &str, expires: &str) {
+        let flags = if cfg!(debug_assertions) {
+            "HttpOnly"
+        } else {
+            "Secure"
+        };
+
+        response.append_header(
+            header::SET_COOKIE,
+            HeaderValue::from_str(&format!(
+                "auth_token={}; Domain=.{}; Path=/; SameSite=Lax; {}; Expires={};",
+                value,
+                crate::DOMAIN.split(':').next().unwrap(),
+                flags,
+                expires,
+            ))
+            .unwrap(),
+        );
+    }
 
     #[tracing::instrument]
     pub async fn auth_guard(mut req: Request, next: Next) -> Result<Response, StatusCode> {
@@ -45,11 +66,19 @@ mod ssr {
         let Ok(claim) = decode_jwt(token) else {
             let mut response = next.run(req).await;
 
+            let flags = if cfg!(debug_assertions) {
+                "HttpOnly"
+            } else {
+                "Secure"
+            };
+
             response.headers_mut().append(
                 header::SET_COOKIE,
-                HeaderValue::from_str(
-                    &format!("auth_token=deleted; Domain={}; Path=/; SameSite=Lax; Secure; Expires=Thu, 01 Jan 1970 00:00:00 GMT;", *crate::DOMAIN),
-                )
+                HeaderValue::from_str(&format!(
+                    "auth_token=deleted; Domain=.{}; Path=/; SameSite=Lax; {}; Expires=Thu, 01 Jan 1970 00:00:00 GMT;",
+                    crate::DOMAIN.split(':').next().unwrap(),
+                    flags,
+                ))
                 .unwrap(),
             );
 

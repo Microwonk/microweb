@@ -12,8 +12,7 @@ pub async fn login(login: LoginRequest, return_url: String) -> Result<(), Server
         auth::{encode_jwt, verify_password},
         database,
     };
-    use axum::http::{header, HeaderValue};
-    use leptos_axum::{redirect, ResponseOptions};
+    use leptos_axum::{ResponseOptions, redirect};
 
     let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE email = $1")
         .bind(login.email.as_str())
@@ -40,15 +39,7 @@ pub async fn login(login: LoginRequest, return_url: String) -> Result<(), Server
     let expires = (chrono::Utc::now() + chrono::Duration::days(crate::auth::EXPIRATION_DAYS))
         .format("%a, %d %b %Y %H:%M:%S GMT");
 
-    response.append_header(
-        header::SET_COOKIE,
-        HeaderValue::from_str(&format!(
-            "auth_token={}; Domain={}; Path=/; SameSite=Lax; Secure; Expires={};",
-            token,
-            *crate::DOMAIN,
-            expires
-        ))?,
-    );
+    crate::auth::set_auth_cookie(response, &token, &expires.to_string());
 
     redirect(&return_url);
 

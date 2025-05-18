@@ -11,7 +11,7 @@ pub fn BlogCard(
 ) -> impl IntoView {
     let title_clone = title.clone();
     view! {
-        <a href={format!("posts/{}", link)} class="group relative block h-64 sm:h-80 lg:h-96">
+        <a href={format!("posts/{link}")} class="group relative block h-64 sm:h-80 lg:h-96">
             <span class="rounded-md absolute inset-0 border-2 border-dashed border-black"></span>
 
             <div

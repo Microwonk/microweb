@@ -9,9 +9,8 @@ use crate::{auth::ReturnUrlQuery, models::*};
 #[tracing::instrument]
 pub async fn register(register: RegisterRequest, return_url: String) -> Result<(), ServerFnError> {
     use crate::auth::encode_jwt;
-    use axum::http::{header, HeaderValue};
-    use bcrypt::{hash, DEFAULT_COST};
-    use leptos_axum::{redirect, ResponseOptions};
+    use bcrypt::{DEFAULT_COST, hash};
+    use leptos_axum::{ResponseOptions, redirect};
 
     let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE email = $1")
         .bind(register.email.as_str())
@@ -48,15 +47,7 @@ pub async fn register(register: RegisterRequest, return_url: String) -> Result<(
     let expires = (chrono::Utc::now() + chrono::Duration::days(crate::auth::EXPIRATION_DAYS))
         .format("%a, %d %b %Y %H:%M:%S GMT");
 
-    response.append_header(
-        header::SET_COOKIE,
-        HeaderValue::from_str(&format!(
-            "auth_token={}; Domain={}; Path=/; SameSite=Lax; Secure; Expires={};",
-            token,
-            *crate::DOMAIN,
-            expires
-        ))?,
-    );
+    crate::auth::set_auth_cookie(response, &token, &expires.to_string());
 
     redirect(&return_url);
 

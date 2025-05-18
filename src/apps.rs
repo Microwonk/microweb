@@ -18,6 +18,14 @@ impl Apps {
         }
     }
 
+    pub fn url(self) -> String {
+        match self {
+            Apps::Blog => format!("{}://blog.{}", crate::PROTOCOL, crate::DOMAIN),
+            Apps::Www => format!("{}://www.{}", crate::PROTOCOL, crate::DOMAIN),
+            Apps::Auth => format!("{}://auth.{}", crate::PROTOCOL, crate::DOMAIN),
+        }
+    }
+
     pub fn app(&self) -> Box<dyn FnOnce() -> AnyView> {
         match self {
             Apps::Blog => Box::new(|| crate::blog::app::App().into_any()),
@@ -46,7 +54,7 @@ impl Apps {
         match self {
             Apps::Blog => {
                 use crate::blog::app::*;
-                use leptos_axum::{generate_route_list, LeptosRoutes};
+                use leptos_axum::{LeptosRoutes, generate_route_list};
 
                 static BLOG_ROUTER: OnceCell<axum::Router> = OnceCell::const_new();
 
@@ -62,7 +70,6 @@ impl Apps {
                                 move || shell(leptos_options.clone())
                             })
                             .fallback(leptos_axum::file_and_error_handler(shell))
-                            // .layer(axum::middleware::from_fn(auth::auth_guard))
                             .with_state(leptos_options)
                     })
                     .await
@@ -70,7 +77,7 @@ impl Apps {
             }
             Apps::Www => {
                 use crate::www::app::*;
-                use leptos_axum::{generate_route_list, LeptosRoutes};
+                use leptos_axum::{LeptosRoutes, generate_route_list};
 
                 static WWW_ROUTER: OnceCell<axum::Router> = OnceCell::const_new();
 
@@ -93,7 +100,7 @@ impl Apps {
             }
             Apps::Auth => {
                 use crate::auth::app::*;
-                use leptos_axum::{generate_route_list, LeptosRoutes};
+                use leptos_axum::{LeptosRoutes, generate_route_list};
 
                 static AUTH_ROUTER: OnceCell<axum::Router> = OnceCell::const_new();
 
@@ -139,7 +146,7 @@ impl Apps {
             .headers()
             .get("host")
             .and_then(|h| h.to_str().ok())
-            .unwrap_or("");
+            .unwrap_or_default();
 
         let apps = Apps::routers().await;
 
@@ -149,9 +156,6 @@ impl Apps {
             }
         }
 
-        Ok(
-            axum::response::Redirect::permanent(&format!("http://www.{}", *crate::DOMAIN))
-                .into_response(),
-        )
+        Ok(axum::response::Redirect::permanent(&Apps::Www.url()).into_response())
     }
 }

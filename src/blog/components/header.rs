@@ -1,14 +1,16 @@
 use leptos::{prelude::*, task::spawn_local};
-use leptos_router::components::A;
+use leptos_router::{components::A, hooks::use_location};
 use reactive_stores::Store;
 
-use crate::blog::app::{GlobalState, GlobalStateStoreFields};
+use crate::{
+    apps::Apps,
+    blog::app::{GlobalState, GlobalStateStoreFields},
+};
 
 #[component]
 pub fn Header() -> impl IntoView {
     let store = expect_context::<Store<GlobalState>>();
-
-    let dom = Resource::new(|| (), async |_| crate::domain().await.unwrap_or_default());
+    let location = use_location();
 
     let header = {
         move || {
@@ -50,9 +52,10 @@ pub fn Header() -> impl IntoView {
                     <div class="group relative inline-block text-sm sm:text-lg font-medium text-black focus:outline-none focus:ring active:text-nf-color">
                         <A href=move || {
                             format!(
-                                "http://auth.{}/login?return_url={}",
-                                dom.get().unwrap_or_default(),
-                                leptos::prelude::window().location().hostname().unwrap_or_default(),
+                                "{}/login?return_url={}{}",
+                                Apps::Auth.url(),
+                                Apps::Blog.url(),
+                                location.pathname.get(),
                             )
                         }>
                             <span class="absolute inset-0 border border-current"></span>
@@ -65,9 +68,10 @@ pub fn Header() -> impl IntoView {
                     <div class="group relative inline-block text-sm sm:text-lg font-medium text-black focus:outline-none focus:ring active:text-nf-color">
                         <A href=move || {
                             format!(
-                                "http://auth.{}/register?return_url={}",
-                                dom.get().unwrap_or_default(),
-                                leptos::prelude::window().location().hostname().unwrap_or_default(),
+                                "{}/register?return_url={}{}",
+                                Apps::Auth.url(),
+                                Apps::Blog.url(),
+                                location.pathname.get(),
                             )
                         }>
                             <span class="absolute inset-0 border border-current"></span>
@@ -111,7 +115,7 @@ pub fn Header() -> impl IntoView {
 
                     <li class="font-montserrat flex gap-4 md:gap-8 items-center w-full md:justify-end justify-center">
                         <Suspense>
-                            <A href=move || format!("http://www.{}", dom.get().unwrap_or_default())>
+                            <A href=Apps::Www.url()>
                                 <span class="text-sm sm:text-lg text-nf-dark flex items-center gap-1 hover:animate-pulse hover:text-nf-color">
                                     about
                                 </span>
@@ -133,17 +137,11 @@ pub fn Header() -> impl IntoView {
 #[server(LogoutAction, "/api", endpoint = "logout")]
 #[tracing::instrument]
 pub async fn logout() -> Result<(), ServerFnError> {
-    use axum::http::{header, HeaderValue};
     use leptos_axum::ResponseOptions;
 
     let response = expect_context::<ResponseOptions>();
 
-    response.append_header(
-        header::SET_COOKIE,
-        HeaderValue::from_str(
-            &format!("auth_token=deleted; Domain={}; Path=/; SameSite=Lax; Secure; expires=Thu, 01 Jan 1970 00:00:00 GMT;", *crate::DOMAIN),
-        )?,
-    );
+    crate::auth::set_auth_cookie(response, "deleted", "Thu, 01 Jan 1970 00:00:00 GMT");
 
     Ok(())
 }

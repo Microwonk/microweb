@@ -1,5 +1,5 @@
-use flate2::write::DeflateEncoder;
 use flate2::Compression;
+use flate2::write::DeflateEncoder;
 use leptos::prelude::*;
 use leptos_meta::Title;
 use leptos_router::hooks::use_params_map;
@@ -9,9 +9,9 @@ use std::io::{Cursor, Write};
 use syntect::{highlighting::ThemeSet, html::highlighted_html_for_string, parsing::SyntaxSet};
 
 use crate::blog::{
+    THEME_STR,
     components::{comment::CommentSection, header::Header, links::Links},
     pages::loading::LoadingPage,
-    THEME_STR,
 };
 use crate::models::*;
 
@@ -165,7 +165,7 @@ pub fn BlogPostHeader(
                     href="#comment_section"
                     class="flex-shrink-0 mt-3 text-sm md:mt-0 hover:underline"
                 >
-                    {format!("{} min read • {} comments", read_time, num_comments)}
+                    {format!("{read_time} min read • {num_comments} comments")}
                 </a>
             </div>
         </div>
@@ -222,8 +222,7 @@ fn add_markdown_heading_ids(events: Vec<Event<'_>>) -> Vec<Event<'_>> {
 
                 events_to_return.push(Event::Text(CowStr::from(" ")));
                 events_to_return.push(Event::Html(CowStr::from(format!(
-                    "<a href=\"#{}\" id=\"{}\"><span class=\"anchor-icon\">#</span></a>",
-                    heading_id, heading_id
+                    "<a href=\"#{heading_id}\" id=\"{heading_id}\"><span class=\"anchor-icon\">#</span></a>"
                 ))));
             }
             Event::Text(ref text) => {
@@ -270,8 +269,7 @@ fn highlight_code(events: Vec<Event<'_>>) -> Vec<Event<'_>> {
 
                 if plantuml {
                     let diagram_url = generate_plantuml_diagram_url(&to_highlight);
-                    let img_tag =
-                        format!("<img src=\"{}\" alt=\"PlantUML Diagram\" />", diagram_url);
+                    let img_tag = format!("<img src=\"{diagram_url}\" alt=\"PlantUML Diagram\" />");
                     out_events.push(Event::Html(CowStr::from(img_tag)));
                 } else {
                     // Regular code block, highlight syntax
@@ -302,7 +300,7 @@ fn highlight_code(events: Vec<Event<'_>>) -> Vec<Event<'_>> {
 
 fn generate_plantuml_diagram_url(plantuml_code: &str) -> String {
     let encoded = encode64(&compress_data(plantuml_code));
-    let url = format!("http://www.plantuml.com/plantuml/png/{}", encoded);
+    let url = format!("http://www.plantuml.com/plantuml/png/{encoded}");
     url
 }
 

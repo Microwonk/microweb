@@ -2,6 +2,8 @@ use chrono::{DateTime, Local, Offset, Utc};
 use chrono_tz::Europe::Vienna;
 use leptos::prelude::*;
 
+use crate::apps::Apps;
+
 #[component]
 pub fn Header() -> impl IntoView {
     let utc_now: DateTime<Utc> = Utc::now();
@@ -13,11 +15,6 @@ pub fn Header() -> impl IntoView {
     let offset_minutes = (offset_seconds % 3600) / 60;
     let diff = format!("{:+03}:{:02}", offset_hours, offset_minutes.abs());
     let time_str = vienna_time.format("%H:%M").to_string();
-
-    let dom = Resource::new(
-        || (),
-        async |_| format!("http://blog.{}", crate::domain().await.unwrap()),
-    );
 
     view! {
         <header
@@ -49,7 +46,7 @@ pub fn Header() -> impl IntoView {
                             Making Mods and Games
                         </span>
                     </li>
-                    <li class="relative group text-nf-white text-xl md:text-2xl flex gap-2 items-center">
+                    <li class="z-10 relative group text-nf-white text-xl md:text-2xl flex gap-2 items-center">
                         <img
                             src="/assets/globe.svg"
                             class="w-6 h-6 animate-[spin_3s_linear_infinite]"
@@ -72,7 +69,7 @@ pub fn Header() -> impl IntoView {
                     class="absolute inset-0 bg-nf-white z-0"
                     style="filter: url(#rough-paper);"
                 ></div>
-                <ul class="gap-4 flex-row flex items-center justify-between relative z-10">
+                <ul class="gap-4 flex-row flex items-center justify-between relative z-1">
                     <li class="hidden sm:block font-bold text-nf-dark text-md md:text-lg flex uppercase">
                         Frey
                     </li>
@@ -93,7 +90,7 @@ pub fn Header() -> impl IntoView {
                         </a>
                         <Suspense>
                             <a
-                                href=move || dom.get().unwrap_or_default()
+                                href=Apps::Blog.url()
                                 class="font-montserrat text-sm sm:text-lg text-nf-dark flex items-center gap-1 hover:animate-pulse hover:text-nf-color font-bold"
                             >
                                 blog

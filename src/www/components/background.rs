@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use leptos_use::{use_mouse, UseMouseReturn};
+use leptos_use::{UseMouseReturn, use_mouse};
 
 #[component]
 pub fn BackGround() -> impl IntoView {
@@ -8,10 +8,7 @@ pub fn BackGround() -> impl IntoView {
     let mask_style = move || {
         let x = x.get();
         let y = y.get();
-        format!(
-            "mask-image: radial-gradient(ellipse at {}px {}px, transparent 20%, #0e0306);",
-            x, y
-        )
+        format!("mask-image: radial-gradient(ellipse at {x}px {y}px, transparent 20%, #0e0306);")
     };
 
     view! {
