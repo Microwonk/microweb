@@ -197,7 +197,7 @@ pub fn CommentSection(
                 if store.user().get().is_some() {
                     view! {
                         // textarea for new comment
-                        <div class="mb-6 min-w-full px-48">
+                        <div class="mb-6 min-w-full px-1 md:px-32 lg:px-48">
                             <div class="py-2 px-4 m-4 bg-nf-white rounded-lg">
                                 <label for="comment" class="sr-only">
                                     Your comment
@@ -272,7 +272,7 @@ pub fn CommentSection(
                                             u.id == comment.author_id.unwrap_or_default() || u.is_admin
                                         });
                                     view! {
-                                        <li class="px-48 min-w-full">
+                                        <li class="px-4 md:px-32 lg:px-48 min-w-full">
                                             <CommentComponent comment comments delete_btn />
                                         </li>
                                     }

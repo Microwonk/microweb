@@ -6,7 +6,7 @@ pub fn Experience() -> impl IntoView {
         <div class="grid lg:grid-cols-9 lg:grid-flow-col gap-x-12 lg:gap-y-0 fade-in w-full">
             <div class="lg:col-span-2">
                 <div class="text-md lg:text-lg leading-about text-nf-white uppercase">
-                    <span class="uppercase">Experience</span>
+                    <span class="uppercase">"Experience —"</span>
                 </div>
 
             </div>
@@ -18,10 +18,7 @@ pub fn Experience() -> impl IntoView {
                         <span></span>
                     </span>
                     <span class="experience-cta-title">
-                        <span
-                            data-text="Software Engineer"
-                            class="justify-between flex-row w-full"
-                        >
+                        <span data-text="Software Engineer" class="justify-between flex-row w-full">
                             ICOTEC GmbH
                             <small class="font-montserrat text-md text-nf-color font-[400]">
                                 "2024 - present"

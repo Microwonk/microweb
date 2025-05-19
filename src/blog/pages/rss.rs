@@ -8,6 +8,7 @@ use leptos_use::{UseTimeoutFnReturn, use_timeout_fn};
 use rss::Channel;
 use syntect::{highlighting::ThemeSet, html::highlighted_html_for_string, parsing::SyntaxSet};
 
+use crate::apps::Apps;
 use crate::blog::{THEME_STR, components::header::Header, pages::loading::LoadingPage};
 use crate::models::*;
 
@@ -100,7 +101,7 @@ pub fn RSSPage() -> impl IntoView {
         let _ = window()
             .navigator()
             .clipboard()
-            .write_text(format!("{}/api/rss.xml", "https://blog.nicolas-frey.com").as_str());
+            .write_text(format!("{}/api/rss.xml", Apps::Blog.url()).as_str());
         set_copied(true);
         start(0);
     };
@@ -113,7 +114,7 @@ pub fn RSSPage() -> impl IntoView {
 
         <Header />
 
-        <div class="py-12 px-0 mx-auto lg:w-[96rem]">
+        <div class="py-12 px-4 mx-auto lg:w-[96rem]">
             <h1 class="text-4xl font-bold md:tracking-tight md:text-5xl">RSS Feed Viewer</h1>
             <div class="flex gap-4 my-4">
                 <button

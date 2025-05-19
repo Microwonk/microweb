@@ -54,7 +54,7 @@ pub fn Skills() -> impl IntoView {
         <div class="grid lg:grid-cols-9 lg:grid-flow-col gap-x-12 lg:gap-y-0 fade-in w-full">
             <div class="lg:col-span-2">
                 <div class="text-md lg:text-lg leading-about text-nf-white uppercase">
-                    <span class="uppercase">Skills</span>
+                    <span class="uppercase">"Skills —"</span>
                 </div>
 
             </div>

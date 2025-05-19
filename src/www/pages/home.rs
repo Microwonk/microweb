@@ -11,9 +11,8 @@ pub fn HomePage() -> impl IntoView {
         <BackGround />
         <Title text="Nicolas Frey" />
         <Header />
-        // <Profile/>
-        // <BackGround/>
-        <main class="grid gap-20 md:gap-28 lg:gap-64 mt-12 md:mt-20 xl:mt-28">
+
+        <main class="flex flex-col gap-y-20 md:gap-y-28 lg:gap-y-64 mt-12 md:mt-20 xl:mt-28">
             <Hero />
             <About />
             <Contact />

@@ -104,7 +104,7 @@ pub fn BlogPostPage() -> impl IntoView {
                                 view! {
                                     <Title text=blog_post.title.clone() />
 
-                                    <article class="py-12 md:px-0 md:mx-auto md:w-[48rem]">
+                                    <article class="py-12 px-4 md:px-0 md:mx-auto md:w-[48rem]">
                                         <BlogPostHeader
                                             blog_post=blog_post.clone()
                                             num_comments=comments.len()

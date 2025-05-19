@@ -7,7 +7,7 @@ async fn main() {
         Router,
         http::{HeaderValue, header::*},
     };
-    use microweb::{apps::Apps, auth, database};
+    use microweb::{apps::Apps, database};
     use strum::IntoEnumIterator;
     use tower::service_fn;
     use tower_http::cors::CorsLayer;
@@ -29,13 +29,11 @@ async fn main() {
                 .allow_credentials(true)
                 .allow_origin(
                     Apps::iter()
-                        .map(Apps::url)
-                        .filter_map(|url| HeaderValue::from_str(&url).ok())
+                        .filter_map(|app| HeaderValue::from_str(&app.url()).ok())
                         .collect::<Vec<HeaderValue>>(),
                 )
                 .allow_headers([CONTENT_TYPE, AUTHORIZATION, ACCEPT, COOKIE]),
         )
-        .layer(axum::middleware::from_fn(auth::auth_guard))
         .layer(
             tower_http::trace::TraceLayer::new_for_http()
                 .make_span_with(

@@ -51,6 +51,8 @@ impl Apps {
     pub async fn router(&self) -> axum::Router {
         use leptos::config::get_configuration;
         use tokio::sync::OnceCell;
+
+        use crate::auth;
         match self {
             Apps::Blog => {
                 use crate::blog::app::*;
@@ -70,6 +72,7 @@ impl Apps {
                                 move || shell(leptos_options.clone())
                             })
                             .fallback(leptos_axum::file_and_error_handler(shell))
+                            .layer(axum::middleware::from_fn(auth::auth_guard))
                             .with_state(leptos_options)
                     })
                     .await
@@ -116,6 +119,7 @@ impl Apps {
                                 move || shell(leptos_options.clone())
                             })
                             .fallback(leptos_axum::file_and_error_handler(shell))
+                            .layer(axum::middleware::from_fn(auth::auth_guard))
                             .with_state(leptos_options)
                     })
                     .await

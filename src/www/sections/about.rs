@@ -13,7 +13,7 @@ pub fn About() -> impl IntoView {
             <div class="grid lg:grid-cols-9 lg:grid-flow-col gap-x-12 lg:gap-y-0 fade-in">
                 <div class="lg:col-span-2">
                     <div class="text-md lg:text-lg leading-about text-nf-white uppercase">
-                        <span class="uppercase">About</span>
+                        <span class="uppercase">"About —"</span>
                     </div>
 
                 </div>

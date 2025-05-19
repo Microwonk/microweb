@@ -1,4 +1,4 @@
-use crate::www::utils::map_y_to_value;
+use crate::{apps::Apps, www::utils::map_y_to_value};
 
 use chrono::Datelike;
 use leptos::{html::Footer, prelude::*};
@@ -33,7 +33,7 @@ pub fn InfoSocials() -> impl IntoView {
         <div class="flex flex-col">
             <a
                 class="gtkm text-2xl md:text-3xl lg:text-4xl font-[400] py-8 md:py-10 font-montserrat"
-                href="https://blog.nicolas-frey.com"
+                href=move || Apps::Blog.url()
             >
                 blog
             </a>

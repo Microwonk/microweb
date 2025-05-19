@@ -53,12 +53,38 @@ pub fn LoginPage() -> impl IntoView {
     let (email_error, set_email_error) = signal(None::<String>);
     let (password_error, set_password_error) = signal(None::<String>);
 
+    let back_icon = icondata::IoArrowBackOutline;
+
     let query = use_query::<ReturnUrlQuery>();
 
     view! {
         <Title text="Login" />
         <div class="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 lg:px-8">
             <div class="mx-auto max-w-lg">
+                <a href=move || {
+                    query
+                        .with(|q| {
+                            q.as_ref()
+                                .map(|r| r.return_url.clone())
+                                .ok()
+                                .unwrap_or("/profile".into())
+                        })
+                }>
+                    <svg
+                        x=back_icon.x
+                        y=back_icon.y
+                        width=48
+                        height=48
+                        viewBox=back_icon.view_box
+                        stroke-linecap=back_icon.stroke_linecap
+                        stroke-linejoin=back_icon.stroke_linejoin
+                        stroke-width=back_icon.stroke_width
+                        stroke=back_icon.stroke
+                        fill=back_icon.fill.unwrap_or("currentColor")
+                        inner_html=back_icon.data
+                    ></svg>
+                </a>
+
                 <h1 class="text-center text-2xl font-bold text-black sm:text-3xl">Sign in</h1>
 
                 <p class="mx-auto mt-4 max-w-md text-center text-gray-500">

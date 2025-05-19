@@ -20,7 +20,7 @@ pub fn Header() -> impl IntoView {
                         <A href="/admin">
                             <div class="group relative inline-block text-sm sm:text-lg font-medium text-black focus:outline-none focus:ring active:text-nf-color">
                                 <span class="pointer-events-none absolute inset-0 border border-current"></span>
-                                <span class="pointer-events-none block border border-current bg-nf-black px-12 py-3 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:backdrop-blur">
+                                <span class="pointer-events-none block border border-current bg-nf-black px-6 sm:px-8 md:px-12 py-3 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:backdrop-blur">
                                     "admin"
                                 </span>
                             </div>
@@ -29,7 +29,7 @@ pub fn Header() -> impl IntoView {
 
                     <LogoutButton />
 
-                    <div class="group relative inline-block w-1/6">
+                    <div class="group relative inline-block w-full sm:w-1/2 md:w-1/6 overflow-hidden break-all text-center">
                         <div class="email email-cta">
                             <span class="email-cta-border"></span>
                             <span class="email-cta-ripple">
@@ -40,7 +40,7 @@ pub fn Header() -> impl IntoView {
                                     data-text=u.email.clone()
                                     class="justify-between flex-row w-full"
                                 >
-                                    {u.email.clone()}
+                                    {u.name.clone()}
                                 </span>
                             </span>
                         </div>
@@ -49,7 +49,7 @@ pub fn Header() -> impl IntoView {
                 .into_any()
             } else {
                 view! {
-                    <div class="group relative inline-block text-sm sm:text-lg font-medium text-black focus:outline-none focus:ring active:text-nf-color">
+                    <div class="group relative inline-block text-sm md:text-lg font-medium text-black focus:outline-none focus:ring active:text-nf-color">
                         <A href=move || {
                             format!(
                                 "{}/login?return_url={}{}",
@@ -59,13 +59,13 @@ pub fn Header() -> impl IntoView {
                             )
                         }>
                             <span class="absolute inset-0 border border-current"></span>
-                            <span class="block border border-current bg-nf-black px-12 py-3 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:backdrop-blur">
+                            <span class="block border border-current bg-nf-black px-6 sm:px-8 md:px-12 py-3 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:backdrop-blur">
                                 login
                             </span>
                         </A>
                     </div>
 
-                    <div class="group relative inline-block text-sm sm:text-lg font-medium text-black focus:outline-none focus:ring active:text-nf-color">
+                    <div class="group relative inline-block text-sm md:text-lg font-medium text-black focus:outline-none focus:ring active:text-nf-color">
                         <A href=move || {
                             format!(
                                 "{}/register?return_url={}{}",
@@ -75,7 +75,7 @@ pub fn Header() -> impl IntoView {
                             )
                         }>
                             <span class="absolute inset-0 border border-current"></span>
-                            <span class="block border border-current bg-nf-black px-12 py-3 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:backdrop-blur">
+                            <span class="block border border-current bg-nf-black px-6 sm:px-8 md:px-12 py-3 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:backdrop-blur">
                                 register
                             </span>
                         </A>
@@ -95,7 +95,7 @@ pub fn Header() -> impl IntoView {
                 class="w-full bg-nf-dark py-2 md:py-3 border-b-nf-white/[0.35] border-b-2 px-3 md:px-5"
                 aria-label="Global"
             >
-                <ul class="gap-4 flex-row flex items-center justify-between">
+                <ul class="flex flex-col sm:flex-row gap-2 sm:gap-4 items-center justify-between">
                     <li class="text-nf-white text-md md:text-lg flex uppercase gap-1">
                         <a href="/">
                             <span>"Microwonk's"</span>
@@ -108,8 +108,8 @@ pub fn Header() -> impl IntoView {
                 class="w-full py-1 bg-transparent border-b-nf-white/[0.35] border-b-2 px-3 md:px-5"
                 aria-label="Global"
             >
-                <ul class="gap-4 flex-row flex justify-between">
-                    <li class="hidden font-bold sm:block text-nf-dark mt-3 text-md md:text-lg flex uppercase hover:text-nf-color transition">
+                <ul class="flex flex-col md:flex-row gap-2 md:gap-4 items-center justify-between w-full">
+                    <li class="hidden font-bold md:block text-nf-dark mt-3 text-md md:text-lg flex uppercase hover:text-nf-color transition">
                         <A href="/">Blog</A>
                     </li>
 
@@ -167,7 +167,7 @@ fn LogoutButton() -> impl IntoView {
             on:click=on_click
         >
             <span class="pointer-events-none absolute inset-0 border border-current"></span>
-            <span class="pointer-events-none block border border-current bg-nf-black px-12 py-3 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:backdrop-blur">
+            <span class="pointer-events-none block border border-current bg-nf-black px-6 sm:px-8 md:px-12 py-3 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:backdrop-blur">
                 "logout"
             </span>
         </button>
