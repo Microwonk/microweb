@@ -222,15 +222,16 @@ async fn get_full_path(mut directory_id: Option<i32>) -> Vec<Directory> {
         }
     }
 
-    path.reverse();
-    let mut full = vec![Directory {
+    path.push(Directory {
         id: 0,
         parent_id: None,
         dir_name: "~".to_string(),
-        dir_path: "/".to_string(),
-    }];
-    full.extend(path);
-    full
+        dir_path: "~".to_string(),
+    });
+
+    path.reverse();
+    tracing::info!("{path:?}");
+    path
 }
 
 #[tracing::instrument]
@@ -291,8 +292,10 @@ pub async fn get_dir_by_id(
         return StatusCode::UNAUTHORIZED.into_response();
     };
 
+    let contents = q.contents.is_some_and(|c| c);
+
     if id == 0 {
-        if q.contents.is_some_and(|c| c) {
+        if contents {
             return match get_directory_contents(None).await {
                 Ok(contents) => (StatusCode::OK, Json(contents)).into_response(),
                 Err(err) => err.into_response(),
@@ -304,7 +307,7 @@ pub async fn get_dir_by_id(
                     id: 0,
                     parent_id: None,
                     dir_name: "~".to_string(),
-                    dir_path: "/".to_string(),
+                    dir_path: "~".to_string(),
                 }),
             )
                 .into_response();
@@ -318,7 +321,7 @@ pub async fn get_dir_by_id(
         .unwrap_or(None);
 
     if let Some(dir) = dir {
-        if q.contents.is_some_and(|c| c) {
+        if contents {
             return match get_directory_contents(Some(dir.id)).await {
                 Ok(contents) => (StatusCode::OK, Json(contents)).into_response(),
                 Err(err) => err.into_response(),
@@ -349,7 +352,7 @@ pub async fn traverse_directories(
                     id: 0,
                     parent_id: None,
                     dir_name: "~".to_string(),
-                    dir_path: "/".to_string(),
+                    dir_path: "~".to_string(),
                 }),
             )
                 .into_response();
@@ -379,19 +382,8 @@ pub async fn traverse_directories(
 async fn get_directory_contents(
     id: Option<i32>,
 ) -> Result<DirectoryContents, (StatusCode, Json<Vec<String>>)> {
-    let files = sqlx::query_as::<_, File>("SELECT * FROM files WHERE directory_id = $1")
-        .bind(id)
-        .fetch_all(crate::database::db())
-        .await
-        .map_err(|err| {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(vec![err.to_string()]),
-            )
-        })?;
-
-    let directories =
-        sqlx::query_as::<_, Directory>("SELECT * FROM directories WHERE parent_id = $1")
+    let files =
+        sqlx::query_as::<_, File>("SELECT * FROM files WHERE directory_id IS NOT DISTINCT FROM $1")
             .bind(id)
             .fetch_all(crate::database::db())
             .await
@@ -401,6 +393,19 @@ async fn get_directory_contents(
                     Json(vec![err.to_string()]),
                 )
             })?;
+
+    let directories = sqlx::query_as::<_, Directory>(
+        "SELECT * FROM directories WHERE parent_id IS NOT DISTINCT FROM $1",
+    )
+    .bind(id)
+    .fetch_all(crate::database::db())
+    .await
+    .map_err(|err| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(vec![err.to_string()]),
+        )
+    })?;
 
     Ok(DirectoryContents { files, directories })
 }

@@ -3,40 +3,91 @@
 <head>
   <meta charset="UTF-8" />
   <title>File Browser</title>
+  <link rel="icon" type="image/x-icon" href="https://cdn-icons-png.flaticon.com/512/2258/2258853.png">
   <style>
-    body { font-family: sans-serif; padding: 1rem; }
+    body { font-family: sans-serif; padding: 1rem; background-color: #dad6ca; }
     ul { list-style: none; padding: 0; }
     li { margin: 0.5rem 0; }
-    a { cursor: pointer; color: blue; }
+    a { cursor: pointer; color: blue; text-decoration: none; }
   </style>
 </head>
 <body>
   <h1>File Browser</h1>
   <div id="path"></div>
+  <form id="dirForm" style="margin-top: 1rem; display: flex; gap: 0.5rem; align-items: center;">
+    <input name="name" type="text" required placeholder="Directory name" style="padding: 0.3rem;" />
+    <button type="submit" style="padding: 0.4rem 0.8rem; background-color: #2196F3; color: white; border: none; border-radius: 4px;">+</button>
+  </form>
   <ul id="listing"></ul>
 
-  <h3>Upload File</h3>
-  <form id="uploadForm">
-    <input type="file" name="file" required />
-    <button type="submit">Upload</button>
+  <h3>Upload Files</h3>
+  <form id="uploadForm" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+    <input type="file" id="fileInput" name="file" multiple required style="display: none;" />
+    <label for="fileInput" style="padding: 0.4rem 0.8rem; background-color: #f0f0f0; border: 1px solid #ccc; border-radius: 4px; cursor: pointer;">
+      📂 Choose Files
+    </label>
+    <span id="fileName" style="font-style: italic; color: #555;">No files selected</span>
+    <button type="submit" style="padding: 0.4rem 0.8rem; background-color: #4CAF50; color: white; border: none; border-radius: 4px;">Upload</button>
   </form>
 
   <script>
-    let currentDir = "~";
+    const fileInput = document.getElementById("fileInput");
+    const fileName = document.getElementById("fileName");
+
+    fileInput.addEventListener("change", () => {
+      var files = Array.from(fileInput.files);
+      fileName.textContent = files.length
+        ? files.map(f => f.name).join(", ")
+        : "No files selected";
+    });
+
+    let currentDir = "";
     let currentDirId = null;
 
-    async function fetchContents(path) {
-      const res = await fetch(`/d/${path}?contents=true`);
-      if (!res.ok) return alert("Error loading directory");
-      const data = await res.json();
-      currentDir = path;
-      currentDirId = data.directory_id || null;
+    function updateBreadcrumbs(path) {
+      const pathDiv = document.getElementById("path");
+      pathDiv.innerHTML = "";
 
-      document.getElementById("path").textContent = "/" + path;
+      const parts = path === "~" ? [] : path.split("/");
+      const fullPathParts = [];
+
+      const homeCrumb = document.createElement("a");
+      homeCrumb.textContent = "🏠";
+      homeCrumb.onclick = () => fetchContents("~");
+      pathDiv.appendChild(homeCrumb);
+
+      parts.forEach((part, idx) => {
+        pathDiv.appendChild(document.createTextNode(" / "));
+
+        fullPathParts.push(part);
+        const fullPath = fullPathParts.join("/");
+
+        const crumb = document.createElement("a");
+        crumb.textContent = part;
+        crumb.onclick = () => fetchContents(fullPath);
+        pathDiv.appendChild(crumb);
+      });
+    }
+
+    async function fetchContents(path) {
+      const res1 = await fetch(`/d/${path}?contents=true`);
+      const res2 = await fetch(`/d/${path}`);
+
+      if (!res1.ok || !res2.ok) return alert("Error loading directory");
+
+      const content = await res1.json();
+      const dir = await res2.json();
+      
+      currentDir = path;
+      currentDirId = dir.id;
+      currentDirId = currentDirId === 0 ? null : currentDirId;
+
+      updateBreadcrumbs(path);
+
       const listing = document.getElementById("listing");
       listing.innerHTML = "";
 
-      data.directories.forEach(d => {
+      content.directories.forEach(d => {
         const li = document.createElement("li");
         const link = document.createElement("a");
         link.textContent = "📁 " + d.dir_name;
@@ -45,10 +96,10 @@
         listing.appendChild(li);
       });
 
-      data.files.forEach(f => {
+      content.files.forEach(f => {
         const li = document.createElement("li");
         const link = document.createElement("a");
-        link.href = `/f/${f.file_path}`;
+        link.href = `/f${f.file_path}`;
         link.textContent = "📄 " + f.file_name;
         link.target = "_blank";
         li.appendChild(link);
@@ -58,25 +109,42 @@
 
     document.getElementById("uploadForm").onsubmit = async (e) => {
       e.preventDefault();
-      const fileInput = e.target.elements.file;
       const formData = new FormData();
-      formData.append("file", fileInput.files[0]);
+      for (const file of fileInput.files) {
+        formData.append("file", file);
+      }
 
       const query = currentDirId ? `?directory_id=${currentDirId}` : "";
       const res = await fetch(`/upload/f${query}`, {
         method: "POST",
-        body: formData
+        body: formData,
       });
 
       if (!res.ok) {
         alert("Upload failed");
       } else {
-        alert("Upload successful");
         fetchContents(currentDir);
       }
     };
 
-    fetchContents("");
+    document.getElementById("dirForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const nameInput = e.target.elements.name.value;
+
+      const query = currentDirId ? `parent_id=${currentDirId}&` : "";
+      const res = await fetch(`/upload/d?${query}name=${nameInput}`, {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        alert("Upload failed");
+      } else {
+        fetchContents(currentDir);
+      }
+    };
+
+    // fetch root
+    fetchContents("~");
   </script>
 </body>
 </html>
