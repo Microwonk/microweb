@@ -1,4 +1,4 @@
-use chrono::{DateTime, Local, Offset, Utc};
+use chrono::{Local, Offset, Utc};
 use chrono_tz::Europe::Vienna;
 use leptos::prelude::*;
 
@@ -6,15 +6,20 @@ use crate::apps::Apps;
 
 #[component]
 pub fn Header() -> impl IntoView {
-    let utc_now: DateTime<Utc> = Utc::now();
-    let vienna_time = utc_now.with_timezone(&Vienna);
-    let local_time = Local::now();
-    let offset_seconds =
-        vienna_time.offset().fix().local_minus_utc() - local_time.offset().fix().local_minus_utc();
-    let offset_hours = offset_seconds / 3600;
-    let offset_minutes = (offset_seconds % 3600) / 60;
-    let diff = format!("{:+03}:{:02}", offset_hours, offset_minutes.abs());
-    let time_str = vienna_time.format("%H:%M").to_string();
+    let vienna_time = Utc::now().with_timezone(&Vienna);
+
+    let (time, _) = signal(vienna_time.format("%H:%M").to_string());
+    let (diff, set_diff) = signal("".to_string());
+
+    Effect::new(move |_| {
+        let offset_seconds = vienna_time.offset().fix().local_minus_utc()
+            - Local::now().offset().fix().local_minus_utc();
+        set_diff(format!(
+            "{:+03}:{:02}",
+            offset_seconds / 3600,                // hours
+            ((offset_seconds % 3600) / 60).abs()  // minutes
+        ));
+    });
 
     view! {
         <header
@@ -52,11 +57,11 @@ pub fn Header() -> impl IntoView {
                             class="w-6 h-6 animate-[spin_3s_linear_infinite]"
                         />
                         <span class="text-sm sm:text-md uppercase font-montserrat">
-                            Graz, {time_str}
+                            Graz, {move || time.get()}
                         </span>
 
                         <span class="font-montserrat absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block px-2 py-1 text-sm text-nf-white bg-nf-color rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            {diff}
+                            {move || diff.get()}
                         </span>
                     </li>
                 </ul>
@@ -88,14 +93,12 @@ pub fn Header() -> impl IntoView {
                         >
                             github
                         </a>
-                        <Suspense>
-                            <a
-                                href=Apps::Blog.url()
-                                class="font-montserrat text-sm sm:text-lg text-nf-dark flex items-center gap-1 hover:animate-pulse hover:text-nf-color font-bold"
-                            >
-                                blog
-                            </a>
-                        </Suspense>
+                        <a
+                            href=Apps::Blog.url()
+                            class="font-montserrat text-sm sm:text-lg text-nf-dark flex items-center gap-1 hover:animate-pulse hover:text-nf-color font-bold"
+                        >
+                            blog
+                        </a>
                     </li>
                 </ul>
             </nav>

@@ -114,13 +114,11 @@ pub fn Header() -> impl IntoView {
                     </li>
 
                     <li class="font-montserrat flex gap-4 md:gap-8 items-center w-full md:justify-end justify-center">
-                        <Suspense>
-                            <A href=Apps::Www.url()>
-                                <span class="text-sm sm:text-lg text-nf-dark flex items-center gap-1 hover:animate-pulse hover:text-nf-color">
-                                    about
-                                </span>
-                            </A>
-                        </Suspense>
+                        <A href=Apps::Www.url()>
+                            <span class="text-sm sm:text-lg text-nf-dark flex items-center gap-1 hover:animate-pulse hover:text-nf-color">
+                                about
+                            </span>
+                        </A>
                         <A href="/feed">
                             <span class="font-montserrat text-sm sm:text-lg text-nf-dark flex items-center gap-1 hover:animate-pulse hover:text-nf-color">
                                 feed

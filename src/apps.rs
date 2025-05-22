@@ -7,6 +7,7 @@ macro_rules! define_leptos_router {
         $static_name:ident,
         $with_auth:expr
     ) => {{
+        use crate::trace::TraceExt;
         use axum::Router;
         use leptos::config::get_configuration;
         use leptos_axum::{LeptosRoutes, generate_route_list};
@@ -24,6 +25,7 @@ macro_rules! define_leptos_router {
                         let leptos_options = leptos_options.clone();
                         move || shell(leptos_options.clone())
                     })
+                    .with_tracing()
                     .fallback(leptos_axum::file_and_error_handler(shell));
 
                 if $with_auth {

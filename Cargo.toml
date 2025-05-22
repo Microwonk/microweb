@@ -30,9 +30,9 @@ log = { version = "0.4.27", optional = true }
 leptos_axum = { version = "0.8.2", optional = true }
 axum = { version = "0.8.4", optional = true }
 axum-extra = { version = "0.10.0", features = ["typed-header"], optional = true }
-uuid = { version = "1.16.0", features = ["v4"], optional = true }
+uuid = { version = "1.16.0", features = ["v4", "serde"], optional = true }
 tower-http = { version = "0.6.1", features = ["fs", "trace", "cors"], optional = true }
-sqlx = { version = "0.8.2", features = ["chrono", "runtime-tokio", "postgres", "tls-native-tls"], optional = true }
+sqlx = { version = "0.8.2", features = ["chrono", "runtime-tokio", "postgres", "tls-native-tls", "uuid"], optional = true }
 dotenvy = { version = "0.15.7", optional = true }
 jsonwebtoken = { version = "9.3.0", optional = true }
 tokio = { version = "1", features = ["rt-multi-thread"], optional = true }
@@ -68,7 +68,6 @@ ssr = [
     "dep:tower-http",
     "dep:tower",
     "dep:sqlx",
-    "dep:uuid",
     "dep:dotenvy",
     "dep:jsonwebtoken",
     "leptos/ssr",

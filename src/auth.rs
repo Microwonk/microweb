@@ -51,7 +51,6 @@ mod ssr {
         );
     }
 
-    #[tracing::instrument]
     pub async fn auth_guard(mut req: Request, next: Next) -> Result<Response, StatusCode> {
         let Some(token) = req.headers().typed_get::<Cookie>() else {
             return Ok(next.run(req).await);

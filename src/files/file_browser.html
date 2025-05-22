@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>File Browser</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 0.5rem 0; }
+    a { cursor: pointer; color: blue; }
+  </style>
+</head>
+<body>
+  <h1>File Browser</h1>
+  <div id="path"></div>
+  <ul id="listing"></ul>
+
+  <h3>Upload File</h3>
+  <form id="uploadForm">
+    <input type="file" name="file" required />
+    <button type="submit">Upload</button>
+  </form>
+
+  <script>
+    let currentDir = "~";
+    let currentDirId = null;
+
+    async function fetchContents(path) {
+      const res = await fetch(`/d/${path}?contents=true`);
+      if (!res.ok) return alert("Error loading directory");
+      const data = await res.json();
+      currentDir = path;
+      currentDirId = data.directory_id || null;
+
+      document.getElementById("path").textContent = "/" + path;
+      const listing = document.getElementById("listing");
+      listing.innerHTML = "";
+
+      data.directories.forEach(d => {
+        const li = document.createElement("li");
+        const link = document.createElement("a");
+        link.textContent = "📁 " + d.dir_name;
+        link.onclick = () => fetchContents(path ? `${path}/${d.dir_name}` : d.dir_name);
+        li.appendChild(link);
+        listing.appendChild(li);
+      });
+
+      data.files.forEach(f => {
+        const li = document.createElement("li");
+        const link = document.createElement("a");
+        link.href = `/f/${f.file_path}`;
+        link.textContent = "📄 " + f.file_name;
+        link.target = "_blank";
+        li.appendChild(link);
+        listing.appendChild(li);
+      });
+    }
+
+    document.getElementById("uploadForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const fileInput = e.target.elements.file;
+      const formData = new FormData();
+      formData.append("file", fileInput.files[0]);
+
+      const query = currentDirId ? `?directory_id=${currentDirId}` : "";
+      const res = await fetch(`/upload/f${query}`, {
+        method: "POST",
+        body: formData
+      });
+
+      if (!res.ok) {
+        alert("Upload failed");
+      } else {
+        alert("Upload successful");
+        fetchContents(currentDir);
+      }
+    };
+
+    fetchContents("");
+  </script>
+</body>
+</html>

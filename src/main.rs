@@ -34,19 +34,6 @@ async fn main() {
                 )
                 .allow_headers([CONTENT_TYPE, AUTHORIZATION, ACCEPT, COOKIE]),
         )
-        .layer(
-            tower_http::trace::TraceLayer::new_for_http()
-                .make_span_with(
-                    tower_http::trace::DefaultMakeSpan::new().level(tracing::Level::INFO),
-                )
-                .on_request(tower_http::trace::DefaultOnRequest::new().level(tracing::Level::INFO))
-                .on_response(
-                    tower_http::trace::DefaultOnResponse::new().level(tracing::Level::INFO),
-                )
-                .on_failure(
-                    tower_http::trace::DefaultOnFailure::new().level(tracing::Level::ERROR),
-                ),
-        )
         .fallback_service(service_fn(Apps::fallback_service));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();

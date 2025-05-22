@@ -7,7 +7,7 @@
             "previewLimit": 50,
             "server": "localhost",
             "driver": "PostgreSQL",
-            "connectString": "postgres://blog:password@localhost:5432/blog",
+            "connectString": "postgres://mw:password@localhost:5432/mw",
             "name": "local"
         }
     ],

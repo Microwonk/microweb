@@ -1,6 +1,35 @@
 use rss::{Channel, Item};
 use serde::{Deserialize, Serialize};
 
+#[derive(Default, Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
+pub struct Directory {
+    pub id: i32,
+    pub parent_id: Option<i32>,
+    pub dir_name: String,
+    pub dir_path: String,
+}
+
+#[derive(Default, Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
+pub struct File {
+    #[cfg(feature = "ssr")]
+    pub id: uuid::Uuid,
+    #[cfg(not(feature = "ssr"))]
+    pub id: String,
+    pub directory_id: Option<i32>,
+    pub file_name: String,
+    pub mime_type: String,
+    pub uploaded_at: chrono::NaiveDateTime,
+    pub file_path: String,
+}
+
+#[derive(Default, Clone, Debug, Serialize, Deserialize)]
+pub struct DirectoryContents {
+    pub files: Vec<File>,
+    pub directories: Vec<Directory>,
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct LoginRequest {
     pub email: String,
