@@ -69,6 +69,30 @@
       });
     }
 
+    async function deleteDir(id) {
+      const res = await fetch(`/d_id/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        return alert(await res.json());
+      } else {
+        fetchContents(currentDir);
+      }
+    }
+
+    async function deleteFile(id) {
+      const res = await fetch(`/f_id/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        return alert(await res.json());
+      } else {
+        fetchContents(currentDir);
+      }
+    }
+
     async function fetchContents(path) {
       const res1 = await fetch(`/d/${path}?contents=true`);
       const res2 = await fetch(`/d/${path}`);
@@ -93,6 +117,10 @@
         link.textContent = "📁 " + d.dir_name;
         link.onclick = () => fetchContents(path ? `${path}/${d.dir_name}` : d.dir_name);
         li.appendChild(link);
+        const del = document.createElement("a");
+        del.textContent = "❌";
+        del.onclick = () => deleteDir(d.id);
+        li.appendChild(del);
         listing.appendChild(li);
       });
 
@@ -103,6 +131,10 @@
         link.textContent = "📄 " + f.file_name;
         link.target = "_blank";
         li.appendChild(link);
+        const del = document.createElement("a");
+        del.textContent = "❌";
+        del.onclick = () => deleteFile(f.id);
+        li.appendChild(del)
         listing.appendChild(li);
       });
     }
@@ -121,7 +153,8 @@
       });
 
       if (!res.ok) {
-        alert("Upload failed");
+        var errors = await res.json();
+        alert(errors);
       } else {
         fetchContents(currentDir);
       }
@@ -137,7 +170,8 @@
       });
 
       if (!res.ok) {
-        alert("Upload failed");
+        var errors = await res.json();
+        alert(errors);
       } else {
         fetchContents(currentDir);
       }
