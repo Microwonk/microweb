@@ -123,8 +123,7 @@ impl Apps {
                 define_leptos_router!(AUTH_ROUTER, true)
             }
             Apps::Files => define_router!(FILES_ROUTER, crate::files::router()),
-            // Todo
-            Apps::SandBox => define_router!(SANDBOX_ROUTER, crate::files::router()),
+            Apps::SandBox => define_router!(SANDBOX_ROUTER, crate::sandbox::router()),
         }
     }
 

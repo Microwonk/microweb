@@ -55,10 +55,12 @@ pub async fn upload(
     }
 
     while let Some(field) = multipart.next_field().await.unwrap_or(None) {
+        let id = Uuid::new_v4();
+
         let file_name = field
             .file_name()
             .map(|s| s.to_string())
-            .unwrap_or("file".into());
+            .unwrap_or(format!("file_{id}"));
         let mime_type = field
             .content_type()
             .map(|s| s.to_string())
@@ -72,7 +74,6 @@ pub async fn upload(
             }
         };
 
-        let id = Uuid::new_v4();
         let file_path = dir_path.join(id.to_string());
 
         let full_path = format!(

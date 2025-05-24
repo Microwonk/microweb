@@ -1,5 +1,5 @@
 use axum::{
-    Extension, Router,
+    Extension, Json, Router,
     extract::DefaultBodyLimit,
     http::StatusCode,
     response::{Html, IntoResponse},
@@ -10,7 +10,7 @@ mod directory;
 mod file;
 
 use crate::{
-    models::{Directory, User},
+    models::{Directory, DirectoryContents, File, User},
     trace::TraceExt,
 };
 
@@ -50,7 +50,7 @@ async fn file_browser_html(user: Option<Extension<User>>) -> impl IntoResponse {
     Html(include_str!("file_browser.html")).into_response()
 }
 
-async fn get_full_path(mut directory_id: Option<i32>) -> Vec<Directory> {
+pub async fn get_full_path(mut directory_id: Option<i32>) -> Vec<Directory> {
     let mut path = Vec::new();
 
     while let Some(id) = directory_id {
@@ -77,4 +77,35 @@ async fn get_full_path(mut directory_id: Option<i32>) -> Vec<Directory> {
     path.reverse();
     tracing::info!("{path:?}");
     path
+}
+
+pub async fn get_directory_contents(
+    id: Option<i32>,
+) -> Result<DirectoryContents, (StatusCode, Json<Vec<String>>)> {
+    let files =
+        sqlx::query_as::<_, File>("SELECT * FROM files WHERE directory_id IS NOT DISTINCT FROM $1")
+            .bind(id)
+            .fetch_all(crate::database::db())
+            .await
+            .map_err(|err| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(vec![err.to_string()]),
+                )
+            })?;
+
+    let directories = sqlx::query_as::<_, Directory>(
+        "SELECT * FROM directories WHERE parent_id IS NOT DISTINCT FROM $1",
+    )
+    .bind(id)
+    .fetch_all(crate::database::db())
+    .await
+    .map_err(|err| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(vec![err.to_string()]),
+        )
+    })?;
+
+    Ok(DirectoryContents { files, directories })
 }

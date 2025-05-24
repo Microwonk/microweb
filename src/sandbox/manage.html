@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sandbox Page Manager</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    input, button { margin: 5px; }
+    #pages { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Sandbox Page Manager</h1>
+
+  <div>
+    <label>Slug: <input type="text" id="slug" /></label>
+    <button onclick="createPage()">Create Page</button>
+    <button onclick="listPages()">List Pages</button>
+  </div>
+
+  <div>
+    <label>Get by ID: <input type="text" id="get-id" /></label>
+    <button onclick="getPageById()">Get</button>
+  </div>
+
+  <div>
+    <label>Delete by ID: <input type="text" id="delete-id" /></label>
+    <button onclick="deletePageById()">Delete</button>
+  </div>
+
+  <pre id="pages"></pre>
+
+  <script>
+    async function createPage() {
+      const slug = document.getElementById('slug').value;
+      const res = await fetch(`/create?slug=${encodeURIComponent(slug)}`, {
+        method: 'POST',
+      });
+      const data = await res.json();
+      document.getElementById('pages').textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function listPages() {
+      const res = await fetch(`/pages`);
+      const data = await res.json();
+      document.getElementById('pages').textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function getPageById() {
+      const id = document.getElementById('get-id').value;
+      const res = await fetch(`/page/${id}`);
+      const data = await res.json();
+      document.getElementById('pages').textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function deletePageById() {
+      const id = document.getElementById('delete-id').value;
+      const res = await fetch(`/page/${id}`, {
+        method: 'DELETE',
+      });
+      document.getElementById('pages').textContent = res.status === 200 ? 'Deleted.' : await res.text();
+    }
+  </script>
+</body>
+</html>

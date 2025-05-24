@@ -9,6 +9,8 @@ pub mod database;
 #[cfg(feature = "ssr")]
 pub mod files;
 pub mod models;
+#[cfg(feature = "ssr")]
+pub mod sandbox;
 pub mod www;
 
 #[cfg(debug_assertions)]

@@ -1,21 +1,12 @@
 # Get started with a build env with Rust nightly
 FROM rustlang/rust:nightly-bookworm as builder
 
-# If you’re using stable, use this instead
-# FROM rust:1.86-bullseye as builder
-
-# Install cargo-binstall, which makes it easier to install other
-# cargo extensions like cargo-leptos
-RUN wget https://github.com/cargo-bins/cargo-binstall/releases/latest/download/cargo-binstall-aarch64-unknown-linux-gnu.full.tgz 
-RUN tar -xvf cargo-binstall-aarch64-unknown-linux-gnu.full.tgz
-RUN cp cargo-binstall /usr/local/cargo/bin
-
 # Install required tools
 RUN apt-get update -y \
   && apt-get install -y --no-install-recommends clang
 
 # Install cargo-leptos
-RUN cargo binstall cargo-leptos -y
+RUN cargo install cargo-leptos
 
 # Add the WASM target
 RUN rustup target add wasm32-unknown-unknown
@@ -26,6 +17,7 @@ WORKDIR /app
 COPY . .
 
 # Build the app
+ENV DOMAIN=nicolas-frey.com
 RUN cargo leptos build --release -vv
 
 FROM debian:bookworm-slim as runtime

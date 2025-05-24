@@ -9,9 +9,9 @@ use axum::{
 
 use serde::Deserialize;
 
-use crate::models::{Directory, DirectoryContents, File, User};
+use crate::models::{Directory, File, User};
 
-use super::{DIRECTORY, ROOT, get_full_path};
+use super::{DIRECTORY, ROOT, get_directory_contents, get_full_path};
 
 #[derive(Deserialize, Debug)]
 pub struct DirectoryCreateQuery {
@@ -232,35 +232,4 @@ pub async fn traverse(
     }
 
     StatusCode::NOT_FOUND.into_response()
-}
-
-async fn get_directory_contents(
-    id: Option<i32>,
-) -> Result<DirectoryContents, (StatusCode, Json<Vec<String>>)> {
-    let files =
-        sqlx::query_as::<_, File>("SELECT * FROM files WHERE directory_id IS NOT DISTINCT FROM $1")
-            .bind(id)
-            .fetch_all(crate::database::db())
-            .await
-            .map_err(|err| {
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(vec![err.to_string()]),
-                )
-            })?;
-
-    let directories = sqlx::query_as::<_, Directory>(
-        "SELECT * FROM directories WHERE parent_id IS NOT DISTINCT FROM $1",
-    )
-    .bind(id)
-    .fetch_all(crate::database::db())
-    .await
-    .map_err(|err| {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(vec![err.to_string()]),
-        )
-    })?;
-
-    Ok(DirectoryContents { files, directories })
 }

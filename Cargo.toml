@@ -76,6 +76,7 @@ ssr = [
     "leptos-use/ssr",
     "leptos-use/axum",
 ]
+zip = []
 
 # Defines a size-optimized profile for the WASM bundle in release mode
 [profile.wasm-release]

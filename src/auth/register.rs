@@ -311,7 +311,22 @@ pub fn RegisterPage() -> impl IntoView {
                     </button>
 
                     <p class="text-center text-sm text-gray-500">
-                        Already have an account? <a class="underline text-black" href="/login">
+                        Already have an account?
+                        <a
+                            class="underline text-black"
+                            href=move || {
+                                format!(
+                                    "/login?return_url={}",
+                                    query
+                                        .with(|q| {
+                                            q.as_ref()
+                                                .map(|r| r.return_url.clone())
+                                                .ok()
+                                                .unwrap_or("/profile".into())
+                                        }),
+                                )
+                            }
+                        >
                             Sign in
                         </a>
                     </p>
