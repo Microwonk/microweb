@@ -2,64 +2,195 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sandbox Page Manager</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    input, button { margin: 5px; }
-    #pages { margin-top: 20px; }
+    :root {
+      font-family: system-ui, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 1rem;
+      background-color: #dad6ca; 
+      color: #333;
+    }
+
+    .layout {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .left, .right {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .box {
+      background: #fff;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.75rem;
+    }
+
+    input[type="text"], input[type="file"] {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.3rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 0.3rem;
+    }
+
+    button {
+      margin-top: 0.5rem;
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 0.3rem;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .page-entry {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f1f3f5;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.3rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .page-entry span {
+      word-break: break-all;
+      flex-grow: 1;
+      margin-right: 0.5rem;
+    }
+
+    .delete-btn {
+      background: #dc3545;
+    }
+
+    .delete-btn:hover {
+      background: #b02a37;
+    }
+
+    @media (max-width: 768px) {
+      .layout {
+        flex-direction: column;
+      }
+    }
   </style>
 </head>
 <body>
   <h1>Sandbox Page Manager</h1>
+  <div class="layout">
+    <div class="left">
+      <div class="box">
+        <h2>Create Page</h2>
+        <label>Slug
+          <input type="text" id="create-slug" placeholder="Enter slug" />
+        </label>
+        <label>Upload ZIP
+          <input type="file" id="zip-file" accept=".zip" />
+        </label>
+        <button onclick="uploadZip()">Upload ZIP</button>
+      </div>
+    </div>
 
-  <div>
-    <label>Slug: <input type="text" id="slug" /></label>
-    <button onclick="createPage()">Create Page</button>
-    <button onclick="listPages()">List Pages</button>
+    <div class="right">
+      <div class="box">
+        <h2>Pages</h2>
+        <div id="pages-list"></div>
+      </div>
+    </div>
   </div>
-
-  <div>
-    <label>Get by ID: <input type="text" id="get-id" /></label>
-    <button onclick="getPageById()">Get</button>
-  </div>
-
-  <div>
-    <label>Delete by ID: <input type="text" id="delete-id" /></label>
-    <button onclick="deletePageById()">Delete</button>
-  </div>
-
-  <pre id="pages"></pre>
 
   <script>
-    async function createPage() {
-      const slug = document.getElementById('slug').value;
-      const res = await fetch(`/create?slug=${encodeURIComponent(slug)}`, {
-        method: 'POST',
-      });
-      const data = await res.json();
-      document.getElementById('pages').textContent = JSON.stringify(data, null, 2);
-    }
-
     async function listPages() {
       const res = await fetch(`/pages`);
       const data = await res.json();
-      document.getElementById('pages').textContent = JSON.stringify(data, null, 2);
+      renderPages(data);
+    }
+
+    function renderPages(pages) {
+      const container = document.getElementById('pages-list');
+      container.innerHTML = '';
+      if (!Array.isArray(pages)) return;
+
+      for (const page of pages) {
+        const div = document.createElement('div');
+        div.className = 'page-entry';
+
+        const a = document.createElement('a');
+        a.textContent = `ID: ${page.id} | Slug: ${page.slug || ''}`;
+        a.href = `/${page.slug}`;
+        a.target = "_blank";
+
+        const btn = document.createElement('button');
+        btn.textContent = 'Delete';
+        btn.className = 'delete-btn';
+        btn.onclick = async () => {
+          await fetch(`/page/${page.id}`, { method: 'DELETE' });
+          listPages();
+        };
+
+        div.appendChild(a);
+        div.appendChild(btn);
+        container.appendChild(div);
+      }
     }
 
     async function getPageById() {
-      const id = document.getElementById('get-id').value;
+      const id = document.getElementById('get-id').value.trim();
+      if (!id) return;
       const res = await fetch(`/page/${id}`);
       const data = await res.json();
-      document.getElementById('pages').textContent = JSON.stringify(data, null, 2);
+      alert(JSON.stringify(data, null, 2));
     }
 
     async function deletePageById() {
-      const id = document.getElementById('delete-id').value;
-      const res = await fetch(`/page/${id}`, {
-        method: 'DELETE',
-      });
-      document.getElementById('pages').textContent = res.status === 200 ? 'Deleted.' : await res.text();
+      const id = document.getElementById('delete-id').value.trim();
+      if (!id) return;
+      await fetch(`/page/${id}`, { method: 'DELETE' });
+      listPages();
     }
+
+    async function uploadZip() {
+      const slug = document.getElementById('create-slug').value.trim();
+      const fileInput = document.getElementById('zip-file');
+      if (!slug || !fileInput.files.length) return;
+
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+
+      const res = await fetch(`/create?slug=${encodeURIComponent(slug)}`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      await listPages();
+    }
+
+    // Initial load
+    listPages();
   </script>
 </body>
 </html>

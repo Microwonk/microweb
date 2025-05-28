@@ -1,5 +1,6 @@
 use axum::{
     Extension, Router,
+    extract::DefaultBodyLimit,
     http::StatusCode,
     response::{Html, IntoResponse},
     routing::{get, post},
@@ -12,7 +13,10 @@ use crate::{models::User, trace::TraceExt};
 pub fn router() -> Router {
     Router::new()
         .route("/manage", get(manage_html))
-        .route("/create", post(page::create))
+        .route(
+            "/create",
+            post(page::create).layer(DefaultBodyLimit::max(1e+9 as usize)),
+        )
         .route(
             "/page/{id}",
             get(page::get_by_id).delete(page::delete_by_id),

@@ -19,7 +19,7 @@ pub struct DirectoryQuery {
     directory_id: Option<i32>,
 }
 
-#[tracing::instrument(skip(user))]
+#[tracing::instrument(skip(user, multipart))]
 pub async fn upload(
     Query(directory): Query<DirectoryQuery>,
     user: Option<Extension<User>>,

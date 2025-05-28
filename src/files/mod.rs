@@ -5,6 +5,7 @@ use axum::{
     response::{Html, IntoResponse},
     routing::{get, post},
 };
+use tower_http::cors::{Any, CorsLayer};
 
 mod directory;
 mod file;
@@ -39,6 +40,7 @@ pub fn router() -> Router {
         .route("/f/{*file_path}", get(file::traverse))
         .with_tracing()
         .layer(axum::middleware::from_fn(crate::auth::auth_guard))
+        .layer(CorsLayer::new().allow_origin(Any))
 }
 
 #[tracing::instrument(skip(user))]
