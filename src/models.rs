@@ -21,6 +21,18 @@ pub struct Directory {
     pub dir_path: String,
 }
 
+#[cfg(feature = "ssr")]
+impl Directory {
+    pub fn root() -> Self {
+        Self {
+            id: 0,
+            parent_id: None,
+            dir_name: crate::files::ROOT.to_string(),
+            dir_path: crate::files::ROOT.to_string(),
+        }
+    }
+}
+
 #[derive(Default, Clone, Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct File {

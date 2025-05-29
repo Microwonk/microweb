@@ -1,5 +1,7 @@
+use std::{fs::File as FsFile, io::Write, path::PathBuf};
+
 use axum::{
-    Extension, Json, Router,
+    Extension, Router,
     extract::DefaultBodyLimit,
     http::StatusCode,
     response::{Html, IntoResponse},
@@ -7,10 +9,11 @@ use axum::{
 };
 use tower_http::cors::{Any, CorsLayer};
 
-mod directory;
-mod file;
+pub mod directory;
+pub mod file;
 
 use crate::{
+    api::{ApiError, ApiResult},
     models::{Directory, DirectoryContents, File, User},
     trace::TraceExt,
 };
@@ -52,6 +55,19 @@ async fn file_browser_html(user: Option<Extension<User>>) -> impl IntoResponse {
     Html(include_str!("file_browser.html")).into_response()
 }
 
+pub async fn save_to_disk(file_path: PathBuf, data: &[u8]) -> Result<(), String> {
+    match FsFile::create(&file_path) {
+        Ok(mut file) => {
+            if let Err(e) = file.write_all(data) {
+                Err(format!("Write error: {e}"))
+            } else {
+                Ok(())
+            }
+        }
+        Err(err) => Err(format!("Create error: {err}")),
+    }
+}
+
 pub async fn get_full_path(mut directory_id: Option<i32>) -> Vec<Directory> {
     let mut path = Vec::new();
 
@@ -81,20 +97,13 @@ pub async fn get_full_path(mut directory_id: Option<i32>) -> Vec<Directory> {
     path
 }
 
-pub async fn get_directory_contents(
-    id: Option<i32>,
-) -> Result<DirectoryContents, (StatusCode, Json<Vec<String>>)> {
+pub async fn get_directory_contents(id: Option<i32>) -> ApiResult<DirectoryContents> {
     let files =
         sqlx::query_as::<_, File>("SELECT * FROM files WHERE directory_id IS NOT DISTINCT FROM $1")
             .bind(id)
             .fetch_all(crate::database::db())
             .await
-            .map_err(|err| {
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(vec![err.to_string()]),
-                )
-            })?;
+            .map_err(|err| ApiError::Message(StatusCode::INTERNAL_SERVER_ERROR, err.to_string()))?;
 
     let directories = sqlx::query_as::<_, Directory>(
         "SELECT * FROM directories WHERE parent_id IS NOT DISTINCT FROM $1",
@@ -102,12 +111,7 @@ pub async fn get_directory_contents(
     .bind(id)
     .fetch_all(crate::database::db())
     .await
-    .map_err(|err| {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(vec![err.to_string()]),
-        )
-    })?;
+    .map_err(|err| ApiError::Message(StatusCode::INTERNAL_SERVER_ERROR, err.to_string()))?;
 
     Ok(DirectoryContents { files, directories })
 }

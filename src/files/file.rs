@@ -7,12 +7,15 @@ use axum::{
 
 use chrono::Utc;
 use serde::Deserialize;
-use std::{fs::File as FsFile, io::Write, path::PathBuf};
+use std::path::PathBuf;
 use uuid::Uuid;
 
-use crate::models::{Directory, File, User};
+use crate::{
+    api::{ApiError, ApiResult},
+    models::{Directory, File, User},
+};
 
-use super::{DIRECTORY, PRIVATE, get_full_path};
+use super::{DIRECTORY, PRIVATE, get_full_path, save_to_disk};
 
 #[derive(Deserialize, Debug)]
 pub struct DirectoryQuery {
@@ -24,9 +27,9 @@ pub async fn upload(
     Query(directory): Query<DirectoryQuery>,
     user: Option<Extension<User>>,
     mut multipart: Multipart,
-) -> impl IntoResponse {
+) -> ApiResult<Json<Vec<File>>> {
     if !user.is_some_and(|u| u.admin) {
-        return StatusCode::UNAUTHORIZED.into_response();
+        return Err(ApiError::StatusCode(StatusCode::UNAUTHORIZED));
     };
 
     if let Some(id) = directory.directory_id
@@ -37,7 +40,10 @@ pub async fn upload(
             .unwrap_or(None)
             .is_none()
     {
-        return (StatusCode::BAD_REQUEST, Json(["Directory does not exist."])).into_response();
+        return Err(ApiError::Message(
+            StatusCode::BAD_REQUEST,
+            "Directory does not exist.".into(),
+        ));
     }
 
     let mut uploaded_files = Vec::new();
@@ -46,13 +52,7 @@ pub async fn upload(
     let dir_path = PathBuf::from(DIRECTORY);
 
     // Ensure the directory exists
-    if let Err(e) = std::fs::create_dir_all(&dir_path) {
-        return (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json([format!("Failed to create directory: {e}")]),
-        )
-            .into_response();
-    }
+    tokio::fs::create_dir_all(&dir_path).await?;
 
     while let Some(field) = multipart.next_field().await.unwrap_or(None) {
         let id = Uuid::new_v4();
@@ -61,6 +61,7 @@ pub async fn upload(
             .file_name()
             .map(|s| s.to_string())
             .unwrap_or(format!("file_{id}"));
+
         let mime_type = field
             .content_type()
             .map(|s| s.to_string())
@@ -85,17 +86,6 @@ pub async fn upload(
             file_name,
         );
 
-        if sqlx::query_as::<_, File>("SELECT * FROM files WHERE file_path = $1")
-            .bind(&full_path)
-            .fetch_optional(crate::database::db())
-            .await
-            .unwrap_or(None)
-            .is_some()
-        {
-            errors.push(format!("File with name exists: {file_name}"));
-            continue;
-        }
-
         match sqlx::query_as::<_, File>(
             r#"
             INSERT INTO files (id, directory_id, file_name, file_path, mime_type, uploaded_at)
@@ -119,97 +109,80 @@ pub async fn upload(
             }
         };
 
-        // Store file on disk
-        match FsFile::create(&file_path) {
-            Ok(mut file) => {
-                if let Err(e) = file.write_all(&data) {
-                    errors.push(format!("Write error: {e}"));
-                }
-            }
-            Err(err) => {
-                errors.push(format!("Create error: {err}"));
-            }
-        };
+        if let Err(e) = save_to_disk(file_path, &data).await {
+            errors.push(e);
+        }
     }
 
     if uploaded_files.is_empty() {
-        (StatusCode::BAD_REQUEST, Json(errors)).into_response()
+        Err(ApiError::MultipleMessages(StatusCode::BAD_REQUEST, errors))
     } else {
-        (StatusCode::OK, Json(uploaded_files)).into_response()
+        Ok(Json(uploaded_files))
     }
 }
 
 #[tracing::instrument(skip(user))]
-pub async fn delete_by_id(
-    Path(id): Path<Uuid>,
-    user: Option<Extension<User>>,
-) -> impl IntoResponse {
+pub async fn delete_by_id(Path(id): Path<Uuid>, user: Option<Extension<User>>) -> ApiResult<()> {
     if !user.is_some_and(|u| u.admin) {
-        return StatusCode::UNAUTHORIZED.into_response();
+        return Err(ApiError::unauthorized());
     };
 
-    let success = sqlx::query("DELETE FROM files WHERE id = $1")
+    if sqlx::query("DELETE FROM files WHERE id = $1")
         .bind(id)
         .execute(crate::database::db())
         .await
-        .map_or(0, |r| r.rows_affected());
-
-    if success == 1 {
-        let file_path: PathBuf = [DIRECTORY, &id.to_string()].iter().collect();
-        if let Err(e) = tokio::fs::remove_file(file_path).await {
-            (StatusCode::INTERNAL_SERVER_ERROR, Json([e.to_string()])).into_response()
-        } else {
-            StatusCode::OK.into_response()
-        }
+        .map_or(0, |r| r.rows_affected())
+        == 1
+    {
+        tokio::fs::remove_file([DIRECTORY, &id.to_string()].iter().collect::<PathBuf>())
+            .await
+            .map_err(Into::into)
     } else {
-        StatusCode::BAD_REQUEST.into_response()
+        Err(ApiError::bad_request())
     }
 }
 
 #[tracing::instrument(skip(user))]
-pub async fn get_by_id(Path(id): Path<Uuid>, user: Option<Extension<User>>) -> impl IntoResponse {
+pub async fn get_by_id(
+    Path(id): Path<Uuid>,
+    user: Option<Extension<User>>,
+) -> ApiResult<impl IntoResponse> {
     if !user.is_some_and(|u| u.admin) {
-        return StatusCode::UNAUTHORIZED.into_response();
+        return Err(ApiError::unauthorized());
     };
 
     let file = sqlx::query_as::<_, File>("SELECT * FROM files WHERE id = $1")
         .bind(id)
-        .fetch_optional(crate::database::db())
+        .fetch_one(crate::database::db())
         .await
-        .unwrap_or(None);
+        .map_err(|_| ApiError::not_found())?;
 
-    if let Some(file) = file {
-        let file_path: PathBuf = [DIRECTORY, &file.id.to_string()].iter().collect();
-        if let Ok(bytes) = tokio::fs::read(file_path).await {
-            return ([(header::CONTENT_TYPE, file.mime_type)], bytes).into_response();
-        }
-    }
-
-    StatusCode::NOT_FOUND.into_response()
+    let file_path: PathBuf = [DIRECTORY, &file.id.to_string()].iter().collect();
+    tokio::fs::read(file_path)
+        .await
+        .map(|bytes| ([(header::CONTENT_TYPE, file.mime_type)], bytes))
+        .map_err(|_| ApiError::not_found())
 }
 
 #[tracing::instrument(skip(user))]
 pub async fn traverse(
     Path(file_path): Path<String>,
     user: Option<Extension<User>>,
-) -> impl IntoResponse {
+) -> ApiResult<impl IntoResponse> {
     // if it is in any folder containing .private, user must be admin
     if file_path.contains(PRIVATE) && !user.is_some_and(|u| u.admin) {
-        return StatusCode::UNAUTHORIZED.into_response();
+        return Err(ApiError::unauthorized());
     };
 
     let file = sqlx::query_as::<_, File>("SELECT * FROM files WHERE file_path = $1")
         .bind(format!("/{file_path}"))
-        .fetch_optional(crate::database::db())
+        .fetch_one(crate::database::db())
         .await
-        .unwrap_or(None);
+        .map_err(|_| ApiError::not_found())?;
 
-    if let Some(file) = file {
-        let file_path: PathBuf = [DIRECTORY, &file.id.to_string()].iter().collect();
-        if let Ok(bytes) = tokio::fs::read(file_path).await {
-            return ([(header::CONTENT_TYPE, file.mime_type)], bytes).into_response();
-        }
-    }
-
-    StatusCode::NOT_FOUND.into_response()
+    let file_path: PathBuf = [DIRECTORY, &file.id.to_string()].iter().collect();
+    tokio::fs::read(file_path)
+        .await
+        .map(|bytes| ([(header::CONTENT_TYPE, file.mime_type)], bytes))
+        .map_err(|_| ApiError::not_found())
 }

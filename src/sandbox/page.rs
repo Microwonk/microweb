@@ -12,8 +12,9 @@ use uuid::Uuid;
 use zip::ZipArchive;
 
 use crate::{
+    api::{ApiError, ApiResult},
     apps::Apps,
-    files::{DIRECTORY, get_directory_contents, get_full_path},
+    files::{DIRECTORY, directory, get_directory_contents, get_full_path},
     models::{Directory, File, SandboxPage, User},
 };
 
@@ -29,9 +30,9 @@ pub async fn create(
     Query(q): Query<UploadPageQuery>,
     user: Option<Extension<User>>,
     multipart: Multipart,
-) -> impl IntoResponse {
+) -> ApiResult<Json<SandboxPage>> {
     if !user.is_some_and(|u| u.admin) {
-        return StatusCode::UNAUTHORIZED.into_response();
+        return Err(ApiError::unauthorized());
     };
 
     let Some(sbx_dir) =
@@ -41,11 +42,10 @@ pub async fn create(
             .await
             .unwrap_or(None)
     else {
-        return (
+        return Err(ApiError::Message(
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(["Sandbox directory does not exist."]),
-        )
-            .into_response();
+            "Sandbox directory does not exist.".to_string(),
+        ));
     };
 
     let full_path = format!(
@@ -57,21 +57,7 @@ pub async fn create(
         &q.slug,
     );
 
-    if sqlx::query_as::<_, SandboxPage>("SELECT * FROM sandbox WHERE slug = $1")
-        .bind(&q.slug)
-        .fetch_optional(crate::database::db())
-        .await
-        .unwrap_or(None)
-        .is_some()
-    {
-        return (
-            StatusCode::BAD_REQUEST,
-            Json(["Page with same slug exists."]),
-        )
-            .into_response();
-    }
-
-    let dir = match sqlx::query_as::<_, Directory>(
+    let dir = sqlx::query_as::<_, Directory>(
         r#"
         INSERT INTO directories (parent_id, dir_name, dir_path)
         VALUES ($1, $2, $3)
@@ -82,18 +68,11 @@ pub async fn create(
     .bind(&q.slug)
     .bind(&full_path)
     .fetch_one(crate::database::db())
-    .await
-    {
-        Ok(dir) => dir,
-        Err(err) => return (StatusCode::BAD_REQUEST, Json(err.to_string())).into_response(),
-    };
+    .await?;
 
-    let _files = match upload_zip(dir.id, full_path, &q.slug, multipart).await {
-        Ok(files) => files,
-        Err(errs) => return (StatusCode::BAD_REQUEST, Json(errs)).into_response(),
-    };
+    let _files = upload_zip(dir.id, full_path, &q.slug, multipart).await?;
 
-    match sqlx::query_as::<_, SandboxPage>(
+    sqlx::query_as::<_, SandboxPage>(
         r#"
         INSERT INTO sandbox (directory_id, slug)
         VALUES ($1, $2)
@@ -104,10 +83,8 @@ pub async fn create(
     .bind(&q.slug)
     .fetch_one(crate::database::db())
     .await
-    {
-        Ok(res) => (StatusCode::OK, Json(res)).into_response(),
-        Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, Json([err.to_string()])).into_response(),
-    }
+    .map(Json)
+    .map_err(Into::into)
 }
 
 pub async fn upload_zip(
@@ -115,32 +92,30 @@ pub async fn upload_zip(
     root_path: String,
     slug: &str,
     mut multipart: Multipart,
-) -> Result<Vec<File>, Vec<String>> {
+) -> ApiResult<Vec<File>> {
     let exists = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM directories WHERE id = $1")
         .bind(parent_id)
         .fetch_one(crate::database::db())
         .await
         .unwrap_or(0);
     if exists == 0 {
-        return Err(vec!["Directory does not exist.".to_string()]);
+        return Err(ApiError::Message(
+            StatusCode::BAD_REQUEST,
+            "Directory does not exist.".to_string(),
+        ));
     }
 
     let mut uploaded_files = Vec::new();
     let mut errors = Vec::new();
 
-    let Some(field) = multipart.next_field().await.unwrap_or(None) else {
-        return Err(vec!["No file provided.".to_string()]);
-    };
+    let field = multipart.next_field().await?.ok_or(ApiError::Message(
+        StatusCode::BAD_REQUEST,
+        "At least one file should be in multipart.".to_string(),
+    ))?;
 
-    let data = match field.bytes().await {
-        Ok(d) => d,
-        Err(e) => return Err(vec![e.to_string()]),
-    };
+    let data = field.bytes().await?;
 
-    let mut archive = match ZipArchive::new(Cursor::new(data)) {
-        Ok(a) => a,
-        Err(e) => return Err(vec![e.to_string()]),
-    };
+    let mut archive = ZipArchive::new(Cursor::new(data)).map_err(ApiError::any)?;
 
     let db = crate::database::db();
     let mut dir_cache: HashMap<String, i32> = HashMap::new();
@@ -277,130 +252,108 @@ pub async fn upload_zip(
         }
     }
 
-    // After the loop
     if !found_index_html {
-        return Err(vec!["Missing index.html in root of zip.".to_string()]);
+        return Err(ApiError::Message(
+            StatusCode::BAD_REQUEST,
+            "Missing index.html in root of zip.".to_string(),
+        ));
     }
 
     if uploaded_files.is_empty() {
-        Err(errors)
+        Err(ApiError::MultipleMessages(StatusCode::BAD_REQUEST, errors))
     } else {
         Ok(uploaded_files)
     }
 }
 
 #[tracing::instrument(skip(user))]
-pub async fn list(user: Option<Extension<User>>) -> impl IntoResponse {
+pub async fn list(user: Option<Extension<User>>) -> ApiResult<Json<Vec<SandboxPage>>> {
     if !user.is_some_and(|u| u.admin) {
-        return StatusCode::UNAUTHORIZED.into_response();
+        return Err(ApiError::unauthorized());
     };
 
-    match sqlx::query_as::<_, SandboxPage>("SELECT * FROM sandbox")
+    sqlx::query_as::<_, SandboxPage>("SELECT * FROM sandbox")
         .fetch_all(crate::database::db())
         .await
-    {
-        Ok(res) => (StatusCode::OK, Json(res)).into_response(),
-        Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, Json([err.to_string()])).into_response(),
-    }
+        .map(Json)
+        .map_err(Into::into)
 }
 
 #[tracing::instrument(skip(user))]
-pub async fn get_by_id(Path(id): Path<Uuid>, user: Option<Extension<User>>) -> impl IntoResponse {
-    if !user.is_some_and(|u| u.admin) {
-        return StatusCode::UNAUTHORIZED.into_response();
-    };
-
-    match sqlx::query_as::<_, SandboxPage>("SELECT * FROM sandbox WHERE id = $1")
-        .bind(id)
-        .fetch_all(crate::database::db())
-        .await
-    {
-        Ok(res) => (StatusCode::OK, Json(res)).into_response(),
-        Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, Json([err.to_string()])).into_response(),
-    }
-}
-
-#[tracing::instrument(skip(user))]
-pub async fn delete_by_id(
+pub async fn get_by_id(
     Path(id): Path<Uuid>,
     user: Option<Extension<User>>,
-) -> impl IntoResponse {
+) -> ApiResult<Json<SandboxPage>> {
     if !user.is_some_and(|u| u.admin) {
-        return StatusCode::UNAUTHORIZED.into_response();
+        return Err(ApiError::unauthorized());
     };
 
-    match sqlx::query(
-        "DELETE FROM directories d USING sandbox s WHERE s.directory_id = d.id AND s.id = $1",
-    )
-    .bind(id)
-    .execute(crate::database::db())
-    .await
-    {
-        Ok(_) => (),
-        Err(err) => {
-            return (StatusCode::INTERNAL_SERVER_ERROR, Json([err.to_string()])).into_response();
-        }
-    };
-
-    match sqlx::query("DELETE FROM sandbox WHERE id = $1")
+    sqlx::query_as::<_, SandboxPage>("SELECT * FROM sandbox WHERE id = $1")
         .bind(id)
-        .execute(crate::database::db())
+        .fetch_one(crate::database::db())
         .await
-    {
-        Ok(_) => (StatusCode::OK).into_response(),
-        Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, Json([err.to_string()])).into_response(),
-    }
+        .map(Json)
+        .map_err(Into::into)
 }
 
-pub async fn view(Path(slug): Path<String>) -> impl IntoResponse {
-    let dir = match sqlx::query_as::<_, Directory>(
+#[tracing::instrument(skip(user))]
+pub async fn delete_by_id(Path(id): Path<Uuid>, user: Option<Extension<User>>) -> ApiResult<()> {
+    if !user.as_ref().is_some_and(|u| u.admin) {
+        return Err(ApiError::unauthorized());
+    };
+
+    let dir_id: i32 = sqlx::query_scalar(
+        "SELECT d.id FROM directories d JOIN sandbox s ON s.directory_id = d.id WHERE s.id = $1",
+    )
+    .bind(id)
+    .fetch_one(crate::database::db())
+    .await?;
+
+    println!("{dir_id}");
+
+    directory::delete_by_id(Path(dir_id), user).await
+}
+
+pub async fn view(Path(slug): Path<String>) -> ApiResult<impl IntoResponse> {
+    let dir = sqlx::query_as::<_, Directory>(
         "SELECT d.* FROM directories d JOIN sandbox s ON d.id = s.directory_id WHERE s.slug = $1",
     )
     .bind(slug)
     .fetch_one(crate::database::db())
     .await
-    {
-        Ok(dir) => dir,
-        Err(_) => {
-            return StatusCode::NOT_FOUND.into_response();
-        }
-    };
+    .map_err(|_| ApiError::not_found())?;
 
-    let contents = match get_directory_contents(Some(dir.id)).await {
-        Ok(contents) => contents,
-        Err(err) => return err.into_response(),
-    };
+    let contents = get_directory_contents(Some(dir.id)).await?;
 
     let Some(index) = contents.files.iter().find(|f| f.file_name == "index.html") else {
-        return (
+        return Err(ApiError::Message(
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(["File index.html does not exist."]),
-        )
-            .into_response();
+            "index.html does not exist.".to_string(),
+        ));
     };
 
     let file_path: PathBuf = [DIRECTORY, &index.id.to_string()].iter().collect();
     if let Ok(bytes) = tokio::fs::read(file_path).await {
-        return ([(header::CONTENT_TYPE, &index.mime_type)], bytes).into_response();
+        return Ok(([(header::CONTENT_TYPE, &index.mime_type)], bytes).into_response());
     }
 
-    StatusCode::NOT_FOUND.into_response()
+    Err(ApiError::not_found())
 }
 
 #[tracing::instrument]
-pub async fn view_static(Path((slug, file_path)): Path<(String, String)>) -> impl IntoResponse {
-    let file = match sqlx::query_as::<_, File>("SELECT * FROM files WHERE file_path = $1")
+pub async fn view_static(
+    Path((slug, file_path)): Path<(String, String)>,
+) -> ApiResult<impl IntoResponse> {
+    let file = sqlx::query_as::<_, File>("SELECT * FROM files WHERE file_path = $1")
         .bind(format!("{SANDBOX_DIR}/{slug}/{file_path}"))
         .fetch_one(crate::database::db())
         .await
-    {
-        Ok(file) => file,
-        Err(_) => return StatusCode::NOT_FOUND.into_response(),
-    };
+        .map_err(|_| ApiError::not_found())?;
 
     let file_path: PathBuf = [DIRECTORY, &file.id.to_string()].iter().collect();
-    match tokio::fs::read(file_path).await {
-        Ok(bytes) => ([(header::CONTENT_TYPE, &file.mime_type)], bytes).into_response(),
-        Err(_) => StatusCode::NOT_FOUND.into_response(),
-    }
+
+    tokio::fs::read(file_path)
+        .await
+        .map(|bytes| ([(header::CONTENT_TYPE, file.mime_type)], bytes))
+        .map_err(|_| ApiError::not_found())
 }
