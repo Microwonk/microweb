@@ -1,6 +1,8 @@
 use leptos::prelude::{AnyView, IntoAny};
 use strum::{EnumIter, IntoEnumIterator};
 
+pub mod components;
+
 #[cfg(feature = "ssr")]
 macro_rules! define_leptos_router {
     (

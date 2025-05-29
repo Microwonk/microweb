@@ -6,11 +6,14 @@ use leptos_router::{
 };
 use reactive_stores::Store;
 
-use crate::blog::pages::{
-    admin::AdminPage, blog_post::BlogPostPage, edit_blog_post::EditBlogPostPage, home::HomePage,
-    loading::LoadingPage, p404::Page404, rss::RSSPage,
-};
 use crate::models::*;
+use crate::{
+    apps::components::CookiePopup,
+    blog::pages::{
+        admin::AdminPage, blog_post::BlogPostPage, edit_blog_post::EditBlogPostPage,
+        home::HomePage, loading::LoadingPage, p404::Page404, rss::RSSPage,
+    },
+};
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -66,6 +69,8 @@ pub fn App() -> impl IntoView {
         <Stylesheet id="leptos" href="/pkg/microweb.css" />
 
         <Title text="Microwonk's Blog" />
+
+        <CookiePopup />
 
         <Suspense fallback=LoadingPage>
             <ErrorBoundary fallback=|_| {

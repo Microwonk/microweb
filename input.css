@@ -65,6 +65,12 @@
   @apply bg-nf-color;
 }
 
+.tornpaper-effect {
+  @apply bg-nf-white;
+  filter: url(#filter_tornpaper);
+  background-blend-mode: multiply;
+}
+
 .textured-text {
   -webkit-background-clip: text;
   background-clip: text;
@@ -133,27 +139,48 @@
   animation-fill-mode: forwards;
 }
 
-.animated-title:nth-of-type(1) .animated-title-element {
+@keyframes rollTitleOut {
+  0% {
+    transform: translate(-120%, 0px);
+  }
+  100% {
+    transform: translate(0%, 0px);
+  }
+}
+
+.animated-hero-element {
+  position: relative;
+  display: inline-block;
+  transform: translate(0px, 120%);
+  will-change: auto;
+  animation-name: rollTitleOut;
+  animation-duration: 1.2s;
+  animation-delay: 0.05s;
+  animation-timing-function: cubic-bezier(0.34, 0.34, 0, 0.97);
+  animation-fill-mode: forwards;
+}
+
+.animated-title:nth-of-type(1) .animated-title-element .animated-hero-element {
   animation-delay: 0.15s;
 }
 
-.animated-title:nth-of-type(2) .animated-title-element {
+.animated-title:nth-of-type(2) .animated-title-element .animated-hero-element {
   animation-delay: 0.3s;
 }
 
-.animated-title:nth-of-type(3) .animated-title-element {
+.animated-title:nth-of-type(3) .animated-title-element .animated-hero-element {
   animation-delay: 0.45s;
 }
 
-.animated-title:nth-of-type(4) .animated-title-element {
+.animated-title:nth-of-type(4) .animated-title-element .animated-hero-element {
   animation-delay: 0.6s;
 }
 
-.animated-title:nth-of-type(5) .animated-title-element {
+.animated-title:nth-of-type(5) .animated-title-element .animated-hero-element {
   animation-delay: 0.7s;
 }
 
-.animated-title:nth-of-type(6) .animated-title-element {
+.animated-title:nth-of-type(6) .animated-title-element .animated-hero-element {
   animation-delay: 0.75s;
 }
 
@@ -166,15 +193,6 @@
     transform: translate(0px, 0%);
   }
 }
-
-/* .features a {
-  transform: translate(0px, 20%);
-  will-change: auto;
-  animation-name: slideDown;
-  animation-duration: 1.2s;
-  animation-timing-function: ease-out;
-  animation-fill-mode: forwards;
-} */
 
 .features a {
   will-change: transform;

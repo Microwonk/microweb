@@ -23,9 +23,12 @@ pub fn DownloadCVPage() -> impl IntoView {
     };
 
     view! {
-        <BackGround />
         <Title text="Nicolas Frey - Resume" />
+
+        <BackGround />
+
         <Close el=close_icon />
+
         <main class={
             let base_class = "grid gap-20 md:gap-28 lg:gap-64 mt-10 xl:mt-28 delay-75 duration-1000 ease-out";
             move || {

@@ -22,15 +22,8 @@ pub fn Header() -> impl IntoView {
     });
 
     view! {
-        <header
-            id="header"
-            class="sticky top-0 mx-auto max-w-full selection:bg-nf-white selection:text-nf-dark relative backdrop-invert-0 z-10"
-            style="backdrop-filter: blur(5px)"
-        >
-            <nav
-                class="w-full py-2 md:py-3 bg-nf-dark border-b-nf-white/[0.35] border-b-2 px-3 md:px-5"
-                aria-label="Global"
-            >
+        <header id="header" class="sticky top-0 mx-auto max-w-full relative z-10">
+            <nav class="w-full py-2 md:py-3 bg-nf-dark px-3 md:px-5" aria-label="Global">
                 <ul class="gap-4 flex-row flex items-center justify-between">
                     <li class="text-nf-white text-md md:text-lg flex uppercase gap-1">
                         <span>Nicolas</span>
@@ -67,13 +60,10 @@ pub fn Header() -> impl IntoView {
                 </ul>
             </nav>
             <nav
-                class="w-full py-2 md:py-3 bg-nf-white border-b-nf-white/[0.35] border-b-2 px-3 md:px-5 relative overflow-hidden"
+                class="w-full py-2 md:py-3 px-3 md:px-5 relative overflow-hidden bg-gradient-to-b from-black from-50% via-transparent via-75% to-transparent"
                 aria-label="Global"
             >
-                <div
-                    class="absolute inset-0 bg-nf-white z-0"
-                    style="filter: url(#rough-paper);"
-                ></div>
+                <div class="absolute inset-0 z-0 tornpaper-effect"></div>
                 <ul class="gap-4 flex-row flex items-center justify-between relative z-1">
                     <li class="hidden sm:block font-bold text-nf-dark text-md md:text-lg flex uppercase">
                         Frey

@@ -8,6 +8,15 @@ module.exports = {
   content: ["*.html", "./src/**/*.rs"],
   theme: {
     extend: {
+      keyframes: {
+        popup: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+      },
+      animation: {
+        popup: 'popup 1000ms ease-out forwards',
+      },
       screens: {
         "2xl": "2400px",
       },

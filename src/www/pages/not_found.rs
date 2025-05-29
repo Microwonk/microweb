@@ -8,8 +8,11 @@ pub fn NotFound() -> impl IntoView {
     view! {
         <Title text="Nicolas Frey - Page Not Found" />
         <Header />
+
+        <BackGround />
+
         <main class="grid gap-28 lg:gap-64 mt-10 md:mt-28">
-            <h2 class="font-montserrat text-[520px] text-nf-orange/[.75] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-medium">
+            <h2 class="font-montserrat text-[520px] text-nf-color/[.75] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-medium">
                 404
             </h2>
             <Layout

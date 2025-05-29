@@ -35,14 +35,14 @@ pub fn Hero() -> impl IntoView {
     view! {
         <Layout id="home".to_string() aria_label="Hero" class_name="".to_string()>
             <h1 class="text-center w-full">
-                <div class="animated-title">
-                    <span class="text-6xl font-kamikaze sm:text-8xl lg:text-9xl xl:text-10xl text-nf-white animated-title-element uppercase leading-smallheading sm:leading-mediumheading xl:leading-heading tracking-smallheading  sm:tracking-heading">
+                <div class="animated-title -rotate-[0.142rad]">
+                    <span class="p-3 md:p-5 tornpaper-effect text-5xl font-kamikaze sm:text-8xl lg:text-9xl xl:text-10xl text-nf-dark animated-hero-element uppercase leading-smallheading sm:leading-mediumheading xl:leading-heading tracking-smallheading sm:tracking-heading">
                         "Making"
                     </span>
                 </div>
                 <br />
                 <div class="animated-title text-center">
-                    <span class="text-6xl font-kamikaze sm:text-8xl lg:text-9xl xl:text-10xl text-nf-color animated-title-element break-all uppercase leading-smallheading sm:leading-mediumheading  xl:leading-heading tracking-smallheading sm:tracking-heading">
+                    <span class="p-5 md:p-7 tornpaper-effect text-5xl font-kamikaze sm:text-8xl lg:text-9xl xl:text-10xl text-nf-color animated-hero-element break-all uppercase leading-smallheading sm:leading-mediumheading xl:leading-heading tracking-smallheading sm:tracking-heading">
                         "Software"
                     </span>
                     {move || {
@@ -54,14 +54,14 @@ pub fn Hero() -> impl IntoView {
                     }}
                 </div>
                 <br />
-
-                <div class="animated-title">
-                    <span class="text-6xl font-kamikaze sm:text-8xl lg:text-9xl xl:text-10xl text-nf-white animated-title-element uppercase leading-smallheading sm:leading-mediumheading xl:leading-heading tracking-smallheading sm:tracking-heading relative">
+                <div class="animated-title rotate-[0.1rad]">
+                    <span class="p-3 md:p-5 tornpaper-effect text-5xl font-kamikaze sm:text-8xl lg:text-9xl xl:text-10xl text-nf-dark animated-hero-element uppercase leading-smallheading sm:leading-mediumheading xl:leading-heading tracking-smallheading sm:tracking-heading relative">
                         "That Lasts"
                     </span>
                 </div>
                 <br />
             </h1>
+
             <div class="absolute hidden md:block left-5 -bottom-20">
                 <span class="scroll-icon hero">
                     <span class="scroll-icon__dot"></span>

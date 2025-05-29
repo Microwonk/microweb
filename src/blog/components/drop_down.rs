@@ -39,14 +39,12 @@ pub fn DropDown(
                     children=move |action: Action| {
                         view! {
                             <a
-                                href={action.link}
+                                href=action.link
                                 class="block rounded-lg px-4 py-2 text-end text-xl text-gray-500 hover:bg-gray-50 hover:text-gray-700"
-                                target={
-                                    if let Some(target) = action.target {
-                                        target
-                                    } else {
-                                        "_self".to_owned()
-                                    }
+                                target=if let Some(target) = action.target {
+                                    target
+                                } else {
+                                    "_self".to_owned()
                                 }
                                 role="menuitem"
                             >

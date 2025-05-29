@@ -13,7 +13,10 @@ pub fn BackGround() -> impl IntoView {
 
     view! {
         <div class="fixed backdrop-blur z-0 top-0 h-full w-full bg-nf-dark bg-dot-nf-color/[0.7] flex items-center justify-center">
-            <div class="fixed pointer-events-all inset-0 flex items-center justify-center bg-nf-dark" style=mask_style></div>
+            <div
+                class="fixed pointer-events-all inset-0 flex items-center justify-center bg-nf-dark"
+                style=mask_style
+            ></div>
         </div>
     }
 }

@@ -1,6 +1,8 @@
 use leptos::prelude::*;
 use leptos_meta::*;
-use leptos_use::{UseWindowSizeReturn, use_window_size};
+use leptos_use::{
+    UseWindowSizeOptions, UseWindowSizeReturn, core::Size, use_window_size_with_options,
+};
 
 use crate::www::components::qrcode::QrCode;
 
@@ -15,12 +17,17 @@ pub fn BusinessCard() -> impl IntoView {
         ("https://discordapp.com/users/444924590913749002", "Discord"),
     ]);
 
-    let UseWindowSizeReturn { width, height } = use_window_size();
+    let UseWindowSizeReturn { width, height } =
+        use_window_size_with_options(UseWindowSizeOptions::default().initial_size(Size {
+            width: 1920_f64,
+            height: 1080_f64,
+        }));
     let (aspect_divisor, _) = signal(5_f64);
     let aspect_divisor: Signal<f64> = aspect_divisor.into();
 
     view! {
         <Title text="Nicolas Frey - Business Card" />
+
         <main class="bg-nf-dark">
             <h1 class="text-center w-full text-4xl sm:text-8xl text-nf-white pt-6 sm:pt-12">
                 Nicolas Frey | Microwonk

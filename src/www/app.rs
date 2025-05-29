@@ -6,7 +6,7 @@ use leptos_router::{
     path,
 };
 
-use crate::www::pages::*;
+use crate::{apps::components::CookiePopup, www::pages::*};
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -36,28 +36,21 @@ pub fn App() -> impl IntoView {
         <Title text="Nicolas Frey" />
         <Meta attr:lang="en" />
 
-        <defs>
-            <svg width="0" height="0">
-                <filter id="rough-paper">
-                    <feTurbulence
-                        type="fractalNoise"
-                        baseFrequency="0.04"
-                        result="noise"
-                        numOctaves="5"
-                    />
+        <script src="https://cdn.jsdelivr.net/gh/happy358/TornPaper@v0.0.3/tornpaper.min.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                new Tornpaper();
+            });
+        </script>
 
-                    <feDiffuseLighting in="noise" lighting-color="#dad6ca" surfaceScale="2">
-                        <feDistantLight azimuth="90" elevation="60" />
-                    </feDiffuseLighting>
-                </filter>
-            </svg>
-        </defs>
+        <CookiePopup />
 
         <Router>
             <FlatRoutes fallback=NotFound>
                 <Route path=path!("/") view=HomePage />
                 <Route path=path!("/businesscard") view=BusinessCard />
                 <Route path=path!("/resume") view=DownloadCVPage />
+                <Route path=path!("/privacy-policy") view=PrivacyPolicy />
             </FlatRoutes>
         </Router>
     }
