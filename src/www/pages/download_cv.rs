@@ -25,8 +25,6 @@ pub fn DownloadCVPage() -> impl IntoView {
     view! {
         <Title text="Nicolas Frey - Resume" />
 
-        <BackGround />
-
         <Close el=close_icon />
 
         <main class={

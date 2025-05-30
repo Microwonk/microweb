@@ -28,7 +28,7 @@ pub fn BusinessCard() -> impl IntoView {
     view! {
         <Title text="Nicolas Frey - Business Card" />
 
-        <main class="bg-nf-dark">
+        <main class="isolate">
             <h1 class="text-center w-full text-4xl sm:text-8xl text-nf-white pt-6 sm:pt-12">
                 Nicolas Frey | Microwonk
             </h1>

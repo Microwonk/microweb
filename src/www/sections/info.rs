@@ -1,7 +1,9 @@
-use crate::{apps::Apps, www::utils::map_y_to_value};
+use crate::{
+    apps::{Apps, components::Footer},
+    www::utils::map_y_to_value,
+};
 
-use chrono::Datelike;
-use leptos::{html::Footer, prelude::*};
+use leptos::{html::Div, prelude::*};
 use leptos_use::{use_element_visibility, use_window_scroll};
 
 #[component]
@@ -66,49 +68,8 @@ pub fn InfoSocials() -> impl IntoView {
 }
 
 #[component]
-pub fn SocialsImages() -> impl IntoView {
-    let (socials, _set_socials) = signal(vec![
-        (
-            "instagram".to_string(),
-            "https://www.instagram.com/nic_ol_ass".to_string(),
-        ),
-        (
-            "bluesky".to_string(),
-            "https://bsky.app/profile/nicolas-frey.com".to_string(),
-        ),
-        (
-            "youtube".to_string(),
-            "https://www.youtube.com/@microwonk".to_string(),
-        ),
-        (
-            "github".to_string(),
-            "https://www.github.com/Microwonk".to_string(),
-        ),
-        (
-            "itch-io".to_string(),
-            "https://microwonk.itch.io".to_string(),
-        ),
-        (
-            "discord".to_string(),
-            "https://discordapp.com/users/444924590913749002".to_string(),
-        ),
-    ]);
-
-    view! {
-        <div class="flex flex-row mx-4">
-            <For each=socials key=|state| state.0.clone() let:child>
-                <a href=child.1 target="_blank" class="hover:animate-pulse">
-                    <img src=move || { format!("/assets/{}.svg", child.0) } class="w-[24px] mx-4" />
-                </a>
-            </For>
-
-        </div>
-    }
-}
-
-#[component]
 pub fn Info() -> impl IntoView {
-    let el = NodeRef::<Footer>::new();
+    let el = NodeRef::<Div>::new();
     let is_element_visible = use_element_visibility(el);
     let (_, y) = use_window_scroll();
 
@@ -120,33 +81,26 @@ pub fn Info() -> impl IntoView {
         }
     });
 
-    let copyright = format!(
-        "© Copyright {}, Nicolas Frey, All rights reserved",
-        chrono::Utc::now().year()
-    );
-
     view! {
-        <footer
+        <div
             node_ref=el
             aria_label="Info"
             id="footer".to_string()
-            class="selection:bg-nf-dark selection:text-nf-white bg-nf-white max-w-full pt-28 pb-4 md:py-28 lg:pt-64 lg:pb-32 relative w-full isolate lg:mx-auto lg:mx-0 lg:flex mx-auto max-w-auto 2xl:max-w-10xl px-4 md:px-6"
+            class="bg-nf-white w-full pt-28 pb-4 lg:pt-64 isolate selection:bg-nf-dark selection:text-nf-white px-4 md:px-6"
             style=move || {
                 format!(
-                    "border-top-left-radius: {}px;border-top-right-radius: {}px",
+                    "border-top-left-radius: {}px; border-top-right-radius: {}px;",
                     map_y_to_value(y.get(), y_visible_coord.get() + 240.0),
                     map_y_to_value(y.get(), y_visible_coord.get() + 240.0),
                 )
             }
         >
-
-            <div class="flex-col relative w-full isolate lg:mx-auto lg:mx-0 lg:flex mx-auto max-w-auto 2xl:max-w-10xl px-4 md:px-6">
+            <div class="w-full max-w-screen-2xl mx-auto">
                 <InfoSocials />
+                <div class="flex flex-row">
+                    <Footer />
+                </div>
             </div>
-            <div class="font-montserrat text-left justify-center mt-20 md:absolute md:left-5 md:bottom-5 text-sm sm:text-md text-nf-dark flex items-center">
-                <span>{copyright}</span>
-                <SocialsImages />
-            </div>
-        </footer>
+        </div>
     }
 }

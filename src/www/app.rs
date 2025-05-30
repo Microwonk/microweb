@@ -6,7 +6,10 @@ use leptos_router::{
     path,
 };
 
-use crate::{apps::components::CookiePopup, www::pages::*};
+use crate::{
+    apps::components::CookiePopup,
+    www::{components::BackGround, pages::*},
+};
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -44,6 +47,8 @@ pub fn App() -> impl IntoView {
         </script>
 
         <CookiePopup />
+
+        <BackGround />
 
         <Router>
             <FlatRoutes fallback=NotFound>

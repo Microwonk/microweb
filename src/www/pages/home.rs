@@ -8,7 +8,6 @@ use leptos_meta::*;
 #[component]
 pub fn HomePage() -> impl IntoView {
     view! {
-        <BackGround />
         <Title text="Nicolas Frey" />
         <Header />
 
