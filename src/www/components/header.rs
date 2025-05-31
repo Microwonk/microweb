@@ -26,8 +26,10 @@ pub fn Header() -> impl IntoView {
             <nav class="w-full py-2 md:py-3 bg-nf-dark px-3 md:px-5" aria-label="Global">
                 <ul class="gap-4 flex-row flex items-center justify-between">
                     <li class="text-nf-white text-md md:text-lg flex uppercase gap-1">
-                        <span>Nicolas</span>
-                        <span class="block sm:hidden">Frey</span>
+                        <a href="/">Nicolas</a>
+                        <a href="/" class="block sm:hidden">
+                            Frey
+                        </a>
                     </li>
                     <li class="hidden lg:flex text-nf-white text-xl md:text-2xl font-bold font-montserrat">
                         <span class="text-sm sm:text-md flex items-center gap-2">
@@ -66,7 +68,7 @@ pub fn Header() -> impl IntoView {
                 <div class="absolute inset-0 z-0 tornpaper-effect"></div>
                 <ul class="gap-4 flex-row flex items-center justify-between relative z-1">
                     <li class="hidden sm:block font-bold text-nf-dark text-md md:text-lg flex uppercase">
-                        Frey
+                        <a href="/">Frey</a>
                     </li>
 
                     <li class="font-montserrat flex gap-4 md:gap-8 items-center w-full md:justify-end justify-center">

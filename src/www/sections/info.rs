@@ -97,7 +97,7 @@ pub fn Info() -> impl IntoView {
         >
             <div class="w-full max-w-screen-2xl mx-auto">
                 <InfoSocials />
-                <div class="flex flex-row">
+                <div class="flex flex-row mt-4 md:mt-8 lg:mt-10">
                     <Footer />
                 </div>
             </div>

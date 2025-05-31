@@ -29,7 +29,7 @@ pub fn Header() -> impl IntoView {
 
                     <LogoutButton />
 
-                    <div class="group relative inline-block w-full sm:w-1/2 md:w-1/6 overflow-hidden break-all text-center">
+                    <div class="hidden md:block group relative inline-block w-full sm:w-1/2 md:w-1/6 overflow-hidden break-all text-center">
                         <div class="email email-cta">
                             <span class="email-cta-border"></span>
                             <span class="email-cta-ripple">
@@ -116,7 +116,7 @@ pub fn Header() -> impl IntoView {
                     <li class="font-montserrat flex gap-4 md:gap-8 items-center w-full md:justify-end justify-center">
                         <A href=Apps::Www.url()>
                             <span class="text-sm sm:text-lg text-nf-dark flex items-center gap-1 hover:animate-pulse hover:text-nf-color">
-                                about
+                                homepage
                             </span>
                         </A>
                         <A href="/feed">
