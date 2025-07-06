@@ -9,7 +9,7 @@ RUN apt-get update -y \
 # RUN cargo install cargo-leptos
 
 # temporary fix, as naming of wasm-opt has been changed
-cargo install --locked --force cargo-leptos --git https://github.com/saikatdas0790/cargo-leptos --branch saikatdas0790/fix-macos-aarch64-arm64-mismatch
+RUN cargo install --locked --force cargo-leptos --git https://github.com/saikatdas0790/cargo-leptos --branch saikatdas0790/fix-macos-aarch64-arm64-mismatch
 
 # Add the WASM target
 RUN rustup target add wasm32-unknown-unknown
