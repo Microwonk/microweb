@@ -1,4 +1,3 @@
-// pub mod bevy;
 pub mod business_card;
 pub mod download_cv;
 pub mod home;

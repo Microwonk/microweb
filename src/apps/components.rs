@@ -90,14 +90,6 @@ pub fn Footer() -> impl IntoView {
                 </li>
                 <li>
                     <a
-                        href=move || format!("{}/impress", Apps::Www.url())
-                        class="text-sm font-bold hover:underline mr-4 md:mr-6"
-                    >
-                        Impress
-                    </a>
-                </li>
-                <li>
-                    <a
                         href="mailto:contact@nicolas-frey.com"
                         class="text-sm font-bold hover:underline mr-4 md:mr-6"
                     >

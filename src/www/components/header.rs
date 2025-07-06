@@ -43,7 +43,7 @@ pub fn Header() -> impl IntoView {
                             >
                                 <circle cx="4" cy="4" r="4" fill="var(--nf-color)"></circle>
                             </svg>
-                            Making Mods and Games
+                            Beep Beep Boop
                         </span>
                     </li>
                     <li class="z-10 relative group text-nf-white text-xl md:text-2xl flex gap-2 items-center">
@@ -52,7 +52,7 @@ pub fn Header() -> impl IntoView {
                             class="w-6 h-6 animate-[spin_3s_linear_infinite]"
                         />
                         <span class="text-sm sm:text-md uppercase font-montserrat">
-                            Graz, {move || time.get()}
+                            Vienna, {move || time.get()}
                         </span>
 
                         <span class="font-montserrat absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block px-2 py-1 text-sm text-nf-white bg-nf-color rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300">

@@ -92,7 +92,7 @@ fn Content() -> impl IntoView {
         <section class="text-nf-white mx-4">
             <h2 class="text-2xl font-semibold mb-2">7. Data Controller</h2>
             <p class="mb-1">Nicolas Frey</p>
-            <p class="mb-1">Graz, Austria</p>
+            <p class="mb-1">Vienna, Austria</p>
             <p>
                 Contact: <a href="mailto:contact@nicolas-frey.com" class="hover:underline">
                     contact@nicolas-frey.com
