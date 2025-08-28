@@ -98,7 +98,7 @@ pub fn Header() -> impl IntoView {
                 <ul class="flex flex-col sm:flex-row gap-2 sm:gap-4 items-center justify-between">
                     <li class="text-nf-white text-md md:text-lg flex uppercase gap-1">
                         <a href="/">
-                            <span>"Microwonk's"</span>
+                            <span>"Nicolas'"</span>
                             <span class="block sm:hidden">Blog</span>
                         </a>
                     </li>

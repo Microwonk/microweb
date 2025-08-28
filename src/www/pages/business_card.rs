@@ -30,7 +30,7 @@ pub fn BusinessCard() -> impl IntoView {
 
         <main class="isolate">
             <h1 class="text-center w-full text-4xl sm:text-8xl text-nf-white pt-6 sm:pt-12">
-                Nicolas Frey | Microwonk
+                Nicolas Frey
             </h1>
             <ul class="grid grid-cols-1 space-between md:grid-cols-3 gap-6 w-full p-4 md:p-12">
                 <For

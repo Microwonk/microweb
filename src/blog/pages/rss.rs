@@ -16,8 +16,8 @@ use crate::models::*;
 #[tracing::instrument]
 pub async fn rss() -> Result<String, ServerFnError> {
     Ok(generate_rss(
-        "Microwonk's Blog",
-        "Ramblings of a (Game) Developer",
+        "Nicolas' Blog",
+        "Ramblings of a Rust Developer",
         "https://blog.nicolas-frey.com",
         &sqlx::query_as::<_, Post>(
             r#"SELECT 

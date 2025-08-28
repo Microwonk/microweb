@@ -18,12 +18,16 @@ pub fn About() -> impl IntoView {
 
                 </div>
                 <p class="font-montserrat lg:col-span-5 min-w-full text-xl lg:text-3xl leading-p lg:leading-largep text-nf-white">
-                    "I am dedicated to developing robust and enduring software solutions.
-                    With a strong foundation in multiple programming languages and paradigms—many of which I have self-taught—I bring extensive experience across backend, frontend, mobile, game, and graphics programming.
-                    I am a fast learner with a demonstrated ability to manage and lead projects of varying scale and complexity.
-                    My focus is on writing clean, maintainable, and efficient code in modern, safe, and high-performance languages such as Rust and C#, with an interest in exploring Go in the future."
+                    "Hello there! My name is Nicolas and I love anything that has to do with computers."
+                    <br /><br /> "Literally." <br /><br />
+                    "From developing graphics engines, operating systems, websites and games to tinkering with microcontrollers and building PCs - I love to do it all.
+                    With a strong foundation in multiple programming languages and paradigms and knowhow of operations systems, virtually nothing stands in my way to make my ideas into reality."
                     <br /> <br />
-                    As a dedicated Linux enthusiast and gamer, I have a deep passion for game development and the open source philosphy.
+                    "I also love modding and reverse engineering games (like minecraft and mario odyssey) and have a passion for speedrunning."
+                    <br /> <br />
+                    "As a fast learner with a demonstrated ability to manage and lead projects of varying scale and complexity I'm fit for any obstacle in my way. My focus is on writing clean, maintainable, and efficient code in modern, safe, and high-performance languages such as Rust."
+                    <br /> <br />
+                    "I am a strong believer in the open source philosophy and a Linux enthusiast."
                 </p>
             </div>
 

@@ -43,7 +43,7 @@ pub fn Header() -> impl IntoView {
                             >
                                 <circle cx="4" cy="4" r="4" fill="var(--nf-color)"></circle>
                             </svg>
-                            Beep Beep Boop
+                            "♫♪.ılılıll|̲̅̅●̲̅̅|̲̅̅=̲̅̅|̲̅̅●̲̅̅|llılılı.♫♪"
                         </span>
                     </li>
                     <li class="z-10 relative group text-nf-white text-xl md:text-2xl flex gap-2 items-center">

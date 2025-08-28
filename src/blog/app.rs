@@ -68,7 +68,7 @@ pub fn App() -> impl IntoView {
     view! {
         <Stylesheet id="leptos" href="/pkg/microweb.css" />
 
-        <Title text="Microwonk's Blog" />
+        <Title text="Nicolas' Blog" />
 
         <CookiePopup />
 
