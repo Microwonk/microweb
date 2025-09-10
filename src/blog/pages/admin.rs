@@ -1,16 +1,18 @@
-use crate::blog::{
-    app::{GlobalState, GlobalStateStoreFields},
-    components::{header::Header, side_menu::SideMenu},
-    pages::loading::LoadingPage,
-};
 use crate::models::*;
+use crate::{
+    apps::Apps,
+    blog::{
+        app::{GlobalState, GlobalStateStoreFields},
+        components::{header::Header, side_menu::SideMenu},
+        pages::loading::LoadingPage,
+    },
+};
 use chrono::Utc;
-use leptos::{html::Div, prelude::*};
-use leptos::{task::spawn_local, Params};
+use leptos::prelude::*;
+use leptos::{Params, task::spawn_local};
 use leptos_meta::*;
 use leptos_router::hooks::{use_navigate, use_query};
 use leptos_router::params::Params;
-use leptos_use::{use_drop_zone_with_options, UseDropZoneOptions, UseDropZoneReturn};
 use reactive_stores::Store;
 
 #[derive(Params, PartialEq)]
@@ -231,9 +233,9 @@ pub async fn create_post() -> Result<u64, ServerFnError> {
     .map(|r| r.rows_affected())
 }
 
-#[server(GetMediaAction, "/api/admin", "GetJson", endpoint = "media")]
+#[server(GetFilesAction, "/api/admin", "GetJson", endpoint = "files")]
 #[tracing::instrument]
-pub async fn get_media() -> Result<Vec<Media>, ServerFnError> {
+pub async fn get_files() -> Result<Vec<File>, ServerFnError> {
     use axum::extract::Extension;
     use leptos_axum::extract;
 
@@ -241,16 +243,19 @@ pub async fn get_media() -> Result<Vec<Media>, ServerFnError> {
         return Err(ServerFnError::new("Unauthorized."));
     };
 
-    sqlx::query_as::<_, Media>(
-        "SELECT id, post_id, name, media_type, created_at FROM media ORDER BY created_at DESC",
-    )
-    .fetch_all(crate::database::db())
-    .await
-    .map_err(|e| {
-        let err = format!("Error while getting users: {e:?}");
-        tracing::error!("{err}");
-        ServerFnError::new("Could not retrieve users, try again later")
-    })
+    let Some(dir) = sqlx::query_as::<_, Directory>("SELECT * FROM directories WHERE dir_path = $1")
+        .bind("/~/blogs".to_string())
+        .fetch_optional(crate::database::db())
+        .await
+        .unwrap_or(None)
+    else {
+        return Err(ServerFnError::ServerError("Not found.".into()));
+    };
+
+    crate::files::get_directory_contents(Some(dir.id))
+        .await
+        .map(|dir| dir.files)
+        .map_err(|_| ServerFnError::ServerError("Not found.".into()))
 }
 
 #[component]
@@ -264,7 +269,7 @@ pub fn AdminPage() -> impl IntoView {
     let (current_tab, set_current_tab) = signal(String::new());
     let (blog_posts, set_blog_posts) = signal(Vec::new());
     let (users, set_users) = signal(Vec::new());
-    let (media, set_media) = signal(Vec::new());
+    let (contained_files, set_files) = signal(Vec::new());
 
     let posts_res = Resource::new(
         move || updated.get(),
@@ -276,9 +281,9 @@ pub fn AdminPage() -> impl IntoView {
         |_| async move { get_users().await.unwrap_or(Vec::new()) },
     );
 
-    let media_res = Resource::new(
+    let files_res = Resource::new(
         move || updated.get(),
-        |_| async move { get_media().await.unwrap_or(Vec::new()) },
+        |_| async move { get_files().await.unwrap_or(Vec::new()) },
     );
 
     Effect::new(move |_| {
@@ -292,7 +297,7 @@ pub fn AdminPage() -> impl IntoView {
 
         set_blog_posts(posts_res.get().unwrap_or(Vec::new()));
         set_users(users_res.get().unwrap_or(Vec::new()));
-        set_media(media_res.get().unwrap_or(Vec::new()));
+        set_files(files_res.get().unwrap_or(Vec::new()));
     });
 
     view! {
@@ -310,9 +315,7 @@ pub fn AdminPage() -> impl IntoView {
                     <div class="p-6">
                         {move || match current_tab.get().as_str() {
                             "users" => view! { <UserSection users set_updated /> }.into_any(),
-                            "media" => {
-                                view! { <MediaSection media set_updated blog_posts /> }.into_any()
-                            }
+                            "files" => view! { <FilesSection contained_files /> }.into_any(),
                             "blogs" => view! { <BlogSection blog_posts set_updated /> }.into_any(),
                             _ => view! { <LoadingPage /> }.into_any(),
                         }}
@@ -487,176 +490,48 @@ pub fn UserEditRow(
 }
 
 #[component]
-pub fn MediaSection(
-    media: ReadSignal<Vec<Media>>,
-    set_updated: WriteSignal<u32>,
-    blog_posts: ReadSignal<Vec<Post>>,
-) -> impl IntoView {
-    let (post_id, set_post_id) = signal(0);
-
-    let _ = set_updated;
-
-    let drop_zone_el = NodeRef::<Div>::new();
-
-    let UseDropZoneReturn { files, .. } =
-        use_drop_zone_with_options(drop_zone_el, UseDropZoneOptions::default());
-
+pub fn FilesSection(contained_files: ReadSignal<Vec<File>>) -> impl IntoView {
     view! {
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y-2 divide-gray-200 text-sm">
                 <thead class="text-left">
                     <tr>
                         <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">ID</th>
-                        <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Post</th>
                         <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Name</th>
                         <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Path</th>
                         <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">
                             MIME Type
                         </th>
-                        <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">
-                            Created At
-                        </th>
-                        <th class="px-4 py-2"></th>
                     </tr>
                 </thead>
 
                 <tbody class="divide-y divide-gray-200">
                     <For
-                        each=move || media.get()
-                        key=|media| media.id
-                        children=move |media: Media| {
-                            let post = blog_posts
-                                .get()
-                                .iter()
-                                .find(|&p| p.id == media.post_id)
-                                .cloned();
-                            let path = format!(
-                                "https://microweb.shuttleapp.rs/upload/{}",
-                                media.id,
-                            );
+                        each=move || contained_files.get()
+                        key=|f| f.id.to_string()
+                        children=move |f: File| {
+                            let path = format!("{}/f{}", Apps::Files.url(), f.file_path);
                             view! {
                                 <tr class="odd:bg-gray-50">
                                     <td class="whitespace-nowrap px-4 py-2 text-gray-700">
-                                        {media.id}
-                                    </td>
-                                    <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">
-                                        {if let Some(p) = post {
-                                            p.title
-                                        } else {
-                                            format!("No Post? ID {}", media.post_id)
-                                        }}
+                                        {f.id.to_string()}
                                     </td>
                                     <td class="whitespace-nowrap px-4 py-2 text-gray-700">
-                                        {media.name}
+                                        {f.file_name}
                                     </td>
                                     <td class="whitespace-nowrap px-4 py-2 text-gray-700">
                                         <a href=path target="_blank">
-                                            {format!("/upload/{}", media.id)}
+                                            {path.clone()}
                                         </a>
                                     </td>
                                     <td class="whitespace-nowrap px-4 py-2 text-gray-700">
-                                        {media.media_type}
-                                    </td>
-                                    <td class="whitespace-nowrap px-4 py-2 text-gray-700">
-                                        {media.created_at.to_string()}
-                                    </td>
-                                    <td class="whitespace-nowrap px-4 py-2">
-                                        <button
-                                            class="border-none inline-block rounded bg-red-600 px-4 py-2 text-xs font-medium text-white hover:bg-red-700"
-                                            on:click=move |_| {}
-                                        >
-                                            Delete
-                                        </button>
+                                        {f.mime_type}
                                     </td>
                                 </tr>
                             }
                         }
                     />
-                    <tr class="odd:bg-gray-50">
-                        <td class="whitespace-nowrap px-4 py-2 text-gray-700">
-                            {move || {
-                                media
-                                    .get()
-                                    .iter()
-                                    .map(|m| m.id)
-                                    .max()
-                                    .map(|i| i + 1)
-                                    .unwrap_or_default()
-                            }}
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">
-                            <select
-                                on:change=move |ev| {
-                                    let new_value = event_target_value(&ev);
-                                    set_post_id(new_value.parse().unwrap());
-                                }
-                                prop:value=move || post_id.get().to_string()
-                            >
-                                <option value=0 hidden>
-                                    Please select a post
-                                </option>
-                                {move || {
-                                    blog_posts
-                                        .get()
-                                        .iter()
-                                        .cloned()
-                                        .map(|p| {
-                                            view! {
-                                                <option
-                                                    value=p.id
-                                                    on:click=move |ev| {
-                                                        let new_value = event_target_value(&ev);
-                                                        set_post_id(new_value.parse().unwrap());
-                                                    }
-                                                >
-                                                    {p.title}
-                                                </option>
-                                            }
-                                        })
-                                        .collect_view()
-                                }}
-                            </select>
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-2 text-gray-700">
-                            <div
-                                node_ref=drop_zone_el
-                                class="flex flex-col w-full min-h-[200px] h-auto bg-gray-400/10 justify-center items-center pt-6"
-                            >
-                                "Drop files here"
-                                <For each=files key=|f| f.name() let:file>
-                                    <div class="w-200px pa-6">
-                                        <p>Name: {file.name()}, Size: {file.size()}</p>
-                                    </div>
-                                </For>
-                            </div>
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-2 text-gray-700">
-                            {move || {
-                                format!(
-                                    "/upload/{}",
-                                    media
-                                        .get()
-                                        .iter()
-                                        .map(|m| m.id)
-                                        .max()
-                                        .map(|i| i + 1)
-                                        .unwrap_or_default(),
-                                )
-                            }}
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-2 text-gray-700">?</td>
-                        <td class="whitespace-nowrap px-4 py-2 text-gray-700">
-                            {move || { Utc::now().naive_local().to_string() }}
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-2 text-gray-700">
-                            <button
-                                class="border-none inline-block rounded bg-indigo-600 px-4 py-2 text-xs font-medium text-white hover:bg-indigo-700"
-                                on:click=move |_| {}
-                            >
-                                Add
-                            </button>
-                        </td>
-                    </tr>
+                    <tr class="odd:bg-gray-50"></tr>
                 </tbody>
             </table>
         </div>
@@ -804,375 +679,3 @@ pub fn BlogSection(
         </div>
     }
 }
-
-// TODO
-// use std::{io::BufWriter, num::NonZeroU32};
-
-// use crate::blog::{
-//     admin_check, logs_handler::Log, ok, ApiError, ApiResult, Media, MediaNoData, ServerState, User,
-// };
-// use axum::{
-//     body::Bytes,
-//     extract::{Multipart, Path, State},
-//     http::StatusCode,
-//     response::IntoResponse,
-//     Extension, Json,
-// };
-
-// use fast_image_resize as fr;
-// use image::{
-//     codecs::{jpeg::JpegEncoder, png::PngEncoder},
-//     ColorType, ImageEncoder, ImageReader,
-// };
-// use uuid::Uuid;
-
-// pub async fn upload(
-//     Extension(identity): Extension<User>,
-//     Path(post_id): Path<i32>,
-//     State(state): State<ServerState>,
-//     mut multipart: Multipart,
-// ) -> ApiResult<impl IntoResponse> {
-//     admin_check(&identity, &state).await?;
-
-//     let mut successes = vec![];
-//     let mut failures = vec![];
-
-//     while let Ok(Some(field)) = multipart.next_field().await {
-//         // Grab the name of the file
-//         let file_name = match field.file_name().map(|f| {
-//             let orig_name: Vec<&str> = f.split('.').collect();
-//             format!(
-//                 "{}_post{}_{}.{}",
-//                 orig_name[0],
-//                 post_id,
-//                 Uuid::new_v4(),
-//                 orig_name[1]
-//             )
-//         }) {
-//             Some(name) => name,
-//             None => {
-//                 failures.push("Failed to read file name.".to_string());
-//                 continue;
-//             }
-//         };
-
-//         let content_type = match field.content_type().map(String::from) {
-//             Some(content_type) => content_type,
-//             None => {
-//                 failures.push(format!(
-//                     "Failed to read content type for file: {}",
-//                     file_name
-//                 ));
-//                 continue;
-//             }
-//         };
-
-//         if field.name().unwrap() == "file_upload" {
-//             // Unwrap the incoming bytes
-//             let data = match field.bytes().await {
-//                 Ok(data) => data.to_vec(), // Convert Bytes to Vec<u8>
-//                 Err(_) => {
-//                     failures.push(format!("Could not read bytes for file: {}", file_name));
-//                     continue;
-//                 }
-//             };
-
-//             let compressed_data = match content_type.as_str() {
-//                 "image/jpeg" | "image/png" => {
-//                     match compress_image(&data, content_type.as_str(), 720, 720) {
-//                         Ok(compressed_img) => compressed_img,
-//                         Err(err) => {
-//                             failures.push(format!(
-//                                 "Image compression failed for file: {} with error: {}",
-//                                 file_name, err
-//                             ));
-//                             continue;
-//                         }
-//                     }
-//                 }
-//                 "image/gif" => {
-//                     // TODO: implement gif compression
-//                     data
-//                 }
-//                 "video/mp4" => {
-//                     // TODO: implement video compression
-//                     data
-//                 }
-//                 _ => {
-//                     failures.push(format!("Unsupported content type for file: {}", file_name));
-//                     continue;
-//                 }
-//             };
-
-//             // Try to insert media into the database
-//             match sqlx::query_as::<_, Media>(
-//                 r#"
-//                 INSERT INTO media (post_id, name, data, media_type)
-//                 VALUES ($1, $2, $3, $4)
-//                 RETURNING id, post_id, name, data, media_type, created_at
-//                 "#,
-//             )
-//             .bind(post_id)
-//             .bind(file_name.clone())
-//             .bind(compressed_data) // Store the compressed data
-//             .bind(content_type) // directly store MIME
-//             .fetch_one(&state.pool)
-//             .await
-//             {
-//                 Ok(media) => successes.push(media),
-//                 Err(e) => failures.push(format!("Database error {} for file: {}", e, file_name)),
-//             }
-//         }
-//     }
-
-//     Log::warn(
-//         format!(
-//             "Upload failed for one or multiple files. Errors: {:?}",
-//             failures
-//         ),
-//         &state,
-//     )
-//     .await?;
-
-//     // Prepare response with both successes and failures
-//     let response = serde_json::json!({
-//         "success": successes,
-//         "failure": failures
-//     });
-
-//     // Return the response
-//     ok!(response)
-// }
-
-// fn compress_image(
-//     data: &[u8],
-//     content_type: &str,
-//     max_width: u32,
-//     max_height: u32,
-// ) -> Result<Vec<u8>, String> {
-//     // Convert DynamicImage to an RGBA buffer
-//     let img = ImageReader::new(std::io::Cursor::new(data))
-//         .with_guessed_format()
-//         .map_err(|e| e.to_string())?
-//         .decode()
-//         .map_err(|e| e.to_string())?;
-//     let original_width = img.width();
-//     let original_height = img.height();
-
-//     // Calculate aspect ratio and the new dimensions while keeping the aspect ratio
-//     let aspect_ratio = original_width as f32 / original_height as f32;
-//     let (new_width, new_height) = if original_width > original_height {
-//         let adjusted_height = (max_width as f32 / aspect_ratio).round() as u32;
-//         (max_width, adjusted_height.min(max_height))
-//     } else {
-//         let adjusted_width = (max_height as f32 * aspect_ratio).round() as u32;
-//         (adjusted_width.min(max_width), max_height)
-//     };
-
-//     // Convert the image to RGBA (or RGB if it's for JPEG)
-//     let mut src_image = if content_type == "image/jpeg" {
-//         // Strip the alpha channel for JPEG by converting the image to RGB
-//         fr::Image::from_vec_u8(
-//             NonZeroU32::new(original_width).unwrap(),
-//             NonZeroU32::new(original_height).unwrap(),
-//             img.to_rgb8().into_raw(), // Convert to RGB8 for JPEG
-//             fr::PixelType::U8x3,      // RGB has 3 channels (U8x3)
-//         )
-//         .unwrap()
-//     } else {
-//         // Use RGBA8 for other formats like PNG
-//         fr::Image::from_vec_u8(
-//             NonZeroU32::new(original_width).unwrap(),
-//             NonZeroU32::new(original_height).unwrap(),
-//             img.to_rgba8().into_raw(), // RGBA for PNG
-//             fr::PixelType::U8x4,       // RGBA has 4 channels (U8x4)
-//         )
-//         .unwrap()
-//     };
-
-//     // Multiple RGB channels of source image by alpha channel
-//     // (not required for the Nearest algorithm)
-//     let alpha_mul_div = fr::MulDiv::default();
-//     if content_type != "image/jpeg" {
-//         // Only multiply by alpha if it's not JPEG (which doesn't have alpha)
-//         alpha_mul_div
-//             .multiply_alpha_inplace(&mut src_image.view_mut())
-//             .unwrap();
-//     }
-
-//     // Create container for data of destination image with new dimensions
-//     let new_width_non_zero = NonZeroU32::new(new_width).unwrap();
-//     let new_height_non_zero = NonZeroU32::new(new_height).unwrap();
-//     let mut dst_image = fr::Image::new(
-//         new_width_non_zero,
-//         new_height_non_zero,
-//         src_image.pixel_type(),
-//     );
-
-//     // Get mutable view of destination image data
-//     let mut dst_view = dst_image.view_mut();
-
-//     // Create Resizer instance and resize source image
-//     let mut resizer = fr::Resizer::new(fr::ResizeAlg::Convolution(fr::FilterType::Lanczos3));
-//     resizer
-//         .resize(&src_image.view(), &mut dst_view)
-//         .map_err(|e| e.to_string())?;
-
-//     // Divide RGB channels of destination image by alpha
-//     if content_type != "image/jpeg" {
-//         // Only divide by alpha if it's not JPEG
-//         alpha_mul_div
-//             .divide_alpha_inplace(&mut dst_view)
-//             .map_err(|e| e.to_string())?;
-//     }
-
-//     // Write destination image as PNG/JPEG-file
-//     let mut result_buf = BufWriter::new(Vec::new());
-
-//     match content_type {
-//         "image/jpeg" => JpegEncoder::new(&mut result_buf)
-//             .write_image(
-//                 dst_image.buffer(),
-//                 new_width_non_zero.get(),
-//                 new_height_non_zero.get(),
-//                 ColorType::Rgb8.into(), // Use RGB for JPEG
-//             )
-//             .map_err(|e| e.to_string())?,
-//         "image/png" => PngEncoder::new(&mut result_buf)
-//             .write_image(
-//                 dst_image.buffer(),
-//                 new_width_non_zero.get(),
-//                 new_height_non_zero.get(),
-//                 ColorType::Rgba8.into(), // Use RGBA for PNG
-//             )
-//             .map_err(|e| e.to_string())?,
-//         _ => return Err("Unsupported image format".to_string()),
-//     }
-
-//     let image_bytes = result_buf.into_inner().map_err(|e| e.to_string())?;
-
-//     Ok(image_bytes)
-// }
-
-// pub async fn get_upload(
-//     Path(id): Path<i32>,
-//     State(state): State<ServerState>,
-// ) -> ApiResult<impl IntoResponse> {
-//     let media: Media = match sqlx::query_as::<_, Media>("SELECT * FROM media WHERE id = $1 ")
-//         .bind(id)
-//         .fetch_one(&state.pool)
-//         .await
-//     {
-//         Ok(media) => media,
-//         Err(e) => {
-//             return Err(ApiError::werr("Asset not Found.", StatusCode::NOT_FOUND, e));
-//         }
-//     };
-
-//     Ok((
-//         StatusCode::OK,
-//         [
-//             (
-//                 "Content-Disposition",
-//                 format!("inline; filename=\"{}\"", media.name),
-//             ),
-//             // Cache Control for 7 days
-//             ("Cache-Control", "public, max-age=604800".to_owned()),
-//             // unique identifier for caching
-//             ("ETag", media.name),
-//             // last modified with datetime value of HTTP date format RFC 7231
-//             (
-//                 "Last-Modified",
-//                 media
-//                     .created_at
-//                     .format("%a, %d %b %Y %H:%M:%S GMT")
-//                     .to_string(),
-//             ),
-//             ("Content-Type", media.media_type),
-//         ],
-//         Bytes::from(media.data),
-//     ))
-// }
-
-// pub async fn delete_media(
-//     Extension(identity): Extension<User>,
-//     Path(id): Path<i32>,
-//     State(state): State<ServerState>,
-// ) -> ApiResult<impl IntoResponse> {
-//     admin_check(&identity, &state).await?;
-//     match sqlx::query("DELETE FROM media WHERE id = $1")
-//         .bind(id)
-//         .execute(&state.pool)
-//         .await
-//     {
-//         Ok(_) => ok!(),
-//         Err(e) => Err(ApiError::werr(
-//             "Could not delete Media.",
-//             StatusCode::BAD_REQUEST,
-//             e,
-//         )),
-//     }
-// }
-
-// pub async fn get_all_media(
-//     Extension(identity): Extension<User>,
-//     State(state): State<ServerState>,
-// ) -> ApiResult<impl IntoResponse> {
-//     admin_check(&identity, &state).await?;
-
-//     match sqlx::query_as::<_, MediaNoData>(
-//         "SELECT id, post_id, name, media_type, created_at FROM media ORDER BY created_at DESC",
-//     )
-//     .fetch_all(&state.pool)
-//     .await
-//     {
-//         Ok(response) => ok!(response),
-//         Err(e) => Err(ApiError::werr(
-//             "Error retrieving all media.",
-//             StatusCode::BAD_REQUEST,
-//             e,
-//         )),
-//     }
-// }
-
-// pub async fn get_all_media_by_post(
-//     Extension(identity): Extension<User>,
-//     Path(post_id): Path<i32>,
-//     State(state): State<ServerState>,
-// ) -> ApiResult<impl IntoResponse> {
-//     admin_check(&identity, &state).await?;
-//     match sqlx::query_as::<_, MediaNoData>(
-//         "SELECT id, post_id, name, media_type, created_at FROM media WHERE post_id = $1",
-//     )
-//     .bind(post_id)
-//     .fetch_all(&state.pool)
-//     .await
-//     {
-//         Ok(response) => ok!(response),
-//         Err(e) => Err(ApiError::werr(
-//             "Error retrieving all media.",
-//             StatusCode::BAD_REQUEST,
-//             e,
-//         )),
-//     }
-// }
-
-// pub async fn get_media(
-//     Path(media_id): Path<i32>,
-//     State(state): State<ServerState>,
-// ) -> ApiResult<impl IntoResponse> {
-//     match sqlx::query_as::<_, MediaNoData>(
-//         "SELECT id, post_id, name, media_type, created_at FROM media WHERE id = $1",
-//     )
-//     .bind(media_id)
-//     .fetch_one(&state.pool)
-//     .await
-//     {
-//         Ok(response) => ok!(response),
-//         Err(e) => Err(ApiError::werr(
-//             "Error retrieving all media.",
-//             StatusCode::BAD_REQUEST,
-//             e,
-//         )),
-//     }
-// }

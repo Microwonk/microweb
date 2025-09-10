@@ -117,23 +117,6 @@ impl User {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
-pub struct Media {
-    pub id: i32,
-    pub post_id: i32,
-    pub name: String,
-    pub media_type: String,
-    pub created_at: chrono::NaiveDateTime,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
-pub struct UploadReturn {
-    success: Vec<Media>,
-    failure: Vec<String>,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct NewPost {
     pub title: String,
     pub description: String,
