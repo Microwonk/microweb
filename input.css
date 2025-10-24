@@ -65,6 +65,20 @@
   @apply bg-nf-color;
 }
 
+span.obfuscate {
+    unicode-bidi: bidi-override;
+    direction: rtl;
+    cursor: pointer;
+}
+
+span.obfuscate > i {
+    display: none;
+}
+
+span.obfuscate > span::after {
+    content: '@';
+}
+
 .tornpaper-effect {
   @apply bg-nf-white;
   filter: url(#filter_tornpaper);

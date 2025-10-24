@@ -4,8 +4,8 @@ use leptos::prelude::*;
 pub fn Layout(
     children: Children,
     aria_label: &'static str,
-    class_name: String,
-    id: String,
+    #[prop(into)] class_name: String,
+    #[prop(into)] id: String,
 ) -> impl IntoView {
     view! {
         <section

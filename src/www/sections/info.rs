@@ -85,7 +85,7 @@ pub fn Info() -> impl IntoView {
         <div
             node_ref=el
             aria_label="Info"
-            id="footer".to_string()
+            id="footer"
             class="bg-nf-white w-full pt-28 pb-4 lg:pt-64 isolate selection:bg-nf-dark selection:text-nf-white px-4 md:px-6"
             style=move || {
                 format!(

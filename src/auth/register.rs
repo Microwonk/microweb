@@ -56,9 +56,9 @@ pub async fn register(register: RegisterRequest, return_url: String) -> Result<(
 
 #[component]
 pub fn RegisterPage() -> impl IntoView {
-    let (email, set_email) = signal("".to_string());
-    let (password, set_password) = signal("".to_string());
-    let (username, set_username) = signal("".to_string());
+    let (email, set_email) = signal(String::new());
+    let (password, set_password) = signal(String::new());
+    let (username, set_username) = signal(String::new());
     let (email_error, set_email_error) = signal(None::<String>);
     let (password_error, set_password_error) = signal(None::<String>);
     let (username_error, set_username_error) = signal(None::<String>);

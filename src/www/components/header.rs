@@ -9,7 +9,7 @@ pub fn Header() -> impl IntoView {
     let vienna_time = Utc::now().with_timezone(&Vienna);
 
     let (time, _) = signal(vienna_time.format("%H:%M").to_string());
-    let (diff, set_diff) = signal("".to_string());
+    let (diff, set_diff) = signal(String::new());
 
     Effect::new(move |_| {
         let offset_seconds = vienna_time.offset().fix().local_minus_utc()
@@ -43,7 +43,7 @@ pub fn Header() -> impl IntoView {
                             >
                                 <circle cx="4" cy="4" r="4" fill="var(--nf-color)"></circle>
                             </svg>
-                            "♫♪.ılılıll|̲̅̅●̲̅̅|̲̅̅=̲̅̅|̲̅̅●̲̅̅|llılılı.♫♪"
+                            "Flipping bits for fun"
                         </span>
                     </li>
                     <li class="z-10 relative group text-nf-white text-xl md:text-2xl flex gap-2 items-center">

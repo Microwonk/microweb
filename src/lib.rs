@@ -23,6 +23,8 @@ pub static PROTOCOL: &str = "http";
 #[cfg(not(debug_assertions))]
 pub static PROTOCOL: &str = "https";
 
+pub static EMAIL: &str = "nicolas.theo.frey@gmail.com";
+
 #[cfg(feature = "hydrate")]
 #[wasm_bindgen::prelude::wasm_bindgen]
 pub fn hydrate() {

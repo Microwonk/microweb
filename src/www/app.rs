@@ -1,4 +1,3 @@
-use business_card::BusinessCard;
 use leptos::prelude::*;
 use leptos_meta::*;
 use leptos_router::{
@@ -53,7 +52,6 @@ pub fn App() -> impl IntoView {
         <Router>
             <FlatRoutes fallback=NotFound>
                 <Route path=path!("/") view=HomePage />
-                <Route path=path!("/businesscard") view=BusinessCard />
                 <Route path=path!("/resume") view=DownloadCVPage />
                 <Route path=path!("/privacy-policy") view=PrivacyPolicy />
             </FlatRoutes>

@@ -14,9 +14,9 @@ pub fn NotFound() -> impl IntoView {
                 404
             </h2>
             <Layout
-                id="notfound".to_string()
+                id="notfound"
                 aria_label="Not Found"
-                class_name="flex-col".to_string()
+                class_name="flex-col"
             >
                 <h1 class="text-5xl xs:text-6xl sm:text-7xl lg:text-8xl xl:text-10xl text-nf-white font-bold uppercase">
                     Page <br /> <span class="font-[400]">not</span>found

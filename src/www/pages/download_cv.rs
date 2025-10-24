@@ -38,9 +38,9 @@ pub fn DownloadCVPage() -> impl IntoView {
             }
         }>
             <Layout
-                id="resume".to_string()
+                id="resume"
                 aria_label="resume"
-                class_name="flex-col mb-10 xl:mb-28".to_string()
+                class_name="flex-col mb-10 xl:mb-28"
             >
                 <div class="flex flex-col lg:flex-row gap-16 md:gap-28">
                     <div class="relative order-2 lg:order-1 basis-[60%] fade-y-trans">

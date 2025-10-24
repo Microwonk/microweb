@@ -1,7 +1,11 @@
 use leptos::prelude::*;
 
 #[component]
-pub fn Button(label: String, class_name: String, href: String) -> impl IntoView {
+pub fn Button(
+    #[prop(into)] label: String,
+    #[prop(into)] class_name: String,
+    #[prop(into)] href: RwSignal<String>,
+) -> impl IntoView {
     let after_label = label.clone();
 
     view! {

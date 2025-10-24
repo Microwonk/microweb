@@ -1,11 +1,12 @@
-use crate::www::components::*;
+use crate::{apps::components::obfuscate_email, www::components::*};
 
 use leptos::prelude::*;
 
 #[component]
 pub fn Contact() -> impl IntoView {
+    let email = obfuscate_email();
     view! {
-        <Layout id="contact".to_string() aria_label="Contact" class_name="flex-col".to_string()>
+        <Layout id="contact" aria_label="Contact" class_name="flex-col">
             // Flex container to align the heading and button next to each other
             <div class="flex flex-col lg:flex-row items-start lg:items-center">
                 <h2 class="text-5xl xs:text-6xl sm:text-7xl lg:text-8xl text-nf-white leading-smallheading sm:leading-mediumheading tracking-smallheading sm:tracking-heading m-10">
@@ -23,9 +24,9 @@ pub fn Contact() -> impl IntoView {
                 </h2>
 
                 <Button
-                    href="mailto:contact@nicolas-frey.com".to_string()
-                    class_name="mx-0 lg:mx-16 mt-4 lg:mt-0".to_string()
-                    label="I can't wait!".to_string()
+                    href=email
+                    class_name="mx-0 lg:mx-16 mt-4 lg:mt-0"
+                    label="I can't wait!"
                 />
             </div>
 

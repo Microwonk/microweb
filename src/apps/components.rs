@@ -3,7 +3,45 @@ use codee::string::FromToStringCodec;
 use leptos::prelude::*;
 use leptos_use::{UseCookieOptions, use_cookie_with_options};
 
-use crate::apps::Apps;
+use crate::{EMAIL, apps::Apps};
+
+// credit to crate leptos_obfuscate:
+pub fn obfuscate_email() -> RwSignal<String> {
+    let mailto = RwSignal::new("mailto:honeypot@example.com".to_string());
+
+    Effect::new(move |_| {
+        let mail = format!("mailto:{EMAIL}");
+        set_timeout(move || mailto.set(mail), core::time::Duration::from_secs(3));
+    });
+
+    mailto
+}
+
+#[component(transparent)]
+pub fn ObfuscateEmailSpan() -> impl IntoView {
+    let one = move || {
+        EMAIL
+            .split_once('@')
+            .map(|(one, _)| one.chars().rev().collect::<String>())
+            .unwrap_or_default()
+    };
+
+    let two = move || {
+        EMAIL
+            .split_once('@')
+            .map(|(_, two)| two.chars().rev().collect::<String>())
+            .unwrap_or_default()
+    };
+
+    view! {
+        <span aria-label="E-Mail" class="obfuscate">
+            {two}
+            <i>"%/#"</i>
+            <span></span>
+            {one}
+        </span>
+    }
+}
 
 #[component]
 pub fn CookiePopup() -> impl IntoView {
@@ -45,35 +83,19 @@ pub fn CookiePopup() -> impl IntoView {
 #[component(transparent)]
 pub fn Footer() -> impl IntoView {
     let copyright = format!(
-        "©️ Copyright 2024 - {} Nicolas Frey, All rights reserved",
+        "©️ Copyright 2024 - {} Nicolas Frey",
         chrono::Utc::now().year()
     );
 
+    let email = obfuscate_email();
+
     let (socials, _set_socials) = signal(vec![
-        (
-            "instagram".to_string(),
-            "https://www.instagram.com/nic_ol_ass".to_string(),
-        ),
-        (
-            "bluesky".to_string(),
-            "https://bsky.app/profile/nicolas-frey.com".to_string(),
-        ),
-        (
-            "youtube".to_string(),
-            "https://www.youtube.com/@microwonk".to_string(),
-        ),
-        (
-            "github".to_string(),
-            "https://www.github.com/Microwonk".to_string(),
-        ),
-        (
-            "itch-io".to_string(),
-            "https://microwonk.itch.io".to_string(),
-        ),
-        (
-            "discord".to_string(),
-            "https://discordapp.com/users/444924590913749002".to_string(),
-        ),
+        ("instagram", "https://www.instagram.com/nic_ol_ass"),
+        ("bluesky", "https://bsky.app/profile/nicolas-frey.com"),
+        ("youtube", "https://www.youtube.com/@microwonk"),
+        ("github", "https://www.github.com/Microwonk"),
+        ("itch-io", "https://microwonk.itch.io"),
+        ("discord", "https://discordapp.com/users/444924590913749002"),
     ]);
 
     view! {
@@ -89,24 +111,13 @@ pub fn Footer() -> impl IntoView {
                     </a>
                 </li>
                 <li>
-                    <a
-                        href="mailto:contact@nicolas-frey.com"
-                        class="text-sm font-bold hover:underline mr-4 md:mr-6"
-                    >
+                    <a href=email class="text-sm font-bold hover:underline mr-4 md:mr-6">
                         Contact
-                    </a>
-                </li>
-                <li>
-                    <a
-                        href=move || format!("{}/businesscard", Apps::Www.url())
-                        class="text-sm font-bold hover:underline"
-                    >
-                        "🪪"
                     </a>
                 </li>
             </ul>
             <div class="flex sm:justify-center space-x-6">
-                <For each=socials key=|state| state.0.clone() let:child>
+                <For each=socials key=|state| state.0 let:child>
                     <a href=child.1 target="_blank" class="hover:animate-pulse">
                         <img
                             src=move || { format!("/assets/{}.svg", child.0) }

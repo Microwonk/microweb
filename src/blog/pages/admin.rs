@@ -244,7 +244,7 @@ pub async fn get_files() -> Result<Vec<File>, ServerFnError> {
     };
 
     let Some(dir) = sqlx::query_as::<_, Directory>("SELECT * FROM directories WHERE dir_path = $1")
-        .bind("/~/blogs".to_string())
+        .bind("/~/blogs")
         .fetch_optional(crate::database::db())
         .await
         .unwrap_or(None)
@@ -329,8 +329,8 @@ pub fn AdminPage() -> impl IntoView {
 #[component]
 pub fn UserSection(users: ReadSignal<Vec<User>>, set_updated: WriteSignal<u32>) -> impl IntoView {
     let edit_row = RwSignal::new(None::<i32>);
-    let username = RwSignal::new("".to_string());
-    let email = RwSignal::new("".to_string());
+    let username = RwSignal::new(String::new());
+    let email = RwSignal::new(String::new());
     view! {
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y-2 divide-gray-200 text-sm">
@@ -601,7 +601,7 @@ pub fn BlogSection(
                                         {post
                                             .release_date
                                             .map(|r| r.to_string())
-                                            .unwrap_or("".to_string())}
+                                            .unwrap_or_default()}
                                     </td>
                                     <td class="whitespace-nowrap px-4 py-2 text-gray-700">
                                         <a

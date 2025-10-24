@@ -1,7 +1,10 @@
 use leptos::prelude::*;
 use leptos_meta::*;
 
-use crate::{apps::components::Footer, www::components::*};
+use crate::{
+    apps::components::{Footer, ObfuscateEmailSpan, obfuscate_email},
+    www::components::*,
+};
 
 #[component]
 pub fn PrivacyPolicy() -> impl IntoView {
@@ -20,6 +23,7 @@ pub fn PrivacyPolicy() -> impl IntoView {
 
 #[component(transparent)]
 fn Content() -> impl IntoView {
+    let email = obfuscate_email();
     view! {
         <section class="text-nf-white mx-4">
             <p class="mb-1 text-3xl font-bold">
@@ -63,8 +67,8 @@ fn Content() -> impl IntoView {
             <h2 class="text-2xl font-semibold">4. Data Deletion</h2>
             <p>
                 You may request deletion of your account and associated data at any time by contacting me at
-                <a href="mailto:contact@nicolas-frey.com" class="hover:underline">
-                    contact@nicolas-frey.com
+                <a href=email class="hover:underline">
+                    <ObfuscateEmailSpan />
                 </a>.
             </p>
         </section>
@@ -94,8 +98,8 @@ fn Content() -> impl IntoView {
             <p class="mb-1">Nicolas Frey</p>
             <p class="mb-1">Vienna, Austria</p>
             <p>
-                Contact: <a href="mailto:contact@nicolas-frey.com" class="hover:underline">
-                    contact@nicolas-frey.com
+                Contact: <a href=email class="hover:underline">
+                    <ObfuscateEmailSpan />
                 </a>
             </p>
         </section>

@@ -82,7 +82,7 @@ pub async fn upload(
             get_full_path(directory.directory_id)
                 .await
                 .iter()
-                .fold("".to_string(), |acc, dir| format!("{acc}/{}", dir.dir_name)),
+                .fold(String::new(), |acc, dir| format!("{acc}/{}", dir.dir_name)),
             file_name,
         );
 

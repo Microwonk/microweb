@@ -5,7 +5,7 @@ pub fn Experience() -> impl IntoView {
     let jobs = [
         (
             "https://www.proxmox.com",
-            "Rust Server Developer",
+            "Rust Software Developer",
             "ProxMox Software Solutions",
             "2025 - present",
         ),

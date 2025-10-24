@@ -1,7 +1,6 @@
 pub mod background;
 pub mod experience;
 pub mod header;
-pub mod qrcode;
 pub mod skills;
 pub mod ui;
 

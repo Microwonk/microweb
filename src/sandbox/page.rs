@@ -53,7 +53,7 @@ pub async fn create(
         get_full_path(Some(sbx_dir.id))
             .await
             .iter()
-            .fold("".to_string(), |acc, dir| format!("{acc}/{}", dir.dir_name)),
+            .fold(String::new(), |acc, dir| format!("{acc}/{}", dir.dir_name)),
         &q.slug,
     );
 

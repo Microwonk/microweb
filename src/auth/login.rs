@@ -28,7 +28,7 @@ pub async fn login(login: LoginRequest, return_url: String) -> Result<(), Server
     let u = user.unwrap_or_default();
 
     if !matches {
-        return Err(ServerFnError::new("Wrong email/password.".to_string()));
+        return Err(ServerFnError::new("Wrong email/password."));
     }
 
     let token =
@@ -48,8 +48,8 @@ pub async fn login(login: LoginRequest, return_url: String) -> Result<(), Server
 
 #[component]
 pub fn LoginPage() -> impl IntoView {
-    let (email, set_email) = signal("".to_string());
-    let (password, set_password) = signal("".to_string());
+    let (email, set_email) = signal(String::new());
+    let (password, set_password) = signal(String::new());
     let (email_error, set_email_error) = signal(None::<String>);
     let (password_error, set_password_error) = signal(None::<String>);
 
