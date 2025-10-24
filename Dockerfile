@@ -5,6 +5,9 @@ FROM rustlang/rust:nightly-bookworm as builder
 RUN apt-get update -y \
   && apt-get install -y --no-install-recommends clang
 
+RUN rustup toolchain install nightly-2025-06-18
+RUN rustup default nightly-2025-06-18
+
 # Install cargo-binstall
 RUN cargo install cargo-binstall
 
@@ -20,8 +23,7 @@ WORKDIR /app
 COPY . .
 
 # Build the app
-ENV DOMAIN=nicolas-frey.com
-RUN cargo leptos build --release -vv
+RUN DOMAIN=nicolas-frey.com cargo leptos build --release
 
 FROM debian:bookworm-slim as runtime
 WORKDIR /app
