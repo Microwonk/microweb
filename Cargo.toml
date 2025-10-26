@@ -7,7 +7,7 @@ edition = "2024"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-iter_tools = "0.39.0"
+iter_tools = "0.40.0"
 leptos = { version = "0.8.11", features = ["nightly"] }
 leptos_router = { version = "0.8.9", features = ["nightly"] }
 leptos-use = { version = "0.16.3", features = ["use_cookie", "use_interval"]}

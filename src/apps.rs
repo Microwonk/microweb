@@ -78,7 +78,7 @@ impl Apps {
     }
 
     pub fn is_leptos(&self) -> bool {
-        *self != Apps::Files
+        !matches!(self, Apps::Files | Apps::SandBox)
     }
 
     pub fn url(&self) -> String {
@@ -96,15 +96,17 @@ impl Apps {
 
     #[cfg(feature = "hydrate")]
     pub fn hydrate() {
-        let hostname = leptos::prelude::window()
-            .location()
-            .hostname()
-            .unwrap_or_default();
-        for app in Apps::iter().filter(|a| a.is_leptos()) {
-            if app.starts_with(&hostname) {
-                leptos::mount::hydrate_body(app.app());
-            }
-        }
+        Apps::iter()
+            .filter(|a| {
+                a.is_leptos()
+                    && a.starts_with(
+                        leptos::prelude::window()
+                            .location()
+                            .hostname()
+                            .unwrap_or(Apps::Www.prefix().into()),
+                    )
+            })
+            .for_each(|app| leptos::mount::hydrate_body(app.app()));
     }
 
     #[cfg(feature = "ssr")]
@@ -145,16 +147,13 @@ impl Apps {
         use axum::{http::StatusCode, response::IntoResponse};
         use tower::ServiceExt;
 
-        let host = req
-            .headers()
-            .get("host")
-            .and_then(|h| h.to_str().ok())
-            .unwrap_or_default();
-
-        let apps = Apps::routers().await;
-
-        for (app, router) in apps {
-            if app.starts_with(host) {
+        for (app, router) in Apps::routers().await {
+            if app.starts_with(
+                req.headers()
+                    .get("host")
+                    .and_then(|h| h.to_str().ok())
+                    .unwrap_or_default(),
+            ) {
                 return router.oneshot(req).await;
             }
         }

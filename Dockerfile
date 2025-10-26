@@ -5,9 +5,6 @@ FROM rustlang/rust:nightly-bookworm as builder
 RUN apt-get update -y \
   && apt-get install -y --no-install-recommends clang
 
-RUN rustup toolchain install nightly-2025-06-18
-RUN rustup default nightly-2025-06-18
-
 # Install cargo-binstall
 RUN cargo install cargo-binstall
 

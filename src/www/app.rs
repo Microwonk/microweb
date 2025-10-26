@@ -36,14 +36,6 @@ pub fn App() -> impl IntoView {
         <Stylesheet id="leptos" href="/pkg/microweb.css" />
 
         <Title text="Nicolas Frey" />
-        <Meta attr:lang="en" />
-
-        <script src="https://cdn.jsdelivr.net/gh/happy358/TornPaper@v0.0.3/tornpaper.min.js"></script>
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                new Tornpaper();
-            });
-        </script>
 
         <CookiePopup />
 
@@ -56,5 +48,12 @@ pub fn App() -> impl IntoView {
                 <Route path=path!("/privacy-policy") view=PrivacyPolicy />
             </FlatRoutes>
         </Router>
+
+        <script src="https://cdn.jsdelivr.net/gh/happy358/TornPaper@v0.0.3/tornpaper.min.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                new Tornpaper();
+            });
+        </script>
     }
 }

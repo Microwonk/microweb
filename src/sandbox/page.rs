@@ -132,7 +132,7 @@ pub async fn upload_zip(
         }
 
         let path = PathBuf::from(entry.name());
-        let is_root_index = path == PathBuf::from("index.html");
+        let is_root_index = path.to_str().is_some_and(|p| p == "index.html");
         if is_root_index {
             found_index_html = true;
         }

@@ -30,7 +30,7 @@ async fn main() {
                 .allow_origin(
                     Apps::iter()
                         .filter_map(|app| HeaderValue::from_str(&app.url()).ok())
-                        .collect::<Vec<HeaderValue>>(),
+                        .collect::<Vec<_>>(),
                 )
                 .allow_headers([CONTENT_TYPE, AUTHORIZATION, ACCEPT, COOKIE]),
         )
