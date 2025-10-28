@@ -1,0 +1,38 @@
+[package]
+name = "www"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# leptos
+leptos.workspace = true
+leptos_axum = { workspace = true, optional = true }
+leptos_router.workspace = true
+leptos_meta.workspace = true
+leptos-use.workspace = true
+
+axum = { workspace = true, optional = true }
+regex.workspace = true
+icondata.workspace = true
+chrono.workspace = true
+chrono-tz.workspace = true
+tracing = { workspace = true }
+rand.workspace = true
+
+# own
+common = { workspace = true }
+
+[features]
+default = ["back", "front"]
+back = [
+    "dep:axum",
+    "dep:leptos_axum",
+    "leptos/ssr",
+    "leptos_router/ssr",
+    "leptos-use/ssr",
+    "leptos-use/axum",
+]
+
+front = [
+    "leptos/hydrate",
+]

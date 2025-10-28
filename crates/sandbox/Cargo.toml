@@ -1,0 +1,18 @@
+[package]
+name = "sandbox"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axum.workspace = true
+chrono.workspace = true
+serde.workspace = true
+uuid.workspace = true
+zip.workspace = true
+tracing.workspace = true
+mime_guess.workspace = true
+tokio.workspace = true
+
+# own
+common = { workspace = true, features = ["back"]}
+files.workspace = true

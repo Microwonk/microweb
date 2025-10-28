@@ -6,84 +6,118 @@ edition = "2024"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
-[dependencies]
-iter_tools = "0.40.0"
-leptos = { version = "0.8.11", features = ["nightly"] }
+[workspace]
+members = ["crates/auth", "crates/blog","crates/common", "crates/files", "crates/sandbox", "crates/www"]
+
+[workspace.dependencies]
+# leptos
+leptos = { version = "0.8.12", features = ["nightly"] }
 leptos_router = { version = "0.8.9", features = ["nightly"] }
 leptos-use = { version = "0.16.3", features = ["use_cookie", "use_interval"]}
-console_error_panic_hook = { version = "0.1", optional = true}
 leptos_meta = { version = "0.8.5" }
-wasm-bindgen = { version = "0.2.104", optional = true }
+leptos_axum = { version = "0.8.6" }
+reactive_stores = "0.3.0"
+# axum
+axum = { version = "0.8.6" }
+axum-extra = { version = "0.10.3", features = ["typed-header"] }
+tower-http = { version = "0.6.6", features = ["fs", "trace", "cors"] }
+# database
+sqlx = { version = "0.8.6", features = ["chrono", "runtime-tokio", "postgres", "tls-native-tls", "uuid"] }
+# serde
 serde = "1.0.228"
 serde_json = "1.0.145"
+# chrono
 chrono = { version = "0.4.42", features = ["serde"] }
-ammonia = { version = "4.1.2" }
-regex = { version = "1.12.2" }
-web-sys = { version = "0.3.81", features = ["Document", "Window"] }
+chrono-tz = "0.10.4"
+# rest
 codee = { version = "0.3.3", features = ["json_serde"] }
+strum = { version = "0.27.2", features = ["derive"] }
+tracing = "0.1.41"
+thiserror = { version = "2.0.17" }
+uuid = { version = "1.17.0", features = ["v4", "serde"] }
+tokio = { version = "1.48.0", features = ["rt-multi-thread"] }
+zip = { version = "6.0.0" }
+jsonwebtoken = { version = "9.3.1" }
+mime_guess = { version = "2.0.5" }
+bcrypt = { version = "0.17.1" }
+regex = { version = "1.12.2" }
 icondata = { version = "0.6.0", features = ["serde"]}
+rand = "0.9.2"
+flate2 = { version = "1.1.5" }
 pulldown-cmark = { version = "0.13.0" }
 syntect = { version = "5.3.0", default-features = false, features = ["default-fancy"] }
-flate2 = { version = "1.1.5" }
 rss = { version = "2.0.12" }
-log = { version = "0.4.28", optional = true }
-leptos_axum = { version = "0.8.6", optional = true }
-axum = { version = "0.8.6", optional = true }
-axum-extra = { version = "0.10.3", features = ["typed-header"], optional = true }
-uuid = { version = "1.17.0", features = ["v4", "serde"], optional = true }
-tower-http = { version = "0.6.6", features = ["fs", "trace", "cors"], optional = true }
-sqlx = { version = "0.8.6", features = ["chrono", "runtime-tokio", "postgres", "tls-native-tls", "uuid"], optional = true }
-dotenvy = { version = "0.15.7", optional = true }
-jsonwebtoken = { version = "9.3.1", optional = true }
-tokio = { version = "1.48.0", features = ["rt-multi-thread"], optional = true }
+ammonia = { version = "4.1.2" }
+
+# own
+common = { path = "./crates/common", default-features = false, version = "*" }
+files = { path = "./crates/files", version = "*" }
+sandbox = { path = "./crates/sandbox", version = "*" }
+auth = { path = "./crates/auth", default-features = false, version = "*" }
+www = { path = "./crates/www", default-features = false, version = "*" }
+blog = { path = "./crates/blog", default-features = false, version = "*" }
+
+[dependencies]
+# leptos
+leptos = { workspace = true, optional = true }
+leptos_axum = { workspace = true, optional = true }
+
+# tracing
+tracing.workspace = true
 tracing-subscriber = { version = "0.3.20", features = ["fmt"] }
-tracing = "0.1.41"
 tracing-wasm = { version = "0.2", optional = true }
-rand = "0.9.2"
-getrandom = { version = "0.3.4", features = ["wasm_js"] }
-bcrypt = { version = "0.17.1", optional = true }
-reactive_stores = "0.3.0"
+console_error_panic_hook = { version = "0.1", optional = true}
+
+# backend
+axum = { workspace = true, optional = true }
 tower = { version = "0.5.2", optional = true }
-chrono-tz = "0.10.4"
-urlencoding = "2.1.3"
-strum = { version = "0.27.2", features = ["derive"] }
+tower-http = { workspace = true , optional = true }
+tokio = { workspace = true, optional = true }
+dotenvy = { version = "0.15.7", optional = true }
 dotenvy_macro = "0.15.7"
-zip = { version = "6.0.0", optional = true }
-mime_guess = { version = "2.0.5", optional = true }
-thiserror = { version = "2.0.17", optional = true }
+
+# frontend
+wasm-bindgen = { version = "0.2.105", optional = true }
+# this is needed for random to work on web
+getrandom = { version = "0.3.4", features = ["wasm_js"] }
+
+# own
+common.workspace = true
+files = { workspace = true, optional = true }
+sandbox = { workspace = true, optional = true }
+auth.workspace = true
+www.workspace = true
+blog.workspace = true
+
 
 [features]
 default = ["ssr", "hydrate"]
 hydrate = [
     "leptos/hydrate",
+    "common/front",
+    "auth/front",
+    "www/front",
+    "blog/front",
     "dep:console_error_panic_hook",
     "dep:wasm-bindgen",
     "dep:tracing-wasm",
 ]
 ssr = [
+    "leptos/ssr",
+    "common/back",
+    "auth/back",
+    "www/back",
+    "blog/back",
     "dep:axum",
-    "dep:axum-extra",
-    "dep:bcrypt",
+    "dep:leptos",
     "dep:leptos_axum",
     "dep:tokio",
-    "dep:uuid",
     "dep:tower-http",
     "dep:tower",
-    "dep:sqlx",
     "dep:dotenvy",
-    "dep:jsonwebtoken",
-    "dep:zip",
-    "dep:mime_guess",
-    "dep:thiserror",
-    "leptos/ssr",
-    "leptos_meta/ssr",
-    "leptos_router/ssr",
-    "leptos-use/ssr",
-    "leptos-use/axum",
+    "dep:files",
+    "dep:sandbox",
 ]
-zip = ["dep:zip"]
-mime_guess = ["dep:mime_guess"]
-thiserror = ["dep:thiserror"]
 
 # Defines a size-optimized profile for the WASM bundle in release mode
 [profile.wasm-release]

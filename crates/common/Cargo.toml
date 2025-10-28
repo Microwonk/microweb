@@ -1,0 +1,48 @@
+[package]
+name = "common"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# leptos
+leptos = { workspace = true }
+leptos-use = { workspace = true }
+leptos_axum = { workspace = true, optional = true }
+
+# axum
+axum = { workspace = true, optional = true }
+axum-extra = { workspace = true, optional = true }
+
+codee = { workspace = true, optional = true }
+strum = { workspace = true }
+thiserror = { workspace = true  }
+sqlx = { workspace = true, optional = true }
+serde = { workspace = true }
+uuid = { workspace = true, optional = true }
+tracing = { workspace = true, optional = true }
+tower-http = { workspace = true, optional = true }
+bcrypt = { workspace = true, optional = true }
+jsonwebtoken = { workspace = true, optional = true }
+chrono = { workspace = true }
+
+[features]
+default = ["back", "front"]
+back = [
+    "dep:axum",
+    "dep:axum-extra",
+    "dep:leptos_axum",
+    "dep:sqlx",
+    "dep:uuid",
+    "dep:tracing",
+    "dep:tower-http",
+    "dep:bcrypt",
+    "dep:jsonwebtoken",
+    "leptos/ssr",
+    "leptos-use/ssr",
+    "leptos-use/axum",
+]
+
+front = [
+    "dep:codee",
+    "leptos/hydrate",
+]

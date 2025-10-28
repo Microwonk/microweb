@@ -3,7 +3,6 @@
 debug/
 target/
 node_modules/
-/files/
 
 .env
 

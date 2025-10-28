@@ -7,8 +7,8 @@ async fn main() {
         Router,
         http::{HeaderValue, header::*},
     };
-    use microweb::{apps::Apps, database};
-    use strum::IntoEnumIterator;
+    use common::apps::*;
+    use microweb::apps::SsrApps;
     use tower::service_fn;
     use tower_http::cors::CorsLayer;
 
@@ -19,7 +19,7 @@ async fn main() {
         .with_max_level(tracing::Level::INFO)
         .init();
 
-    database::init_db()
+    common::db::init_db()
         .await
         .expect("problem during initialization of the database");
 
