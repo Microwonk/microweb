@@ -1,0 +1,85 @@
+#:schema https://raw.githubusercontent.com/yunanwg/brilliant-CV/main/metadata.toml.schema.json
+
+# Set the output language
+# INFO: value must matches folder suffix; i.e "zh" -> "./modules_zh"
+language = "en"
+
+[layout]
+    # Optional values: skyblue, red, nephritis, concrete, darknight
+    # You can also use a custom color by hex code i.e. "#1E90FF"
+    awesome_color = "#047857"
+
+    # Skips are for controlling the spacing between sections and entries
+    before_section_skip = "1pt"
+    before_entry_skip = "1pt"
+    before_entry_description_skip = "1pt"
+
+    # Optional: sets paper size and margins. Possible values: a4 (default), us-letter
+    paper_size = "a4"
+
+    # Optional: sets the width of the right column of a cvEntry. If not set, values known to work well are used
+    #date_width = "3.6cm"
+
+    [layout.fonts]
+        regular_fonts = ["Source Sans Pro", "Source Sans 3"]
+        header_font = "Roboto"
+
+    [layout.header]
+        # Optional values: left, center, right
+        header_align = "left"
+
+        # Decide if you want to display profile photo or not
+        display_profile_photo = true
+        # Radius in % to clip profile photo at
+        profile_photo_radius = "50%"
+        info_font_size = "10pt"
+
+    [layout.entry]
+        # Decide if you want to put your company in bold or your position in bold
+        display_entry_society_first = true
+
+        # Decide if you want to display organisation logo or not
+        display_logo = true
+
+    [layout.footer]
+        # Decide if you want to display page counter or not
+        display_page_counter = false
+
+
+[inject]
+    # Decide if you want to inject AI prompt or not
+    inject_ai_prompt = true
+
+    # Decide if you want to inject keywords or not
+    inject_keywords = true
+    injected_keywords_list = ["Data Analyst", "GCP", "Python", "SQL", "Tableau"]
+
+[personal]
+    first_name = "Nicolas"
+    last_name = "Frey"
+
+    # The order of this section will affect how the entries are displayed
+    # The custom value is for any additional information you want to add, name it as custom-1, custom-2, etc.
+    [personal.info]
+        github = "microwonk"
+        email = "nicolas.theo.frey@gmail.com"
+        linkedin = "nicolas-theo-frey"
+        homepage = "nicolas-frey.com"
+# add a new section if you want to include the language of your choice
+# i.e. [[lang.ru]]
+# each section must contains the following fields
+[lang.de]
+    header_quote = "Making Software That Works™"
+    cv_footer = "Lebenslauf"
+    letter_footer = "Anschreiben"
+
+[lang.en]
+    header_quote = "Making Software That Works™"
+    cv_footer = "Curriculum vitae"
+    letter_footer = "Cover letter"
+
+ # For languages that are not written in Latin script
+ # Currently supported non-latin language codes: ("zh", "ja", "ko", "ru")
+[lang.non_latin]
+    name = "王道尔"
+    font = "Heiti SC"
