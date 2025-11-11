@@ -6,7 +6,7 @@ pub fn Experience() -> impl IntoView {
         (
             "https://www.proxmox.com",
             "Rust Software Developer",
-            "ProxMox Software Solutions",
+            "Proxmox Software Solutions",
             "2025 - present",
         ),
         (

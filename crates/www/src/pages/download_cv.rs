@@ -83,8 +83,8 @@ pub fn DownloadCVPage() -> impl IntoView {
                         </h1>
                         <br />
                         <p class="text-xl md:text-2xl lg:text-3xl leading-p lg:leading-largep text-nf-white fade-y-trans font-montserrat">
-                            Made with <a href="https://www.latex-project.org/" target="_blank">
-                                LaTeX.
+                            Made with <a href="https://typst.app/" target="_blank">
+                                Typst.
                             </a>
                         </p>
                         <br />
