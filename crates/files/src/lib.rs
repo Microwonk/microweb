@@ -95,7 +95,6 @@ pub async fn get_full_path(mut directory_id: Option<i32>) -> Vec<Directory> {
     });
 
     path.reverse();
-    tracing::info!("{path:?}");
     path
 }
 

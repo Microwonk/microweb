@@ -15,7 +15,7 @@ impl<B> OnRequest<B> for CustomOnRequest {
         span.record("http.method", method);
         span.record("http.uri", &uri);
 
-        tracing::info!(method, uri, "received request");
+        tracing::trace!(method, uri, "received request");
     }
 }
 
@@ -36,7 +36,7 @@ impl<B> OnResponse<B> for CustomOnResponse {
 
         match level {
             tracing::Level::INFO => {
-                tracing::info!(status, latency_ms = latency.as_millis(), "sent response")
+                tracing::trace!(status, latency_ms = latency.as_millis(), "sent response")
             }
             tracing::Level::WARN => {
                 tracing::warn!(status, latency_ms = latency.as_millis(), "sent response")
