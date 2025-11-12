@@ -5,7 +5,7 @@ const {
 } = require("tailwindcss/lib/util/flattenColorPalette");
 
 module.exports = {
-  content: ["*.html", "./src/**/*.rs"],
+  content: ["*.html", "./src/**/*.rs", "./crates/**/*.rs"],
   theme: {
     extend: {
       keyframes: {
