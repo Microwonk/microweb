@@ -5,6 +5,12 @@ TMP_METADATA = cv/metadata.tmp.toml
 watch-css:
 	npx tailwindcss -i ./input.css -o ./style/main.css --watch
 
+local-db:
+	docker compose -f database-compose.yml up -d
+
+watch:
+	cargo leptos watch
+
 build:
 	cargo leptos build --release
 
